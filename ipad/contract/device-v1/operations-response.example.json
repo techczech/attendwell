@@ -1,0 +1,31 @@
+{
+  "_provisional": "PROVISIONAL fixture for native stage 1. Fictional data. Shows each outcome; held reasons are stale, duplicate_name, not_on_form, unknown_person and invalid; the device sends one operation per request. Not captured from, or validated against, the host.",
+  "eventId": "evt_fixture_spring",
+  "serverTime": "2026-10-14T09:02:11Z",
+  "window": {
+    "state": "open",
+    "revision": 1,
+    "openedAt": "2026-10-14T08:45:00Z",
+    "closesAt": "2026-10-14T10:00:00Z"
+  },
+  "results": [
+    {
+      "opId": "3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b",
+      "outcome": "applied"
+    },
+    {
+      "opId": "8a1d2c3b-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "outcome": "already_applied"
+    },
+    {
+      "opId": "c4d5e6f7-0a1b-4c2d-9e3f-4a5b6c7d8e9f",
+      "outcome": "held",
+      "reason": "stale"
+    },
+    {
+      "opId": "d5e6f7a8-1b2c-4d3e-8f4a-5b6c7d8e9f01",
+      "outcome": "held",
+      "reason": "duplicate_name"
+    }
+  ]
+}

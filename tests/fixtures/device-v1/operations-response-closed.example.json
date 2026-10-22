@@ -1,0 +1,14 @@
+{
+  "_provisional": "PROVISIONAL fixture for native stage 1. Fictional data. A closed window: the operation is not recorded and stays pending on the device. Not captured from, or validated against, the host.",
+  "eventId": "evt_fixture_spring",
+  "serverTime": "2026-10-14T09:30:00Z",
+  "window": {
+    "state": "closed",
+    "revision": 2,
+    "openedAt": "2026-10-14T08:45:00Z",
+    "closesAt": "2026-10-14T10:00:00Z"
+  },
+  "results": [
+    { "opId": "3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b", "outcome": "closed" }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "name": "workshop-check-in",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "bun node_modules/vite/bin/vite.js build",
+    "check": "bun node_modules/typescript/bin/tsc --noEmit",
+    "test": "bun test tests cloudflare/tests desktop/tests",
+    "start": "bun server/start-attendance.ts",
+    "preview": "bun scripts/preview-attendance.ts",
+    "configure": "bun scripts/configure-attendance.ts",
+    "build:pages": "bun cloudflare/build-pages.ts",
+    "desktop:dev": "cd desktop && bun run dev",
+    "desktop:build": "cd desktop && bun run pack",
+    "desktop:test": "cd desktop && bun run test",
+    "desktop:smoke": "cd desktop && bun run smoke",
+    "desktop:smoke:live": "cd desktop && bun run smoke:live",
+    "desktop:icons": "cd desktop && bun run icons",
+    "desktop:sidecar": "bun desktop/scripts/build-sidecar.ts",
+    "desktop:cloudflared": "bun desktop/scripts/fetch-cloudflared.ts",
+    "desktop:dist:mac": "bun desktop/scripts/build-sidecar.ts darwin-arm64 && bun desktop/scripts/fetch-cloudflared.ts darwin-arm64 && cd desktop && bun run dist:mac",
+    "desktop:dist:mac:test": "bun desktop/scripts/build-sidecar.ts darwin-arm64 && bun desktop/scripts/fetch-cloudflared.ts darwin-arm64 && cd desktop && bun run dist:mac:test",
+    "desktop:dist:win": "bun desktop/scripts/build-sidecar.ts windows-x64 && bun desktop/scripts/fetch-cloudflared.ts windows-x64 && cd desktop && bun run dist:win",
+    "desktop:headless": "node desktop/scripts/run-headless.ts"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "lucide-react": "0.576.0"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.23",
+    "@types/react-dom": "18.3.7",
+    "@types/bun": "1.3.14",
+    "typescript": "5.6.3",
+    "vite": "7.3.2",
+    "tailwindcss": "4.1.18",
+    "@tailwindcss/vite": "4.1.18"
+  }
+}

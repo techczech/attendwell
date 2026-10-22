@@ -1,0 +1,4 @@
+2026-10-21T22:10:00Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out.
+2026-10-21T22:10:00Z INF Requesting new quick Tunnel on trycloudflare.com...
+2026-10-21T22:10:00Z ERR Error requesting new quick tunnel error="failed to request quick Tunnel: Post \"https://api.trycloudflare.com/tunnel\": dial tcp: lookup api.trycloudflare.com: no such host"
+failed to request quick Tunnel: Post "https://api.trycloudflare.com/tunnel": dial tcp: lookup api.trycloudflare.com: no such host

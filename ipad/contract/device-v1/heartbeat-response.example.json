@@ -1,0 +1,12 @@
+{
+  "_provisional": "PROVISIONAL fixture. Fictional data. 200 reply to GET or POST device/v1/heartbeat.",
+  "eventId": "evt_fixture_spring",
+  "serverTime": "2026-10-14T09:05:00Z",
+  "window": {
+    "state": "open",
+    "revision": 1,
+    "openedAt": "2026-10-14T08:45:00Z",
+    "closesAt": "2026-10-14T10:00:00Z"
+  },
+  "rosterVersion": "rv_3f9a1c2b7d4e5a60"
+}

@@ -1,0 +1,7 @@
+2026-10-21T22:12:00Z INF |  https://gentle-example-river-test.trycloudflare.com                                      |
+2026-10-21T22:12:05Z INF Registered tunnel connection connIndex=0 connection=00000000-0000-4000-8000-000000000000 event=0 ip=198.41.200.33 location=lhr01 protocol=quic
+2026-10-21T22:14:00Z ERR Serve tunnel error error="timeout: no recent network activity" connIndex=0 event=0 ip=198.41.200.33
+2026-10-21T22:14:00Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.33
+2026-10-21T22:14:01Z ERR Unable to establish connection with Cloudflare edge error="TLS handshake timeout" connIndex=0 event=0 ip=198.41.200.33
+2026-10-21T22:14:01Z INF Retrying connection in up to 2s connIndex=0 event=0 ip=198.41.200.33
+2026-10-21T22:14:04Z INF Registered tunnel connection connIndex=0 connection=00000000-0000-4000-8000-000000000001 event=0 ip=198.41.200.43 location=lhr01 protocol=quic

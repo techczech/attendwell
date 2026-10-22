@@ -1,0 +1,8 @@
+{
+  "_provisional": "PROVISIONAL fixture. Fictional data. POST device/v1/hello body when the iPad asks the laptop to prove it issued this device's organiser-proof key (forgotten-PIN pairing). Without organiserProof the body is just the code.",
+  "code": "K7QM4TZP",
+  "organiserProof": {
+    "deviceId": "dev_fixture_ipad2",
+    "nonce": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+  }
+}

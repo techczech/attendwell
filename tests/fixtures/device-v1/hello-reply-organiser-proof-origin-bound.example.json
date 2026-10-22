@@ -1,0 +1,16 @@
+{
+  "_provisional": "PROVISIONAL fixture. Fictional data. Written on the host side (techczech/workshop-check-in) for the contract change that binds the organiser proof to the host's participant origin; to be copied into the iPad repository's contract/device-v1/. 200 reply to the hello request in hello-request-organiser-proof.example.json, served at the origin in _inputs. organiserProof is lowercase hex HMAC-SHA256 keyed by the UTF-8 bytes of the organiserProofKey in _inputs over six lines joined by LF, no trailing LF: attendwell-organiser-proof-v1, deviceId, eventId, normalised code, nonce, origin.",
+  "_inputs": {
+    "organiserProofKey": "opk_Fx7-fictional_organiser_proof_key_0000000AA",
+    "deviceId": "dev_fixture_ipad2",
+    "code": "K7QM4TZP",
+    "nonce": "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+    "origin": "https://quiet-river-fixture.trycloudflare.com"
+  },
+  "eventId": "evt_fixture_spring",
+  "eventCode": "7Q2M",
+  "eventName": "Spring Workshop",
+  "eventDate": "14 October 2026",
+  "deviceLabel": "iPad 2",
+  "organiserProof": "2933b19538938fcfcfdea6c262e724291a2d15074b533d7375cfa070ffb1847c"
+}

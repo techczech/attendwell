@@ -1,0 +1,8 @@
+{
+  "_provisional": "PROVISIONAL fixture for native stage 1. Fictional data. 201 reply to POST device/v1/pair; credentialHash is the SHA-256 hex of the fictional credential dc_ followed by 43 'a' characters. organiserProofKey is a fictional key (opk_ + 43 base64url characters).",
+  "eventId": "evt_fixture_spring",
+  "deviceId": "dev_fixture_ipad2",
+  "deviceLabel": "iPad 2",
+  "credentialHash": "55156212eb2580cdf5a7073a79ea30d79d988958768992e1e7e6b9d05541f25c",
+  "organiserProofKey": "opk_Fx7-fictional_organiser_proof_key_0000000AA"
+}

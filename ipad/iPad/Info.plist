@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>net.dominiklukes.attendwell.ipad</string>
+<key>CFBundleName</key><string>AttendWell</string>
+<key>CFBundleDisplayName</key><string>AttendWell</string>
+<key>CFBundleExecutable</key><string>AttendWell</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>0.1.0</string>
+<key>CFBundleVersion</key><string>1</string>
+<key>MinimumOSVersion</key><string>16.0</string>
+<key>UIDeviceFamily</key><array><integer>2</integer></array>
+<key>NSCameraUsageDescription</key><string>Scan the pairing code shown on the organiser's laptop.</string>
+<key>UISupportedInterfaceOrientations~ipad</key><array>
+<string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationPortraitUpsideDown</string>
+<string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string>
+</array>
+<key>UILaunchScreen</key><dict/>
+</dict></plist>

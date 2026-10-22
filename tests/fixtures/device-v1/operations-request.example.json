@@ -1,0 +1,13 @@
+{
+  "_provisional": "PROVISIONAL fixture for native stage 1. Fictional data. Not captured from, or validated against, the host.",
+  "eventId": "evt_fixture_spring",
+  "operations": [
+    {
+      "opId": "3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b",
+      "personToken": "pt_a1e7c0de5f00a1e7c0de5f00",
+      "baseRevision": 1,
+      "windowRevisionSeen": 1,
+      "recordedAt": "2026-10-14T09:02:10Z"
+    }
+  ]
+}

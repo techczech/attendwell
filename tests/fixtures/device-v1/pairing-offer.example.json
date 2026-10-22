@@ -1,0 +1,8 @@
+{
+  "_provisional": "PROVISIONAL fixture for native stage 1. Fictional data. 200 reply to POST device/v1/hello.",
+  "eventId": "evt_fixture_spring",
+  "eventCode": "7Q2M",
+  "eventName": "Spring Workshop",
+  "eventDate": "14 October 2026",
+  "deviceLabel": "iPad 2"
+}

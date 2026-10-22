@@ -1,0 +1,32 @@
+{
+  "name": "cloudflared",
+  "version": "2026.10.1",
+  "licence": "Apache-2.0",
+  "homepage": "https://github.com/cloudflare/cloudflared",
+  "copyright": "Cloudflare, Inc.",
+  "licenceText": {
+    "url": "https://raw.githubusercontent.com/cloudflare/cloudflared/2026.10.1/LICENSE",
+    "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+  },
+  "note": "archiveSha256 is the published release asset (GitHub asset digest); binarySha256 is the checksum listed in the release notes, which for macOS is the binary inside the archive.",
+  "platforms": {
+    "darwin-arm64": {
+      "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.10.1/cloudflared-darwin-arm64.tgz",
+      "archive": "tgz",
+      "archiveSha256": "647615df99d49cd179ea5e13ef760b9bbfb33630f6ae62f87e33dfadda60adcc",
+      "binarySha256": "35b7e34c9a3f214d80d859c4223450c69e583c7668d228c45771026fe376cab9"
+    },
+    "darwin-x64": {
+      "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.10.1/cloudflared-darwin-amd64.tgz",
+      "archive": "tgz",
+      "archiveSha256": "3b0dbaf378337e9d7fb6cd235a76d1d6a7dee434c2d8edf9281164fb6a3837ab",
+      "binarySha256": "8ccc6383aef109c8d88965937649a796febbb166dab4b73345e820623aee1ede"
+    },
+    "windows-x64": {
+      "url": "https://github.com/cloudflare/cloudflared/releases/download/2026.10.1/cloudflared-windows-amd64.exe",
+      "archive": "none",
+      "archiveSha256": "4d2490e74082c5d48dbfedaf92576fa5bd1702379ab88eb7faa0cfbe8dc891b6",
+      "binarySha256": "4d2490e74082c5d48dbfedaf92576fa5bd1702379ab88eb7faa0cfbe8dc891b6"
+    }
+  }
+}

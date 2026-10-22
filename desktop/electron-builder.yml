@@ -1,0 +1,70 @@
+# Packaging only: this file does not sign. `bun run dist:mac` (desktop/README.md, Build and sign) adds the Developer ID identity on the command line; Windows builds are unsigned.
+appId: net.dominiklukes.attendwell
+productName: AttendWell
+copyright: Copyright © 2026 Dominik Lukeš
+directories:
+  buildResources: build
+  output: release
+files:
+  - out/**
+  - package.json
+asar: true
+afterPack: scripts/sign-bundled-programs.cjs
+# What ships beside the app, outside the asar archive: the notes shown after an update, and (staged by the runtime's build scripts,
+# `bun run desktop:sidecar` and `bun run desktop:cloudflared` at the repository root) the register program and the tunnel program
+# for the platform being packaged, in the layout the runtime expects (desktop/runtime/platform.ts resourcePaths, with
+# process.resourcesPath as the root): <resources>/sidecar/<platform>/attendwell-service[.exe] and its dist/, and
+# <resources>/cloudflared/<platform>/cloudflared[.exe], plus cloudflared's licence and about.json for the About box.
+# Stage both before packaging: the app cannot open check-in without them.
+extraResources:
+  - from: resources/whats-new
+    to: whats-new
+  - from: resources/cloudflared
+    to: cloudflared
+    filter: [LICENSE, about.json]
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.icns
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  # Each program gets only its own entitlements: the app (entitlements.mac.plist) and Electron's helpers
+  # (entitlements.mac.inherit.plist) here; the register program and cloudflared are signed by scripts/sign-bundled-programs.cjs
+  # (afterPack, before this signing pass) and skipped by it (signIgnore), so they keep their own.
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
+  signIgnore:
+    - /Contents/Resources/sidecar/[^/]+/attendwell-service$
+    - /Contents/Resources/cloudflared/[^/]+/cloudflared$
+  # No signing here: identity null stops electron-builder from picking a certificate that happens to be installed (dist:mac overrides it).
+  identity: null
+  extraResources:
+    - from: resources/sidecar/darwin-${arch}
+      to: sidecar/darwin-${arch}
+    - from: resources/cloudflared/darwin-${arch}
+      to: cloudflared/darwin-${arch}
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  title: ${productName} ${version}
+win:
+  icon: build/icon.ico
+  executableName: AttendWell
+  target:
+    - target: nsis
+      arch: [x64]
+  extraResources:
+    - from: resources/sidecar/windows-${arch}
+      to: sidecar/windows-${arch}
+    - from: resources/cloudflared/windows-${arch}
+      to: cloudflared/windows-${arch}
+nsis:
+  artifactName: ${productName}-${version}-setup.${ext}
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}

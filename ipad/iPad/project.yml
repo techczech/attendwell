@@ -1,0 +1,70 @@
+# Generate with: xcodegen generate --spec native/iPad/project.yml  (run from native/iPad)
+# The generated AttendWell.xcodeproj is committed so Xcode opens without XcodeGen.
+name: AttendWell
+options:
+  bundleIdPrefix: net.dominiklukes.attendwell
+  deploymentTarget:
+    iOS: "16.0"
+packages:
+  WorkshopCheckInCore:
+    path: ../WorkshopCheckInCore
+targets:
+  AttendWell:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - AttendWellApp.swift
+      - PlatformProbe.swift
+      # WorkshopCheckInUI is compiled into the app module, as build-simulator.sh does
+      # (its symbols are internal, so it cannot be a separate package module).
+      - ../WorkshopCheckInCore/Sources/WorkshopCheckInUI
+    dependencies:
+      - package: WorkshopCheckInCore
+        product: WorkshopCheckInCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.dominiklukes.attendwell.ipad
+        DEVELOPMENT_TEAM: M7H45AGG8A
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: AttendWell.entitlements
+        INFOPLIST_FILE: Info.plist
+        TARGETED_DEVICE_FAMILY: "2"
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: NO
+        OTHER_LDFLAGS: ["-lsqlite3"]
+      configs:
+        Debug:
+          # Simulator: ad-hoc "Sign to Run Locally" applies entitlements without an account.
+          "CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"
+          # Without this Xcode drops the entitlements from ad-hoc simulator builds (keychain -34018).
+          "ENTITLEMENTS_ALLOWED[sdk=iphonesimulator*]": YES
+  AttendWellUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - AttendWellUITests
+    dependencies:
+      - target: AttendWell
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.dominiklukes.attendwell.ipad.uitests
+        DEVELOPMENT_TEAM: M7H45AGG8A
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: YES
+      configs:
+        Debug:
+          "CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"
+schemes:
+  AttendWell:
+    build:
+      targets:
+        AttendWell: all
+    test:
+      config: Debug
+      targets:
+        - AttendWellUITests
+    run:
+      config: Debug

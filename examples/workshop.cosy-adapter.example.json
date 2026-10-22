@@ -1,0 +1,15 @@
+{
+  "sessionId": "example-session-001",
+  "title": "Example Hands-On Workshop",
+  "date": "2030-01-15",
+  "startTime": "13:00",
+  "endTime": "16:00",
+  "organiserHelp": "Please speak to the workshop organisers.",
+  "participantBasePath": "/example-check-in",
+  "publicOrigin": "https://check-in.example.org",
+  "sourceStatuses": {
+    "Booked": "confirmed",
+    "Cancelled": "cancelled",
+    "Waiting List": "waiting"
+  }
+}

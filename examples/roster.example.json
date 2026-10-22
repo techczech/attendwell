@@ -1,0 +1,15 @@
+{
+  "sessionId": "example-session-001",
+  "date": "2030-01-15",
+  "source": {
+    "filename": "fictional-booking-export.csv",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "exportedAt": "2030-01-10T09:00:00Z"
+  },
+  "participants": [
+    {"id": "booking-0001", "name": "Alex Example", "email": "alex@example.org", "booking": "confirmed", "sourceStatus": "Confirmed"},
+    {"id": "booking-0002", "name": "Bea Example", "email": "", "booking": "confirmed", "sourceStatus": "Confirmed"},
+    {"id": "booking-0003", "name": "Robin Example", "email": "robin@example.org", "booking": "waiting", "sourceStatus": "Waiting list"},
+    {"id": "booking-0004", "name": "Taylor Example", "email": "taylor@example.org", "booking": "cancelled", "sourceStatus": "Cancelled"}
+  ]
+}

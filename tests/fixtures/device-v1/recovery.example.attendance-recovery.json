@@ -1,0 +1,19 @@
+{
+  "_provisional": "PROVISIONAL fixture for native stage 1. Fictional data. Laptop import is not built or validated.",
+  "format": "attendance-recovery",
+  "version": 1,
+  "eventId": "evt_fixture_spring",
+  "eventCode": "7Q2M",
+  "deviceId": "dev_fixture_ipad2",
+  "exportedAt": "2026-10-14T11:00:00Z",
+  "operations": [
+    {
+      "opId": "3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b",
+      "personToken": "pt_a1e7c0de5f00a1e7c0de5f00",
+      "displayName": "Alex Morgan",
+      "baseRevision": 1,
+      "windowRevisionSeen": 1,
+      "recordedAt": "2026-10-14T09:02:10Z"
+    }
+  ]
+}

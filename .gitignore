@@ -1,0 +1,34 @@
+# No trailing slash: also ignores a node_modules symlink, which git treats as a file.
+node_modules
+dist/
+*.sqlite*
+.env*
+test-results/
+.wrangler/
+# Real workshop data and credentials never belong in the repository; keep them outside it.
+private/
+*.xlsx
+*.csv
+*.local.json
+.DS_Store
+# Desktop app build output and staged binaries
+desktop/out/
+desktop/release/
+desktop/release-test/
+desktop/resources/sidecar/
+desktop/resources/cloudflared/
+desktop/e2e/shots/
+
+# Fictional test fixtures are tracked
+!desktop/tests/fixtures/*.xlsx
+
+# Build products and tool output
+release*/
+out/
+.build/
+.build-simulator/
+.derived-data/
+.swiftpm/
+xcuserdata/
+*.xcuserstate
+*.app

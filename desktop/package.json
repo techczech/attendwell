@@ -1,0 +1,65 @@
+{
+  "name": "attendwell-desktop",
+  "productName": "AttendWell",
+  "version": "1.0.0-alpha.4",
+  "private": true,
+  "license": "MIT",
+  "description": "AttendWell: the organiser's desktop app for workshop check-in.",
+  "author": "Dominik Lukes",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "icons": "bun scripts/make-icons.ts",
+    "pack:mac": "bun run build && electron-builder --mac --publish never",
+    "pack:win": "bun run build && electron-builder --win --publish never",
+    "dist:mac": "bun run build && electron-builder --mac dmg zip --arm64 --publish never -c.mac.identity=\"DOMINIK LUKES (M7H45AGG8A)\" -c.mac.notarize=false",
+    "dist:mac:test": "bun run build && electron-builder --mac --dir --arm64 --publish never -c.mac.identity=\"DOMINIK LUKES (M7H45AGG8A)\" -c.mac.notarize=false -c.directories.output=release-test -c.extraMetadata.attendwellTestBuild=true",
+    "dist:win": "bun run build && electron-builder --win nsis --x64 --publish never",
+    "pack:dir": "bun run build && electron-builder --dir --publish never",
+    "smoke": "bun run build && node e2e/smoke.mjs",
+    "smoke:live": "bun run build && node e2e/live-smoke.mjs",
+    "smoke:pair": "bun run build && node e2e/pairing-live.mjs",
+    "test": "bun test tests",
+    "pack": "electron-vite build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --publish never"
+  },
+  "dependencies": {
+    "@app-patterns/commands": "file:./vendor/app-patterns/app-patterns-commands-0.4.1.tgz",
+    "@app-patterns/settings": "file:./vendor/app-patterns/app-patterns-settings-0.4.1.tgz",
+    "@app-patterns/settings-electron": "file:./vendor/app-patterns/app-patterns-settings-electron-0.4.1.tgz",
+    "@app-patterns/settings-react": "file:./vendor/app-patterns/app-patterns-settings-react-0.4.1.tgz",
+    "@app-patterns/updates": "file:./vendor/app-patterns/app-patterns-updates-0.4.1.tgz",
+    "@app-patterns/updates-react": "file:./vendor/app-patterns/app-patterns-updates-react-0.4.1.tgz",
+    "lucide-react": "0.576.0",
+    "qrcode": "1.5.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "@types/node": "22.19.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "18.3.23",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "5.1.1",
+    "electron": "42.4.0",
+    "electron-builder": "26.0.12",
+    "electron-vite": "5.0.0",
+    "playwright-core": "1.58.2",
+    "typescript": "5.6.3",
+    "vite": "7.3.2"
+  },
+  "overrides": {
+    "@app-patterns/commands": "file:./vendor/app-patterns/app-patterns-commands-0.4.1.tgz",
+    "@app-patterns/settings": "file:./vendor/app-patterns/app-patterns-settings-0.4.1.tgz",
+    "@app-patterns/settings-electron": "file:./vendor/app-patterns/app-patterns-settings-electron-0.4.1.tgz",
+    "@app-patterns/settings-react": "file:./vendor/app-patterns/app-patterns-settings-react-0.4.1.tgz",
+    "@app-patterns/updates": "file:./vendor/app-patterns/app-patterns-updates-0.4.1.tgz",
+    "@app-patterns/updates-react": "file:./vendor/app-patterns/app-patterns-updates-react-0.4.1.tgz"
+  },
+  "trustedDependencies": [
+    "electron",
+    "esbuild",
+    "@resvg/resvg-js"
+  ]
+}

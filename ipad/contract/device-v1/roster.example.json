@@ -1,0 +1,35 @@
+{
+  "_provisional": "PROVISIONAL fixture for native stage 1. Fictional data. Not captured from, or validated against, the host.",
+  "eventId": "evt_fixture_spring",
+  "eventCode": "7Q2M",
+  "eventName": "Spring Workshop",
+  "eventDate": "2026-10-14",
+  "serverTime": "2026-10-14T09:00:00Z",
+  "rosterVersion": "rv_3f9a1c2b7d4e5a60",
+  "window": {
+    "state": "open",
+    "revision": 1,
+    "openedAt": "2026-10-14T08:45:00Z",
+    "closesAt": "2026-10-14T10:00:00Z"
+  },
+  "people": [
+    {
+      "personToken": "pt_a1e7c0de5f00a1e7c0de5f00",
+      "displayName": "Alex Morgan",
+      "revision": 1,
+      "checkedIn": false
+    },
+    {
+      "personToken": "pt_b2f8d1ef6a11b2f8d1ef6a11",
+      "displayName": "Riya Shah",
+      "revision": 2,
+      "checkedIn": false
+    },
+    {
+      "personToken": "pt_c3a9e2f07b22c3a9e2f07b22",
+      "displayName": "Jo Okafor",
+      "revision": 3,
+      "checkedIn": true
+    }
+  ]
+}

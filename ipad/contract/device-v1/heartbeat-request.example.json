@@ -1,0 +1,7 @@
+{
+  "_provisional": "PROVISIONAL fixture. Fictional data. Optional body of POST device/v1/heartbeat: outbox counts only, never names.",
+  "pendingCount": 2,
+  "heldCount": 0,
+  "oldestPendingAt": "2026-10-14T09:02:10.000Z",
+  "appVersion": "0.2.0"
+}

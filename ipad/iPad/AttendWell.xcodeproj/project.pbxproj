@@ -1,0 +1,477 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		04068ADC0A63E21F20881623 /* PlatformProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C0C6DC042386D6D8E89CC95 /* PlatformProbe.swift */; };
+		12B0C13AD5C82A56E2D189A2 /* AttendWellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C839B8FE8EB0EA33623E38 /* AttendWellApp.swift */; };
+		2D424E64368FE4AAE159ED7B /* PairingCheckInUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11FD9791B164B00CF9A6CB1 /* PairingCheckInUITests.swift */; };
+		701C5700D421E23AD2B6428F /* PairingScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF9A7738C8BEA7D1ABEBD95 /* PairingScanner.swift */; };
+		B4DED86C53ACDAE018A45FC6 /* KioskModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0738DE4E526FCC48C71D5428 /* KioskModel.swift */; };
+		DB6224F2FF8AFEF701DA96AE /* KioskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 713ACDA8C1A0D33DABBCEF7A /* KioskView.swift */; };
+		EDB4C768EDD673DB7F50F0D7 /* WorkshopCheckInCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4140C918AB953553F853AB56 /* WorkshopCheckInCore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		DD4B56D1E9A4930ABA9E489E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6D644A656E1CEDA8C5C7082D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 692DE9129E846CFD046E22EA;
+			remoteInfo = AttendWell;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0738DE4E526FCC48C71D5428 /* KioskModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KioskModel.swift; sourceTree = "<group>"; };
+		639249F0D83DE8E5B7E5EE3A /* AttendWellUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AttendWellUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		64DF876AFCDD1C22D69EF491 /* AttendWell.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AttendWell.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6C0C6DC042386D6D8E89CC95 /* PlatformProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformProbe.swift; sourceTree = "<group>"; };
+		6DF9A7738C8BEA7D1ABEBD95 /* PairingScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingScanner.swift; sourceTree = "<group>"; };
+		713ACDA8C1A0D33DABBCEF7A /* KioskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KioskView.swift; sourceTree = "<group>"; };
+		91C839B8FE8EB0EA33623E38 /* AttendWellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttendWellApp.swift; sourceTree = "<group>"; };
+		A11FD9791B164B00CF9A6CB1 /* PairingCheckInUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingCheckInUITests.swift; sourceTree = "<group>"; };
+		C8F2ED3090D0508C70D5AD2C /* WorkshopCheckInCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WorkshopCheckInCore; path = ../WorkshopCheckInCore; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DB4DCAF26CDFC7EE2352D3A0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDB4C768EDD673DB7F50F0D7 /* WorkshopCheckInCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0DC4DC61384C2DAB83DC9691 /* AttendWellUITests */ = {
+			isa = PBXGroup;
+			children = (
+				A11FD9791B164B00CF9A6CB1 /* PairingCheckInUITests.swift */,
+			);
+			path = AttendWellUITests;
+			sourceTree = "<group>";
+		};
+		4C7864F89DF7BB0F72857EAD /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				C8F2ED3090D0508C70D5AD2C /* WorkshopCheckInCore */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		6CC09C08C92BDB29CCBAC7CB = {
+			isa = PBXGroup;
+			children = (
+				91C839B8FE8EB0EA33623E38 /* AttendWellApp.swift */,
+				6C0C6DC042386D6D8E89CC95 /* PlatformProbe.swift */,
+				0DC4DC61384C2DAB83DC9691 /* AttendWellUITests */,
+				4C7864F89DF7BB0F72857EAD /* Packages */,
+				74865BF2D669515CD14089F0 /* WorkshopCheckInUI */,
+				C30C34D80D21D7A080117BC4 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		74865BF2D669515CD14089F0 /* WorkshopCheckInUI */ = {
+			isa = PBXGroup;
+			children = (
+				0738DE4E526FCC48C71D5428 /* KioskModel.swift */,
+				713ACDA8C1A0D33DABBCEF7A /* KioskView.swift */,
+				6DF9A7738C8BEA7D1ABEBD95 /* PairingScanner.swift */,
+			);
+			name = WorkshopCheckInUI;
+			path = ../WorkshopCheckInCore/Sources/WorkshopCheckInUI;
+			sourceTree = "<group>";
+		};
+		C30C34D80D21D7A080117BC4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				64DF876AFCDD1C22D69EF491 /* AttendWell.app */,
+				639249F0D83DE8E5B7E5EE3A /* AttendWellUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4FE56CE82863513964B6FC26 /* AttendWellUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6D282DDAFD94CF3BECCE5E8F /* Build configuration list for PBXNativeTarget "AttendWellUITests" */;
+			buildPhases = (
+				6955935F17B0DB0019F346A5 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				863999BE6FBAF16F9C6A9274 /* PBXTargetDependency */,
+			);
+			name = AttendWellUITests;
+			packageProductDependencies = (
+			);
+			productName = AttendWellUITests;
+			productReference = 639249F0D83DE8E5B7E5EE3A /* AttendWellUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		692DE9129E846CFD046E22EA /* AttendWell */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A5320463DC5C6A14823D35B /* Build configuration list for PBXNativeTarget "AttendWell" */;
+			buildPhases = (
+				C03A04F560A916F9DBFF0D18 /* Sources */,
+				DB4DCAF26CDFC7EE2352D3A0 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AttendWell;
+			packageProductDependencies = (
+				4140C918AB953553F853AB56 /* WorkshopCheckInCore */,
+			);
+			productName = AttendWell;
+			productReference = 64DF876AFCDD1C22D69EF491 /* AttendWell.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6D644A656E1CEDA8C5C7082D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					4FE56CE82863513964B6FC26 = {
+						DevelopmentTeam = M7H45AGG8A;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 692DE9129E846CFD046E22EA;
+					};
+					692DE9129E846CFD046E22EA = {
+						DevelopmentTeam = M7H45AGG8A;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = B1E40B0620299D70173422FE /* Build configuration list for PBXProject "AttendWell" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6CC09C08C92BDB29CCBAC7CB;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2C03F839452715C12CBB6FB2 /* XCLocalSwiftPackageReference "../WorkshopCheckInCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C30C34D80D21D7A080117BC4 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				692DE9129E846CFD046E22EA /* AttendWell */,
+				4FE56CE82863513964B6FC26 /* AttendWellUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6955935F17B0DB0019F346A5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D424E64368FE4AAE159ED7B /* PairingCheckInUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C03A04F560A916F9DBFF0D18 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				12B0C13AD5C82A56E2D189A2 /* AttendWellApp.swift in Sources */,
+				B4DED86C53ACDAE018A45FC6 /* KioskModel.swift in Sources */,
+				DB6224F2FF8AFEF701DA96AE /* KioskView.swift in Sources */,
+				701C5700D421E23AD2B6428F /* PairingScanner.swift in Sources */,
+				04068ADC0A63E21F20881623 /* PlatformProbe.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		863999BE6FBAF16F9C6A9274 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 692DE9129E846CFD046E22EA /* AttendWell */;
+			targetProxy = DD4B56D1E9A4930ABA9E489E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AD8E422C0F283D47A9EBE50D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = AttendWell.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M7H45AGG8A;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-lsqlite3",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.dominiklukes.attendwell.ipad;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+		C87B3016EC2F710C240CEED9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M7H45AGG8A;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.dominiklukes.attendwell.ipad.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AttendWell;
+			};
+			name = Debug;
+		};
+		CAA870175B482EBB3A6ACCBF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = AttendWell.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M7H45AGG8A;
+				"ENTITLEMENTS_ALLOWED[sdk=iphonesimulator*]" = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"-lsqlite3",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.dominiklukes.attendwell.ipad;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+		CCC1C563129F1C26266C5551 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		D09982EFCE597CD0A4B77D67 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F9A1A0012FA154F42B6337D1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M7H45AGG8A;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.dominiklukes.attendwell.ipad.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AttendWell;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0A5320463DC5C6A14823D35B /* Build configuration list for PBXNativeTarget "AttendWell" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CAA870175B482EBB3A6ACCBF /* Debug */,
+				AD8E422C0F283D47A9EBE50D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6D282DDAFD94CF3BECCE5E8F /* Build configuration list for PBXNativeTarget "AttendWellUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C87B3016EC2F710C240CEED9 /* Debug */,
+				F9A1A0012FA154F42B6337D1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B1E40B0620299D70173422FE /* Build configuration list for PBXProject "AttendWell" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D09982EFCE597CD0A4B77D67 /* Debug */,
+				CCC1C563129F1C26266C5551 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		2C03F839452715C12CBB6FB2 /* XCLocalSwiftPackageReference "../WorkshopCheckInCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../WorkshopCheckInCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4140C918AB953553F853AB56 /* WorkshopCheckInCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WorkshopCheckInCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 6D644A656E1CEDA8C5C7082D /* Project object */;
+}

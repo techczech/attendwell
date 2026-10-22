@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- The register program (a Bun-compiled executable) under the hardened runtime. JavaScriptCore needs JIT pages; without
+       this it falls back to its interpreter (measured: about seven times slower). Bun's code-signing guide lists more
+       (unsigned executable memory, no page protection, DYLD variables, no library validation); the register starts,
+       opens its SQLite register and serves requests with JIT on with this one alone, so the others are not given. -->
+  <key>com.apple.security.cs.allow-jit</key><true/>
+</dict>
+</plist>

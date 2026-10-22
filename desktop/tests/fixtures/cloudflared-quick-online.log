@@ -1,0 +1,50 @@
+2026-10-21T22:07:56Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
+2026-10-21T22:07:56Z INF Requesting new quick Tunnel on trycloudflare.com...
+2026-10-21T22:08:01Z INF +--------------------------------------------------------------------------------------------+
+2026-10-21T22:08:01Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+2026-10-21T22:08:01Z INF |  https://gentle-example-river-test.trycloudflare.com                                      |
+2026-10-21T22:08:01Z INF +--------------------------------------------------------------------------------------------+
+2026-10-21T22:08:01Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared]
+2026-10-21T22:08:01Z INF Version 2026.10.1 (Checksum 35b7e34c9a3f214d80d859c4223450c69e583c7668d228c45771026fe376cab9)
+2026-10-21T22:08:01Z INF GOOS: darwin, GOVersion: go1.27.1, GoArch: arm64
+2026-10-21T22:08:01Z INF Settings: map[ha-connections:1 no-autoupdate:true protocol:quic url:http://127.0.0.1:45999]
+2026-10-21T22:08:11Z ERR Failed to fetch features, default to disable error="lookup cfd-features.argotunnel.com on 192.0.2.53:53: dial udp 192.0.2.53:53: i/o timeout"
+2026-10-21T22:08:11Z INF Generated Connector ID: 00000000-0000-4000-8000-000000000000
+2026-10-21T22:08:11Z INF Initial protocol quic
+2026-10-21T22:08:11Z INF ICMP proxy will use 192.0.2.10 as source for IPv4
+2026-10-21T22:08:11Z INF ICMP proxy will use ::1 in zone lo0 as source for IPv6
+2026-10-21T22:08:11Z INF Created ICMP proxy listening on 192.0.2.10:0
+2026-10-21T22:08:11Z INF Created ICMP proxy listening on [::1]:0
+2026-10-21T22:08:31Z INF +------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+2026-10-21T22:08:31Z INF |                                                                     CONNECTIVITY PRE-CHECKS                                                                      |
+2026-10-21T22:08:31Z INF +------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+2026-10-21T22:08:31Z INF |  COMPONENT         TARGET                     STATUS  DETAILS                                                                                                    |
+2026-10-21T22:08:31Z INF |  DNS Resolution    region1.v2.argotunnel.com  PASS    DNS Resolved successfully                                                                                  |
+2026-10-21T22:08:31Z INF |  DNS Resolution    region2.v2.argotunnel.com  PASS    DNS Resolved successfully                                                                                  |
+2026-10-21T22:08:31Z INF |  UDP Connectivity  region1.v2.argotunnel.com  FAIL    QUIC connection failed                                                                                     |
+2026-10-21T22:08:31Z INF |  UDP Connectivity  region2.v2.argotunnel.com  FAIL    QUIC connection failed                                                                                     |
+2026-10-21T22:08:31Z INF |  TCP Connectivity  region1.v2.argotunnel.com  FAIL    HTTP/2 connection is blocked or unreachable                                                                |
+2026-10-21T22:08:31Z INF |  TCP Connectivity  region2.v2.argotunnel.com  FAIL    HTTP/2 connection is blocked or unreachable                                                                |
+2026-10-21T22:08:31Z INF |  Cloudflare API    api.cloudflare.com:443     FAIL    API Connection failed                                                                                      |
+2026-10-21T22:08:31Z INF |  ERROR: Allow outbound QUIC traffic on port 7844 or use HTTP2.                                                                                                   |
+2026-10-21T22:08:31Z INF |  ERROR: Allow outbound QUIC traffic on port 7844 or use HTTP2.                                                                                                   |
+2026-10-21T22:08:31Z INF |  ERROR: Allow outbound TCP on port 7844.                                                                                                                         |
+2026-10-21T22:08:31Z INF |  ERROR: Allow outbound TCP on port 7844.                                                                                                                         |
+2026-10-21T22:08:31Z INF |  ERROR: cloudflared will still run, but automatic software updates are unavailable. Ensure port 443 TCP to api.cloudflare.com is open if you want auto-updates.  |
+2026-10-21T22:08:31Z INF |                                                                                                                                                                  |
+2026-10-21T22:08:31Z INF |  SUMMARY: Environment has critical failures. cloudflared may not be able to establish a tunnel.                                                                  |
+2026-10-21T22:08:31Z INF +------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+2026-10-21T22:08:31Z INF precheck component="DNS Resolution" details="DNS Resolved successfully" run_id=00000000-0000-4000-8000-000000000000 status=pass target=region1.v2.argotunnel.com
+2026-10-21T22:08:31Z INF precheck component="DNS Resolution" details="DNS Resolved successfully" run_id=00000000-0000-4000-8000-000000000000 status=pass target=region2.v2.argotunnel.com
+2026-10-21T22:08:31Z INF precheck component="UDP Connectivity" details="QUIC connection failed" run_id=00000000-0000-4000-8000-000000000000 status=fail target=region1.v2.argotunnel.com
+2026-10-21T22:08:31Z INF precheck component="UDP Connectivity" details="QUIC connection failed" run_id=00000000-0000-4000-8000-000000000000 status=fail target=region2.v2.argotunnel.com
+2026-10-21T22:08:31Z INF precheck component="TCP Connectivity" details="HTTP/2 connection is blocked or unreachable" run_id=00000000-0000-4000-8000-000000000000 status=fail target=region1.v2.argotunnel.com
+2026-10-21T22:08:31Z INF precheck component="TCP Connectivity" details="HTTP/2 connection is blocked or unreachable" run_id=00000000-0000-4000-8000-000000000000 status=fail target=region2.v2.argotunnel.com
+2026-10-21T22:08:31Z INF precheck component="Cloudflare API" details="API Connection failed" run_id=00000000-0000-4000-8000-000000000000 status=fail target=api.cloudflare.com:443
+2026-10-21T22:08:31Z INF precheck complete hard_fail=true run_id=00000000-0000-4000-8000-000000000000
+2026-10-21T22:08:31Z INF ICMP proxy will use 192.0.2.10 as source for IPv4
+2026-10-21T22:08:31Z INF ICMP proxy will use ::1 in zone lo0 as source for IPv6
+2026-10-21T22:08:31Z INF Starting metrics server on 127.0.0.1:20242/metrics
+2026-10-21T22:08:51Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=0 event=0 ip=198.41.200.33
+2026-10-21T22:08:52Z INF Registered tunnel connection connIndex=0 connection=00000000-0000-4000-8000-000000000000 event=0 ip=198.41.200.33 location=ewr08 protocol=quic
+2026-10-21T22:08:56Z ERR Failed to initialize DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"

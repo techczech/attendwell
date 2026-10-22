@@ -1,0 +1,6 @@
+# Fictional device-v1 contract fixtures copied from the iPad repo (sample credential fingerprint, sample participant token). Line-exact, 2026-10-21.
+tests/fixtures/device-v1/pairing-success.example.json:generic-api-key:6
+tests/fixtures/device-v1/roster.example.json:generic-api-key:29
+# The same fictional contract fixtures in their source location under ipad/ (sample credential hash, sample participant token).
+ipad/contract/device-v1/pairing-success.example.json:generic-api-key:6
+ipad/contract/device-v1/roster.example.json:generic-api-key:29

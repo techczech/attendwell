@@ -1,0 +1,9 @@
+{
+  "_provisional": "PROVISIONAL fixture. Fictional data. 200 reply to the hello request in hello-request-organiser-proof.example.json: the offer plus organiserProof, lowercase hex HMAC-SHA256 keyed by the UTF-8 bytes of the organiserProofKey in pairing-success.example.json over the lines attendwell-organiser-proof-v1, deviceId, eventId, code, nonce joined by LF.",
+  "eventId": "evt_fixture_spring",
+  "eventCode": "7Q2M",
+  "eventName": "Spring Workshop",
+  "eventDate": "14 October 2026",
+  "deviceLabel": "iPad 2",
+  "organiserProof": "bbfe3277c95452dd4959c0351aa9d83f47bf186c152ada6e65f033b12aadd00a"
+}

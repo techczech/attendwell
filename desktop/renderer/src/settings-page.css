@@ -1,0 +1,26 @@
+html, body, #root { height: 100%; }
+body { margin: 0; overflow: hidden; }
+#root { display: flex; flex-direction: column; }
+.aw-settings-titlebar { flex: none; height: 38px; display: flex; align-items: center; justify-content: center; font-weight: 600; background: #d9dfe5; border-bottom: 1px solid #b9c3cc; -webkit-app-region: drag; font: 600 13px -apple-system, 'Segoe UI', sans-serif; }
+.bsw-root.aw-settings { flex: 1; height: auto; min-height: 0; --bsw-accent: #21607f; }
+.aw-conn { padding: 16px; display: flex; flex-direction: column; gap: 16px; user-select: text; font: 13px/1.4 -apple-system, 'Segoe UI', sans-serif; color: #18262f; }
+.aw-card { border: 1px solid #b9c3cc; border-radius: 10px; overflow: hidden; background: #fff; }
+.aw-card h3 { margin: 0; padding: 9px 14px; background: #c9d5df; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.aw-row { display: flex; gap: 12px; padding: 12px 14px; align-items: flex-start; border-bottom: 1px solid #dbe2e8; }
+.aw-row:last-child { border-bottom: 0; }
+.aw-row.between { justify-content: space-between; align-items: center; }
+.aw-row.top { align-items: flex-start; }
+.aw-row p { margin: 3px 0 0; color: #55656f; }
+.aw-row b { font-size: 14px; }
+.aw-addr { display: flex; align-items: center; gap: 8px; }
+.aw-btn { flex: none; white-space: nowrap; height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px solid #9fadb8; background: #fff; border-radius: 8px; font: 600 13px inherit; cursor: pointer; }
+.aw-btn.icon { width: 32px; padding: 0; justify-content: center; }
+.aw-btn:disabled { color: #8b98a2; background: #e3e8ec; cursor: default; }
+.aw-chip { border-radius: 999px; padding: 2px 10px; font-weight: 700; border: 1px solid #9fadb8; background: #eef1f4; }
+.aw-chip.good { background: #e4f3ea; border-color: #8ec6a4; color: #146236; }
+.aw-chip.warn { background: #fbf3dd; border-color: #d6c79f; color: #5c4a1c; }
+.aw-chip.bad { background: #fbeeee; border-color: #c98a8a; color: #a32727; }
+.aw-ok { color: #146236 !important; font-weight: 600; }
+.aw-bad { color: #a32727 !important; font-weight: 600; }
+.aw-note { padding: 0 14px 12px; margin: 0; color: #55656f; }
+.mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
