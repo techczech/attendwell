@@ -1,4 +1,4 @@
-# Generate with: xcodegen generate --spec native/iPad/project.yml  (run from native/iPad)
+# Generate with: xcodegen generate --spec ipad/iPad/project.yml  (run from ipad/iPad)
 # The generated AttendWell.xcodeproj is committed so Xcode opens without XcodeGen.
 name: AttendWell
 options:
@@ -16,6 +16,8 @@ targets:
     sources:
       - AttendWellApp.swift
       - PlatformProbe.swift
+      - Assets.xcassets
+      - PrivacyInfo.xcprivacy
       # WorkshopCheckInUI is compiled into the app module, as build-simulator.sh does
       # (its symbols are internal, so it cannot be a separate package module).
       - ../WorkshopCheckInCore/Sources/WorkshopCheckInUI
@@ -30,6 +32,9 @@ targets:
         CODE_SIGN_ENTITLEMENTS: AttendWell.entitlements
         INFOPLIST_FILE: Info.plist
         TARGETED_DEVICE_FAMILY: "2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: NO
         OTHER_LDFLAGS: ["-lsqlite3"]

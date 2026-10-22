@@ -1,64 +1,62 @@
 # AttendWell for iPad
 
-Native SwiftUI participant screens follow the kiosk design. A normal launch is the real app: it pairs with the organiser's laptop
-by scanning its QR (or typing the address and code), keeps the credential in the
-iOS Keychain (device only, not synchronised), downloads the names list into
-local SQLite and works from that cache whether or not the laptop is reachable.
-Check-ins queue in the outbox until the laptop acknowledges them. When the
-laptop's quick-tunnel address changes, the organiser uses Pair again on the
-laptop and the iPad's organiser menu; queued check-ins then go to the same event
-at the new address. The home-screen name is AttendWell; the bundle identifier
-is net.dominiklukes.attendwell.ipad. There is no same-Wi-Fi mode.
+The iPad app for the door at a workshop. The organiser runs AttendWell on a Mac
+or Windows computer; the iPad pairs with it by scanning the QR code the
+computer shows (the link is HTTPS through a Cloudflare quick tunnel).
+Participants tap their name and confirm. Names are kept in a local database on
+the iPad, check-ins queue until the organiser's computer acknowledges them, and
+the pairing credential and organiser PIN live in the iOS Keychain (this device
+only). The app collects no data for the developer. iPad only, iOS 16 or later,
+bundle identifier `net.dominiklukes.attendwell.ipad`, version 1.0.0.
 
-The fictional modes below (`--fixture-*`) keep their own data folders and the
-"Fictional fixture demonstration" banner. `--fixture-demo` is the former
-default launch: the fixture laptop with connection, close and reopen controls.
+All commands run from the `ipad/` folder.
 
-On an Apple machine with an existing iOS Simulator SDK/runtime:
+## Build and test
 
 ```sh
-From the `ipad/` folder:
-
-swift test --package-path WorkshopCheckInCore
-bash iPad/build-simulator.sh
-bash iPad/smoke-simulator.sh
+swift test --package-path WorkshopCheckInCore --skip KeychainBoundaryTests
+bash iPad/build-simulator.sh          # unsigned simulator app, Debug
+xcodebuild test -project iPad/AttendWell.xcodeproj -scheme AttendWell \
+  -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5)'
 ```
 
-The scripts compile an unsigned simulator app and use an existing iPad runtime.
-They do not install Xcode, download an SDK, sign, deploy or distribute the app.
-The `.app` is for Simulator only; this is not a physical-iPad installation route.
+`KeychainBoundaryTests` need a signed host and are skipped in the package run.
+The UI tests include the demo journey; the live pairing test skips itself
+unless `ui-test-pairing.sh` supplies a laptop address and code.
 
-Normal launch uses real Keychain storage. The unsigned simulator process
-currently receives `-34018` (missing entitlement) at the first Keychain write;
-it cannot complete real pairing until the app is signed. The required platform probe remains failing, rather
-than falling back to insecure credential storage. No signing is authorised.
+The Xcode project is generated from `iPad/project.yml` (`xcodegen generate
+--spec iPad/project.yml` from `ipad/iPad`) and the result is committed.
 
-`--fixture-setup` offers a separate in-memory credential/PIN fixture for
-reviewing the setup and check-in journeys without claiming Keychain persistence.
-Manual fictional pairing uses
-`https://checkin.example.org/s/k3v9` and `K7QM-4TZP`, confirms the event and sets
-a six-digit organiser PIN. The event is labelled on the fictional laptop.
-Only the organiser menu exposes the demo connection/close/reopen controls.
-Selecting a name and confirming it writes SQLite before the saved screen.
-Foreground sends then change the status only on a definite fixture acknowledgement.
+## Run on a device
 
-`--fixture-home` is an isolated screenshot fixture: it uses a separate sandbox
-database, in-memory credentials/PIN, an offline transport, an already-confirmed
-person and a saved person. It does not exercise pairing and is never a host test.
-`--fixture-platform-probe` runs isolated iPad-process checks for Keychain
-pending/relaunch/promotion, device-only accessibility, non-synchronisation,
-installation isolation, persistent PIN lockout, file-protection metadata and
-backup-exclusion metadata. The report contains boolean results, the stage and
-an optional numeric Keychain status; it never contains credentials, pairing
-codes or raw errors.
+Open `iPad/AttendWell.xcodeproj`, choose your iPad and Run. Signing is
+automatic with team M7H45AGG8A. Pairing, the Keychain and the camera need a
+signed build on a real iPad (or a signed simulator build).
 
-The system file exporter marks recovery coverage only after successful saving.
-The saved URL is shared through the system share interface. Exporting bytes or
-opening a share interface does not mark delivery/import. Handover uses a fresh
-removal preview and refuses uncovered or newly-added pending operations.
+## Try a demo
 
-Apple-specific limits remain: Simulator metadata cannot prove protection while
-a physical iPad is locked, keychain behaviour after a real reinstall, actual
-camera scanning, hardware readability, VoiceOver, keyboard and suspension
-behaviour. Real host contracts, recovery import and two-iPad host integration
-are not yet verified on hardware.
+The set-up screen has a small "Try a demo" link. It opens a practice workshop
+("Demo workshop") with ten made-up names. Tapping a name and confirming shows it
+checked in. A banner at the top says the names are made up and nothing is sent;
+"Leave demo" returns to set-up. The demo makes no network calls, uses no Keychain
+items and deletes its temporary data when you leave. It has no organiser or
+pairing screens.
+
+## Debug-only fixtures
+
+Debug builds also accept `--fixture-setup`, `--fixture-home`, `--fixture-demo`
+and `--fixture-platform-probe` launch arguments for screenshots and platform
+checks (see `smoke-simulator.sh`). Release builds do not contain them.
+
+## Archive for the App Store
+
+```sh
+bash iPad/archive-appstore.sh            # archive only: ipad/build/AttendWell.xcarchive
+bash iPad/archive-appstore.sh --upload   # also export and upload to App Store Connect
+```
+
+Both use the Apple account signed in to Xcode. The app icon is built from the
+desktop icon by `iPad/make-appstore-icon.py` (no alpha channel). The privacy
+manifest `iPad/PrivacyInfo.xcprivacy` declares no tracking and no collected data,
+and one required-reason API (system boot time, reason 35F9.1, used to time
+retry and window checks). Store screenshots are in `appstore/screenshots/`.

@@ -34,14 +34,27 @@ public struct KioskView: View {
     @State private var exportFile = false
     @State private var recoveryURL: URL?
     @AccessibilityFocusState private var headingFocused: Bool
-    public init(model: KioskModel) {
+    private let onTryDemo: (() -> Void)?
+    private let onLeaveDemo: (() -> Void)?
+    /// `onTryDemo` adds the secondary "Try a demo" button to the set-up screen;
+    /// `onLeaveDemo` is called by the banner of a demo model.
+    public init(model: KioskModel, onTryDemo: (() -> Void)? = nil, onLeaveDemo: (() -> Void)? = nil) {
         self.model = model
+        self.onTryDemo = onTryDemo; self.onLeaveDemo = onLeaveDemo
         _address = State(initialValue: model.address); _code = State(initialValue: model.code)
     }
 
     public var body: some View {
         VStack(spacing: 0) {
-            if model.fictional {
+            if model.isDemo {
+                HStack(spacing: 16) {
+                    Text("Demo — names are made up and nothing is sent anywhere.").font(.callout.weight(.semibold))
+                    Spacer(minLength: 0)
+                    Button("Leave demo") { onLeaveDemo?() }.buttonStyle(.borderedProminent).controlSize(.regular)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 8).frame(maxWidth: .infinity)
+                .background(KioskStyle.amber)
+            } else if model.fictional {
                 Text("Fictional fixture demonstration · no laptop connection")
                     .font(.caption.weight(.semibold)).padding(8).frame(maxWidth: .infinity)
                     .background(KioskStyle.amber)
@@ -84,6 +97,11 @@ public struct KioskView: View {
                 action("Scan pairing code", icon: "qrcode.viewfinder") { model.showScanner() }
                 action("Enter a code instead", icon: "keyboard") { model.showManual() }
                 if model.canCancelSetup { action("Cancel", icon: "xmark") { model.cancelSetup() } }
+                if let onTryDemo {
+                    Button("Try a demo", action: onTryDemo).buttonStyle(.plain).font(.body)
+                        .foregroundStyle(.secondary).underline().padding(.top, 12).disabled(model.busy)
+                        .accessibilityHint("Opens a practice check-in with made-up names. Nothing is sent or saved.")
+                }
             }
         case .scan:
             scanner
@@ -145,7 +163,7 @@ public struct KioskView: View {
         case .gettingNames:
             panel("Getting the names list…", icon: "list.bullet", detail: "Still waiting for the laptop. Keep this iPad connected to the internet.") {
                 ProgressView(); action("Try again", icon: "arrow.clockwise") { Task { await model.sendNow() } }
-                action("Organiser", icon: "lock") { model.showPIN() }
+                if !model.isDemo { action("Organiser", icon: "lock") { model.showPIN() } }
             }
         case .confirm:
             panel("Is this you?", icon: "person", detail: model.selected?.displayName ?? "") {
@@ -165,11 +183,11 @@ public struct KioskView: View {
             }
         case .closed:
             panel("Check-in is closed", icon: "door.left.hand.closed", detail: "Please speak to the organiser.") {
-                action("Organiser", icon: "lock") { model.showPIN() }
+                if !model.isDemo { action("Organiser", icon: "lock") { model.showPIN() } }
             }
         case .paused:
             panel("This iPad is paused", icon: "pause.circle", detail: "Please speak to the organiser.") {
-                action("Organiser", icon: "lock") { model.showPIN() }
+                if !model.isDemo { action("Organiser", icon: "lock") { model.showPIN() } }
             }
         case .pin:
             panel("Organiser PIN", icon: "lock", detail: "Forgotten the PIN? Show a new pairing code on the laptop and scan it.") {
@@ -209,7 +227,7 @@ public struct KioskView: View {
             }
         case .differentEvent:
             panel("This is a different event", icon: "exclamationmark.triangle", detail: "Send the saved check-ins or save a recovery file before pairing with another event.") {
-                action("Organiser", icon: "lock") { model.showPIN() }
+                if !model.isDemo { action("Organiser", icon: "lock") { model.showPIN() } }
             }
         }
     }
@@ -233,7 +251,7 @@ public struct KioskView: View {
                             Button("All") { model.letter = "" }
                             ForEach(Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), id: \.self) { c in
                                 Button(String(c)) { model.letter = String(c) }.frame(minWidth: 48, minHeight: 48)
-                                    .accessibilityLabel("Names beginning with \(c)")
+                                    .accessibilityLabel("Names beginning with \(String(c))")
                             }
                         }
                     }
@@ -280,7 +298,7 @@ public struct KioskView: View {
             VStack(alignment: .leading) { Text(model.offer?.eventName ?? "").bold(); Text(model.offer?.eventDate ?? "") }
             Text("Can't find your name? Please speak to the organiser.")
             Text(model.statusText).font(.body.bold())
-            Button { model.showPIN() } label: { Label("Organiser", systemImage: "lock") }.frame(minHeight: 48)
+            if !model.isDemo { Button { model.showPIN() } label: { Label("Organiser", systemImage: "lock") }.frame(minHeight: 48) }
         }.padding(20).background(Color.white)
     }
     private var done: some View {

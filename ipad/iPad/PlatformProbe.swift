@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import Security
 import WorkshopCheckInCore
@@ -83,3 +84,4 @@ enum PlatformProbe {
         return passed
     }
 }
+#endif
