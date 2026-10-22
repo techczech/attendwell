@@ -339,7 +339,6 @@ public struct KioskView: View {
                 Text("About · \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Development build") · Protocol 1")
                 Text("Check-ins send while this app is open. Sending while the iPad is locked or the app is closed isn't guaranteed.")
                 Text("Deleting this app removes check-ins saved on this iPad. Save a recovery file first.")
-                Text("Same-Wi-Fi mode · Planned, not available")
                 action("Check-in", icon: "arrow.left") { model.goHome() }
             }.padding(32)
         }
