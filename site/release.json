@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "macDmgUrl": "https://github.com/techczech/attendwell/releases/download/v1.0.0/AttendWell-1.0.0-arm64.dmg",
+  "windowsExeUrl": "https://github.com/techczech/attendwell/releases/download/v1.0.0/AttendWell-1.0.0-setup.exe",
+  "appStoreUrl": null,
+  "contactEmail": null,
+  "issuesUrl": "https://github.com/techczech/attendwell/issues",
+  "sourceUrl": "https://github.com/techczech/attendwell"
+}

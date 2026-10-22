@@ -21,6 +21,7 @@
     "desktop:sidecar": "bun desktop/scripts/build-sidecar.ts",
     "desktop:cloudflared": "bun desktop/scripts/fetch-cloudflared.ts",
     "desktop:dist:mac": "bun desktop/scripts/build-sidecar.ts darwin-arm64 && bun desktop/scripts/fetch-cloudflared.ts darwin-arm64 && cd desktop && bun run dist:mac",
+    "desktop:dist:mac:release": "bash desktop/scripts/release-mac.sh",
     "desktop:dist:mac:test": "bun desktop/scripts/build-sidecar.ts darwin-arm64 && bun desktop/scripts/fetch-cloudflared.ts darwin-arm64 && cd desktop && bun run dist:mac:test",
     "desktop:dist:win": "bun desktop/scripts/build-sidecar.ts windows-x64 && bun desktop/scripts/fetch-cloudflared.ts windows-x64 && cd desktop && bun run dist:win",
     "desktop:headless": "node desktop/scripts/run-headless.ts"

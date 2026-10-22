@@ -2,7 +2,8 @@ name: AttendWell desktop (Windows)
 
 on:
   push:
-    branches: [feat/desktop-app, main]
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
