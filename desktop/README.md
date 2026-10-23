@@ -1,18 +1,18 @@
 ---
-title: AttendWell desktop app (frame)
+title: AttendWell desktop app
 type: reference
 status: current
 ---
 # AttendWell desktop app
 
-Electron app for the organiser's laptop: first run, the workshops library, the command palette, menus, Settings and update notices. The register, pairing and connection screens arrive in later releases; a workshop opens into an empty frame today. It runs on a fake runtime until the headless runtime branch is merged (`main/runtime-port.ts` is the seam, `main/runtime-factory.ts` the one line to change).
+Electron app for the organiser's laptop: first run, the workshops library, the command palette, menus, Settings, update notices, and the register, pairing and connection screens. `main/runtime-port.ts` is the seam between the app and the register runtime.
 
 ## Commands (from the repository root)
 
 | Command | What it does |
 |---|---|
 | `bun run desktop:dev` | Development run with hot reload. Set `ATTENDWELL_TEST=1` first for a run that shows no window. |
-| `bun run desktop:build` | Builds and packages for this computer's platform: macOS dmg and zip (arm64, x64), Windows nsis (x64). Unsigned. Output in `desktop/release/`. |
+| `bun run desktop:build` | Builds and packages for this computer's platform: macOS dmg and zip (arm64, x64), Windows nsis (x64). Unsigned and not notarised; for local checks. Output in `desktop/release/`. |
 | `bun run desktop:test` | Unit tests for the desktop code (also part of `bun test`). |
 | `bun run desktop:smoke` | Headless smoke run: launches hidden, opens the palette, exits with no dialog. |
 | `bun run desktop:icons` | Regenerates `desktop/build/icon.*` from `src/assets/app-icon.svg`. |
@@ -21,11 +21,12 @@ Electron app for the organiser's laptop: first run, the workshops library, the c
 
 | Command (repository root) | What it does |
 |---|---|
-| `bun run desktop:dist:mac` | Stages the arm64 register program and cloudflared, builds, and packages a signed macOS dmg and zip (arm64) in `desktop/release/`. Signed with the Developer ID Application certificate `DOMINIK LUKES (M7H45AGG8A)` from the login Keychain (the first run may show a Keychain access prompt; choose Always Allow), hardened runtime, each program with only its own entitlements: the app `build/entitlements.mac.plist` and Electron's helpers `build/entitlements.mac.inherit.plist` (JIT only), the register program `build/entitlements.sidecar.plist` (JIT only), cloudflared none (signed by `scripts/sign-bundled-programs.cjs` before the app; check with `codesign -d --entitlements :- <binary>`). **Not notarised**: no notarisation credentials are set up for this project, so Gatekeeper assesses it as unnotarised until that step is added. |
+| `bun run desktop:dist:mac` | Stages the arm64 register program and cloudflared, builds, and packages a signed macOS dmg and zip (arm64) in `desktop/release/`. Signed with the Developer ID Application certificate `DOMINIK LUKES (M7H45AGG8A)` from the login Keychain (the first run may show a Keychain access prompt; choose Always Allow), hardened runtime, each program with only its own entitlements: the app `build/entitlements.mac.plist` and Electron's helpers `build/entitlements.mac.inherit.plist` (JIT only), the register program `build/entitlements.sidecar.plist` (JIT only), cloudflared none (signed by `scripts/sign-bundled-programs.cjs` before the app; check with `codesign -d --entitlements :- <binary>`). Not notarised: for local use. |
+| `bun run desktop:dist:mac:release` | The release build: the same signed build with notarisation on (`scripts/release-mac.sh`). electron-builder submits the app with `notarytool` using the Keychain profile in `APPLE_KEYCHAIN_PROFILE` (default `attendwell-notary`) and staples it; the script then signs, notarises and staples the dmg, runs `xcrun stapler validate` and `spctl -a -vvv -t install` on it, and leaves `AttendWell-<version>-arm64.dmg` in `desktop/release/` for upload to the GitHub Release. It refuses to start, and prints the `xcrun notarytool store-credentials` command to run, when the profile does not work. `bash desktop/scripts/release-mac.sh --check` only tests the profile. |
 | `bun run desktop:dist:mac:test` | Same signing, but a test build: unpacked app in `desktop/release-test/`, with the marker `attendwellTestBuild` in its package.json so the test variables below work in a packaged app. For hidden checks only; never install or ship it. |
-| `bun run desktop:dist:win` | Windows installer (nsis, x64), unsigned, in `desktop/release/`. Run on Windows; CI does this in `.github/workflows/desktop-windows.yml` and uploads the installer as an artifact. |
+| `bun run desktop:dist:win` | Windows installer (nsis, x64), unsigned, in `desktop/release/`. Run on Windows; CI does this in `.github/workflows/desktop-windows.yml` (pushes to `main` and pull requests) and uploads the installer as an artifact. A `v*` tag runs `.github/workflows/release.yml`, which builds the same installer and attaches it to a draft GitHub Release; the notarised dmg is uploaded to that draft by hand. |
 
-Version: `desktop/package.json` (`1.0.0-alpha.1`); `app.getVersion()` and Info.plist read it. A pre-release shows the What's new notes of the release it leads to (`resources/whats-new/1.0.0.md`).
+Version: `desktop/package.json` (`1.0.0`); `app.getVersion()` and Info.plist read it. `site/release.json` and `site/updates.json` carry the same number for the website and the update notice. A pre-release shows the What's new notes of the release it leads to (`resources/whats-new/1.0.0.md`).
 
 On Windows the workshops folder defaults to `AppData\Local\AttendWell\Workshops`, and Settings refuses a folder outside AppData (the register runtime only accepts a private folder there).
 

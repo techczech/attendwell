@@ -1,7 +1,7 @@
 {
   "name": "attendwell-desktop",
   "productName": "AttendWell",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0",
   "private": true,
   "license": "MIT",
   "description": "AttendWell: the organiser's desktop app for workshop check-in.",
@@ -14,6 +14,7 @@
     "pack:mac": "bun run build && electron-builder --mac --publish never",
     "pack:win": "bun run build && electron-builder --win --publish never",
     "dist:mac": "bun run build && electron-builder --mac dmg zip --arm64 --publish never -c.mac.identity=\"DOMINIK LUKES (M7H45AGG8A)\" -c.mac.notarize=false",
+    "dist:mac:release": "bun run build && electron-builder --mac dmg zip --arm64 --publish never -c.mac.identity=\"DOMINIK LUKES (M7H45AGG8A)\" -c.mac.notarize=true",
     "dist:mac:test": "bun run build && electron-builder --mac --dir --arm64 --publish never -c.mac.identity=\"DOMINIK LUKES (M7H45AGG8A)\" -c.mac.notarize=false -c.directories.output=release-test -c.extraMetadata.attendwellTestBuild=true",
     "dist:win": "bun run build && electron-builder --win nsis --x64 --publish never",
     "pack:dir": "bun run build && electron-builder --dir --publish never",

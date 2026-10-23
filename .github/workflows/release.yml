@@ -1,0 +1,54 @@
+name: Release (Windows installer, draft)
+
+# On a tag v*: builds the unsigned Windows installer and attaches it to a DRAFT GitHub Release for the tag.
+# The notarised Mac dmg is built on the maintainer's Mac (bun run desktop:dist:mac:release) and uploaded to the same draft by hand;
+# the draft is published by hand once both files are there.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.3
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Install (repository root and desktop)
+        run: |
+          bun install --frozen-lockfile
+          cd desktop
+          bun install --frozen-lockfile
+      - name: The tag matches the app version
+        shell: bash
+        run: |
+          version="$(node -p "require('./desktop/package.json').version")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then echo "Tag $GITHUB_REF_NAME does not match desktop/package.json version $version" >&2; exit 1; fi
+      - name: Build the Windows register program and fetch cloudflared
+        run: |
+          bun desktop/scripts/build-sidecar.ts windows-x64
+          bun desktop/scripts/fetch-cloudflared.ts windows-x64
+      - name: Package the installer (unsigned)
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: bun run dist:win
+      - name: Create the draft release with the installer
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          installer="$(ls desktop/release/*-setup.exe)"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$installer" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$installer" --draft --verify-tag --title "AttendWell ${GITHUB_REF_NAME#v}" --generate-notes
+          fi

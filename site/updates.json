@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "latest": {
+    "version": "1.0.0",
+    "released": "2026-10-22",
+    "summary": [
+      "First public release of AttendWell for Mac and Windows.",
+      "Workshop check-in on an iPad, with arrivals shown on your computer."
+    ],
+    "notes": "https://techczech.github.io/attendwell/",
+    "download": {
+      "mac": "https://techczech.github.io/attendwell/#downloads",
+      "windows": "https://techczech.github.io/attendwell/#downloads"
+    }
+  }
+}
