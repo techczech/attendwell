@@ -1,0 +1,3 @@
+# Keep website source and generated pages identical on Windows and macOS.
+site-copy/*.md text eol=lf
+site/*.html text eol=lf
