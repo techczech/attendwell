@@ -64,6 +64,8 @@ public final class KioskModel: ObservableObject {
     public var address = "https://checkin.example.org/s/k3v9"
     public var code = "K7QM-4TZP"
     public let fictional: Bool
+    /// The reviewer/practice demo: no organiser or pairing screens are reachable.
+    public let isDemo: Bool
     private let store: CheckInStore
     private let credentials: any CredentialVault
     private let pairing: PairingCoordinator
@@ -77,9 +79,9 @@ public final class KioskModel: ObservableObject {
     private var unlockForNewCode = false
 
     public init(store: CheckInStore, credentials: any CredentialVault, pairing: PairingCoordinator,
-                pin: OrganiserPIN, transport: any KioskTransport, fictional: Bool = true) {
+                pin: OrganiserPIN, transport: any KioskTransport, fictional: Bool = true, demo: Bool = false) {
         self.store = store; self.credentials = credentials; self.pairing = pairing
-        self.pin = pin; self.transport = transport; self.fictional = fictional
+        self.pin = pin; self.transport = transport; self.fictional = fictional; self.isDemo = demo
         // Fictional example values belong to the demonstration only.
         if !fictional { address = ""; code = "" }
     }
@@ -224,7 +226,7 @@ public final class KioskModel: ObservableObject {
         } catch CheckInError.windowClosed { screen = .closed }
         catch { screen = .commitFailed }
     }
-    public func showPIN() { accessRevision += 1; unlocked = false; unlockForNewCode = false; screen = .pin; message = "" }
+    public func showPIN() { guard !isDemo else { return }; accessRevision += 1; unlocked = false; unlockForNewCode = false; screen = .pin; message = "" }
     public func unlock(_ value: String) async {
         guard screen == .pin else { return }
         let revision = accessRevision

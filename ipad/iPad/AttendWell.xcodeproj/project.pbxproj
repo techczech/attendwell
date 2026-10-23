@@ -9,11 +9,15 @@
 /* Begin PBXBuildFile section */
 		04068ADC0A63E21F20881623 /* PlatformProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C0C6DC042386D6D8E89CC95 /* PlatformProbe.swift */; };
 		12B0C13AD5C82A56E2D189A2 /* AttendWellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C839B8FE8EB0EA33623E38 /* AttendWellApp.swift */; };
+		2BC721FE5F40838D68E63991 /* DemoSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86635A4F84B471EE8AF77E65 /* DemoSession.swift */; };
 		2D424E64368FE4AAE159ED7B /* PairingCheckInUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11FD9791B164B00CF9A6CB1 /* PairingCheckInUITests.swift */; };
 		701C5700D421E23AD2B6428F /* PairingScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF9A7738C8BEA7D1ABEBD95 /* PairingScanner.swift */; };
+		864F83B50483FC9ED95EEDD9 /* DemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6585499058DC0FA24CEF8097 /* DemoUITests.swift */; };
+		930A2ECBBB257740B1C44A30 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A60AC0774E6843A6592EAEAF /* Assets.xcassets */; };
 		B4DED86C53ACDAE018A45FC6 /* KioskModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0738DE4E526FCC48C71D5428 /* KioskModel.swift */; };
 		DB6224F2FF8AFEF701DA96AE /* KioskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 713ACDA8C1A0D33DABBCEF7A /* KioskView.swift */; };
 		EDB4C768EDD673DB7F50F0D7 /* WorkshopCheckInCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4140C918AB953553F853AB56 /* WorkshopCheckInCore */; };
+		EECA3359C647B6747CBDFA45 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B47EF69CB997C3A7710B6E0E /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,11 +34,15 @@
 		0738DE4E526FCC48C71D5428 /* KioskModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KioskModel.swift; sourceTree = "<group>"; };
 		639249F0D83DE8E5B7E5EE3A /* AttendWellUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AttendWellUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		64DF876AFCDD1C22D69EF491 /* AttendWell.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AttendWell.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6585499058DC0FA24CEF8097 /* DemoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoUITests.swift; sourceTree = "<group>"; };
 		6C0C6DC042386D6D8E89CC95 /* PlatformProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformProbe.swift; sourceTree = "<group>"; };
 		6DF9A7738C8BEA7D1ABEBD95 /* PairingScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingScanner.swift; sourceTree = "<group>"; };
 		713ACDA8C1A0D33DABBCEF7A /* KioskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KioskView.swift; sourceTree = "<group>"; };
+		86635A4F84B471EE8AF77E65 /* DemoSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoSession.swift; sourceTree = "<group>"; };
 		91C839B8FE8EB0EA33623E38 /* AttendWellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttendWellApp.swift; sourceTree = "<group>"; };
 		A11FD9791B164B00CF9A6CB1 /* PairingCheckInUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingCheckInUITests.swift; sourceTree = "<group>"; };
+		A60AC0774E6843A6592EAEAF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B47EF69CB997C3A7710B6E0E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C8F2ED3090D0508C70D5AD2C /* WorkshopCheckInCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WorkshopCheckInCore; path = ../WorkshopCheckInCore; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -53,6 +61,7 @@
 		0DC4DC61384C2DAB83DC9691 /* AttendWellUITests */ = {
 			isa = PBXGroup;
 			children = (
+				6585499058DC0FA24CEF8097 /* DemoUITests.swift */,
 				A11FD9791B164B00CF9A6CB1 /* PairingCheckInUITests.swift */,
 			);
 			path = AttendWellUITests;
@@ -69,8 +78,10 @@
 		6CC09C08C92BDB29CCBAC7CB = {
 			isa = PBXGroup;
 			children = (
+				A60AC0774E6843A6592EAEAF /* Assets.xcassets */,
 				91C839B8FE8EB0EA33623E38 /* AttendWellApp.swift */,
 				6C0C6DC042386D6D8E89CC95 /* PlatformProbe.swift */,
+				B47EF69CB997C3A7710B6E0E /* PrivacyInfo.xcprivacy */,
 				0DC4DC61384C2DAB83DC9691 /* AttendWellUITests */,
 				4C7864F89DF7BB0F72857EAD /* Packages */,
 				74865BF2D669515CD14089F0 /* WorkshopCheckInUI */,
@@ -81,6 +92,7 @@
 		74865BF2D669515CD14089F0 /* WorkshopCheckInUI */ = {
 			isa = PBXGroup;
 			children = (
+				86635A4F84B471EE8AF77E65 /* DemoSession.swift */,
 				0738DE4E526FCC48C71D5428 /* KioskModel.swift */,
 				713ACDA8C1A0D33DABBCEF7A /* KioskView.swift */,
 				6DF9A7738C8BEA7D1ABEBD95 /* PairingScanner.swift */,
@@ -124,6 +136,7 @@
 			buildConfigurationList = 0A5320463DC5C6A14823D35B /* Build configuration list for PBXNativeTarget "AttendWell" */;
 			buildPhases = (
 				C03A04F560A916F9DBFF0D18 /* Sources */,
+				9E2F3671FC3E991ADC7696CC /* Resources */,
 				DB4DCAF26CDFC7EE2352D3A0 /* Frameworks */,
 			);
 			buildRules = (
@@ -181,11 +194,24 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		9E2F3671FC3E991ADC7696CC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				930A2ECBBB257740B1C44A30 /* Assets.xcassets in Resources */,
+				EECA3359C647B6747CBDFA45 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		6955935F17B0DB0019F346A5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				864F83B50483FC9ED95EEDD9 /* DemoUITests.swift in Sources */,
 				2D424E64368FE4AAE159ED7B /* PairingCheckInUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -195,6 +221,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				12B0C13AD5C82A56E2D189A2 /* AttendWellApp.swift in Sources */,
+				2BC721FE5F40838D68E63991 /* DemoSession.swift in Sources */,
 				B4DED86C53ACDAE018A45FC6 /* KioskModel.swift in Sources */,
 				DB6224F2FF8AFEF701DA96AE /* KioskView.swift in Sources */,
 				701C5700D421E23AD2B6428F /* PairingScanner.swift in Sources */,
@@ -220,6 +247,7 @@
 				CODE_SIGN_ENTITLEMENTS = AttendWell.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = M7H45AGG8A;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
@@ -228,6 +256,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0.0;
 				OTHER_LDFLAGS = (
 					"-lsqlite3",
 				);
@@ -268,6 +297,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = M7H45AGG8A;
 				"ENTITLEMENTS_ALLOWED[sdk=iphonesimulator*]" = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -277,6 +307,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0.0;
 				OTHER_LDFLAGS = (
 					"-lsqlite3",
 				);

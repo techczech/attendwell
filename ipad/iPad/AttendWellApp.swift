@@ -4,24 +4,30 @@ import WorkshopCheckInCore
 
 /// AttendWell on the iPad. A normal launch pairs with the organiser's laptop
 /// over HTTPS (`LiveHostTransport`) and keeps the session in local SQLite.
-/// The `--fixture-*` launch arguments open isolated, fictional modes for
-/// screenshots, journeys and the platform probe; they never use the live
-/// data directory or the live Keychain items.
+/// "Try a demo" on the set-up screen opens a practice workshop with made-up
+/// names (`DemoSession`), entirely in memory.
+/// In Debug builds only, the `--fixture-*` launch arguments open isolated,
+/// fictional modes for screenshots, journeys and the platform probe; a Release
+/// build does not contain them.
 @main
 @MainActor
 struct AttendWellApp: App {
+    #if DEBUG
     private let probeRequested = ProcessInfo.processInfo.arguments.contains("--fixture-platform-probe")
     @State private var probeResult = "Running fictional platform checks…"
-    private let model: KioskModel?
     private let fixtureTransport: FictionalKioskTransport?
+    #endif
+    private let model: KioskModel?
+    @State private var demo: DemoSession?
 
     init() {
+        #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         let previewHome = arguments.contains("--fixture-home")
         let previewSetup = arguments.contains("--fixture-setup")
-        let demo = arguments.contains("--fixture-demo")
+        let fixtureDemo = arguments.contains("--fixture-demo")
         do {
-            if previewHome || previewSetup || demo {
+            if previewHome || previewSetup || fixtureDemo {
                 let built = try Self.fixture(home: previewHome, inMemory: previewHome || previewSetup,
                     directoryName: previewHome ? "WorkshopFixturePreview" : previewSetup ? "WorkshopFixtureSetupPreview" : "WorkshopFixture")
                 model = built.0; fixtureTransport = built.1
@@ -29,23 +35,40 @@ struct AttendWellApp: App {
                 model = try Self.live(); fixtureTransport = nil
             }
         } catch { model = nil; fixtureTransport = nil }
+        #else
+        model = try? Self.live()
+        #endif
     }
 
     var body: some Scene {
         WindowGroup {
+            #if DEBUG
             if probeRequested {
                 Text(probeResult).font(.title).padding().task {
                     probeResult = await PlatformProbe.run() ? "Fictional platform checks passed" : "Fictional platform checks failed"
                 }
-            } else if let model {
-                VStack(spacing: 0) {
-                    KioskView(model: model)
-                    if let fixtureTransport { FixtureControls(model: model, transport: fixtureTransport) }
-                }
             } else {
-                Text("Couldn't open the saved check-ins. Nothing has been removed. Please speak to the organiser.")
-                    .font(.title).padding()
+                mainContent
             }
+            #else
+            mainContent
+            #endif
+        }
+    }
+
+    @ViewBuilder private var mainContent: some View {
+        if let demo {
+            KioskView(model: demo.model, onLeaveDemo: { demo.end(); self.demo = nil }).id(ObjectIdentifier(demo))
+        } else if let model {
+            VStack(spacing: 0) {
+                KioskView(model: model, onTryDemo: { demo = try? DemoSession() })
+                #if DEBUG
+                if let fixtureTransport { FixtureControls(model: model, transport: fixtureTransport) }
+                #endif
+            }
+        } else {
+            Text("Couldn't open the saved check-ins. Nothing has been removed. Please speak to the organiser.")
+                .font(.title).padding()
         }
     }
 
@@ -79,6 +102,7 @@ struct AttendWellApp: App {
                           transport: transport, fictional: false)
     }
 
+    #if DEBUG
     private static func fixture(home previewHome: Bool, inMemory: Bool,
                                 directoryName: String) throws -> (KioskModel, FictionalKioskTransport) {
         let (directory, installationID) = try directory(directoryName)
@@ -112,8 +136,10 @@ struct AttendWellApp: App {
         let pairing = PairingCoordinator(vault: credentials, store: store, transport: FixturePairingTransport(offer: offer))
         return (KioskModel(store: store, credentials: credentials, pairing: pairing, pin: pin, transport: transport), transport)
     }
+    #endif
 }
 
+#if DEBUG
 private struct FixtureControls: View {
     @ObservedObject var model: KioskModel
     let transport: FictionalKioskTransport
@@ -131,3 +157,4 @@ private struct FixtureControls: View {
         }
     }
 }
+#endif
