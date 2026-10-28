@@ -7,7 +7,7 @@ description: What data the AttendWell organiser app and iPad app handle, where i
 
 Last updated: 22 October 2026
 
-This policy covers the AttendWell organiser app for Mac and Windows and the AttendWell app for iPad.
+This policy covers the AttendWell organiser app for Mac and the AttendWell app for iPad.
 
 ## Who is responsible
 

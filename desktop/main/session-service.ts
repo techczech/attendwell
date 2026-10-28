@@ -391,10 +391,12 @@ export class SessionService {
   /** Close the sheet. A code that is still open is cancelled, so nothing pairs unseen. */
   async closePairing(): Promise<void> {
     const p = this.pairing;
+    const client = this.client;
     this.pairGen += 1;
-    if (p.phase === 'open' && this.client) { try { await this.client.cancelPairing(p.offer.sessionId); } catch { /* it expires in five minutes anyway */ } }
+    // Relinquish this sheet before waiting: an old cancellation must never clear a newer code.
     this.pairing = IDLE; this.pairLabel = null;
     this.d.changed();
+    if (p.phase === 'open' && client) { try { await client.cancelPairing(p.offer.sessionId); } catch { /* it expires in five minutes anyway */ } }
   }
 
   /** An action that failed: the reason in plain words for the window, and the same line in the log. */

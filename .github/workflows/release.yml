@@ -1,11 +1,9 @@
 name: Release (Windows installer, draft)
 
-# On a tag v*: builds the unsigned Windows installer and attaches it to a DRAFT GitHub Release for the tag.
-# The notarised Mac dmg is built on the maintainer's Mac (bun run desktop:dist:mac:release) and uploaded to the same draft by hand;
-# the draft is published by hand once both files are there.
+# Optional Windows build, started manually. The Mac release is built, notarised and uploaded separately.
+# Do not start a Windows build automatically for a Mac-only release tag.
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write

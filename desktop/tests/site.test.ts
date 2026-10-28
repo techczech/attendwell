@@ -19,7 +19,7 @@ describe('site/updates.json', () => {
   test('announces the version in desktop/package.json and site/release.json', () => {
     expect(release.version).toBe(pkg.version);
     expect(release.macDmgUrl).toContain(`/v${pkg.version}/AttendWell-${pkg.version}-arm64.dmg`);
-    expect(release.windowsExeUrl).toContain(`/v${pkg.version}/AttendWell-${pkg.version}-setup.exe`);
+    expect(release.windowsExeUrl).toBeNull();
   });
 });
 
@@ -34,12 +34,19 @@ describe('site build', () => {
       expect(read(`site/${file}`), `${file} is stale: run node scripts/build-site.mjs`).toBe(html);
     }
   });
-  test('without a Store address the iPad item has no link; with one it does', async () => {
+  test('the iPad item links the source and promises no App Store or TestFlight download', async () => {
     const { build } = (await import(buildPath)) as { build: (r: unknown) => Array<[string, string]> };
-    const index = (r: unknown) => build(r)[0]![1];
-    expect(index(release)).toContain('Coming soon to the App Store');
-    const withStore = index({ ...release, appStoreUrl: 'https://apps.apple.com/app/id1' });
-    expect(withStore).toContain('href="https://apps.apple.com/app/id1"');
-    expect(withStore).not.toContain('Coming soon');
+    const index = build(release)[0]![1];
+    expect(index).toContain('href="https://github.com/techczech/attendwell/tree/main/ipad"');
+    expect(index).toContain('no official download or TestFlight build');
+    expect(index).not.toMatch(/Windows|Coming soon/);
+  });
+  test('the Mac pages claim notarisation only when release.json says so', async () => {
+    const { build } = (await import(buildPath)) as { build: (r: unknown) => Array<[string, string]> };
+    const text = (r: unknown) => build(r).map(([, h]) => h).join('\n');
+    const unnotarised = { ...release, macNotarised: false };
+    expect(text(unnotarised)).not.toMatch(/signed and notarised/i);
+    expect(text(unnotarised)).toContain('Open Anyway');
+    expect(text({ ...release, macNotarised: true })).toContain('Signed and notarised.');
   });
 });

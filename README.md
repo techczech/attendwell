@@ -2,7 +2,9 @@
 
 AttendWell is a workshop check-in app. The organiser runs it on a Mac or Windows laptop and keeps the register there; participants check themselves in by name on an iPad at the door. The register stores names and check-in status, and email addresses stay on the organiser's computer. The iPad keeps working if the connection drops, and sends each check-in once the laptop can be reached again.
 
-Website: <https://techczech.github.io/attendwell/>
+Website and Mac download: <https://techczech.github.io/attendwell/>
+
+The Mac download is for Apple silicon. The iPad app is available as [source code](ipad/README.md); developers can build, sign and distribute it independently. There is no official iPad App Store or TestFlight build. Windows can be built from source.
 
 ## Parts
 

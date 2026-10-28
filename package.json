@@ -26,6 +26,9 @@
     "desktop:dist:win": "bun desktop/scripts/build-sidecar.ts windows-x64 && bun desktop/scripts/fetch-cloudflared.ts windows-x64 && cd desktop && bun run dist:win",
     "desktop:headless": "node desktop/scripts/run-headless.ts"
   },
+  "overrides": {
+    "source-map-js": "1.2.2"
+  },
   "dependencies": {
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -36,7 +39,7 @@
     "@types/react-dom": "18.3.7",
     "@types/bun": "1.3.14",
     "typescript": "5.6.3",
-    "vite": "7.3.2",
+    "vite": "7.3.7",
     "tailwindcss": "4.1.18",
     "@tailwindcss/vite": "4.1.18"
   }
