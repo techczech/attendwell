@@ -4,6 +4,9 @@
 #   archive-appstore.sh --upload           archive, then export and upload to App Store Connect
 # Uses the Apple account signed in to Xcode. Output: ipad/build/AttendWell.xcarchive
 set -euo pipefail
+
+# Apple rsync starts its helper through PATH; Homebrew rsync rejects its extended-attributes option.
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin"
 here="$(cd "$(dirname "$0")" && pwd)"
 build="$here/../build"
 archive="$build/AttendWell.xcarchive"
