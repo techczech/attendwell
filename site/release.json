@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "macDmgUrl": "https://github.com/techczech/attendwell/releases/download/v1.0.0/AttendWell-1.0.0-arm64.dmg",
   "windowsExeUrl": null,
-  "macNotarised": false,
+  "macNotarised": true,
   "ipadSourceUrl": "https://github.com/techczech/attendwell/tree/main/ipad",
   "appStoreUrl": null,
   "contactEmail": null,

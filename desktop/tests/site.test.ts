@@ -44,9 +44,9 @@ describe('site build', () => {
   test('the Mac pages claim notarisation only when release.json says so', async () => {
     const { build } = (await import(buildPath)) as { build: (r: unknown) => Array<[string, string]> };
     const text = (r: unknown) => build(r).map(([, h]) => h).join('\n');
-    expect(release.macNotarised).toBe(false);
-    expect(text(release)).not.toMatch(/signed and notarised/i);
-    expect(text(release)).toContain('Open Anyway');
+    const unnotarised = { ...release, macNotarised: false };
+    expect(text(unnotarised)).not.toMatch(/signed and notarised/i);
+    expect(text(unnotarised)).toContain('Open Anyway');
     expect(text({ ...release, macNotarised: true })).toContain('Signed and notarised.');
   });
 });
