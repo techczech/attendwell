@@ -7,7 +7,7 @@ description: Getting started with AttendWell, pairing an iPad, and how to report
 
 ## Getting started
 
-1. Download the organiser app for [Mac or Windows](index.html#downloads) and install the AttendWell app on an iPad from the App Store.
+1. Download the organiser app for [Mac](index.html#downloads) and install the AttendWell iPad app, built from the [source](index.html#downloads).
 2. In the organiser app, create a workshop and paste or import the participant list.
 3. Choose Start check-in and wait for the connection to open.
 4. On the iPad, scan the QR code shown in the organiser app. If you cannot scan it, type the address and the one-time code shown beside it.
@@ -23,16 +23,12 @@ The iPad app has a Try a demo option on its first screen. It shows the check-in 
 - **The connection never opens.** Some venue networks block it. Try another network, such as a phone hotspot, for the computer.
 - **The connection dropped during check-in.** Check-ins made while the connection is down stay on the iPad and are sent when it returns.
 
-## Windows
-
-The Windows installer is unsigned. Windows shows a warning the first time you run it and asks you to confirm before it continues.
-
 ## Mac
 
-The Mac app is signed and notarised and opens like any other downloaded app.
+{{MAC_SUPPORT}}
 
 ## Report a problem
 
-Open an issue at <https://github.com/techczech/attendwell/issues>. Say which computer you use, whether it was the Mac or Windows app, and what you saw.
+Open an issue at <https://github.com/techczech/attendwell/issues>. Say which Mac you use and what you saw.
 
 You can also write to {{CONTACT_EMAIL}}.

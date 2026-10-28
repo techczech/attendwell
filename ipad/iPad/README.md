@@ -30,7 +30,8 @@ The Xcode project is generated from `iPad/project.yml` (`xcodegen generate
 ## Run on a device
 
 Open `iPad/AttendWell.xcodeproj`, choose your iPad and Run. Signing is
-automatic with team M7H45AGG8A. Pairing, the Keychain and the camera need a
+automatic; the committed team M7H45AGG8A and bundle identifier belong to the
+author, so set your own team and bundle identifier first. Pairing, the Keychain and the camera need a
 signed build on a real iPad (or a signed simulator build).
 
 ## Try a demo

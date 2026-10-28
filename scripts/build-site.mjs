@@ -10,22 +10,26 @@ const release = JSON.parse(readFileSync(join(root, 'site/release.json'), 'utf8')
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
+/** What the pages say about Apple's check on the Mac download; it follows release.json and never claims notarisation that has not happened. */
+function macTrust(r) {
+  return r.macNotarised
+    ? { short: 'Signed and notarised.', support: 'The Mac app is signed and notarised and opens like any other downloaded app.' }
+    : { short: 'Signed with a Developer ID, not yet notarised by Apple.',
+        support: 'The Mac app is signed with a Developer ID but is not notarised by Apple, so macOS blocks it the first time you open it. Open System Settings, choose Privacy & Security, scroll to the message about AttendWell and choose Open Anyway.' };
+}
+
 /** Fills the placeholders from release.json. Exported for the tests. */
 export function fillPlaceholders(md, r) {
   const contactLink = `[Open an issue on GitHub](${r.issuesUrl})`;
   let out = md;
   // Without an email address the "You can also write to" line has nothing to say; the issue link above it already covers it.
   if (!r.contactEmail) out = out.replace(/\n?You can also write to \{\{CONTACT_EMAIL\}\}\.\n?/g, '\n');
-  // Without a Store address the iPad item names no link.
-  if (!r.appStoreUrl) {
-    out = out.replace(/\[AttendWell for iPad\]\(\{\{APP_STORE_URL\}\}\) — the door app, free on the App Store\./,
-      'AttendWell for iPad — Coming soon to the App Store. The door app is free.');
-  }
   const email = r.contactEmail ? `[${r.contactEmail}](mailto:${r.contactEmail})` : contactLink;
   return out
     .replaceAll('{{MAC_DMG_URL}}', r.macDmgUrl ?? '')
-    .replaceAll('{{WINDOWS_EXE_URL}}', r.windowsExeUrl ?? '')
-    .replaceAll('{{APP_STORE_URL}}', r.appStoreUrl ?? '')
+    .replaceAll('{{IPAD_SOURCE_URL}}', r.ipadSourceUrl ?? '')
+    .replaceAll('{{MAC_TRUST}}', macTrust(r).short)
+    .replaceAll('{{MAC_SUPPORT}}', macTrust(r).support)
     .replaceAll('{{CONTACT_EMAIL}}', email);
 }
 
