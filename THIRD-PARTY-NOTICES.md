@@ -6,7 +6,7 @@ third-party code: it uses only Apple system frameworks and the system SQLite lib
 
 ## Electron
 
-The organiser app runs on Electron 42.4.0 (MIT, Copyright (c) Electron contributors and GitHub Inc.).
+The organiser app runs on Electron 44.9.3 (MIT, Copyright (c) Electron contributors and GitHub Inc.).
 Electron includes Chromium and Node.js and their own dependencies, each under its own licence.
 Every packaged build carries Electron's `LICENSE` and `LICENSES.chromium.html` beside the app.
 https://github.com/electron/electron

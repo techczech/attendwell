@@ -245,14 +245,15 @@ describe('pairing', () => {
 describe('pairing after a failed or abandoned attempt', () => {
   /** A service whose organiser client holds createPairing or devices() until the test lets them go. */
   async function held(s: Setup, lines: string[] = []) {
-    const gates: { pairing?: () => void; devices?: () => void } = {};
-    const hold = { pairing: false, devices: false };
+    const gates: { pairing?: () => void; devices?: () => void; cancel?: () => void } = {};
+    const hold = { pairing: false, devices: false, cancel: false };
     const organiser: OrganiserFactory = (url) => {
       const c = s.rt.fake.organiserFactory(url);
       return new Proxy(c, {
         get(target, prop) {
           const v = Reflect.get(target, prop, target);
           if (prop === 'createPairing' && hold.pairing) return async (input: { label?: string }) => { await new Promise<void>((r) => { gates.pairing = r; }); return target.createPairing(input); };
+          if (prop === 'cancelPairing' && hold.cancel) return async (id: string) => { await target.cancelPairing(id); await new Promise<void>((r) => { gates.cancel = r; }); };
           // The list is read now, and answered when the test lets it go: a list from before the code was issued.
           if (prop === 'devices' && hold.devices) return async () => { const list = await target.devices(); await new Promise<void>((r) => { gates.devices = r; }); return list; };
           return typeof v === 'function' ? v.bind(target) : v;
@@ -294,6 +295,25 @@ describe('pairing after a failed or abandoned attempt', () => {
     s.rt.fake.register(s.today.id).simulatePaired();
     await s.svc.refresh();
     expect(s.svc.view().pairing.phase).toBe('paired');
+  });
+  test('an old close response preserves a newer pairing sheet and the newer code can still be cancelled', async () => {
+    const s = await setup();
+    const h = await held(s);
+    expect((await h.svc.pairOpen()).ok).toBe(true);
+    h.hold.cancel = true;
+    const closing = h.svc.closePairing();
+    await until(() => h.gates.cancel !== undefined);
+    expect((await h.svc.pairOpen({ label: 'New door' })).ok).toBe(true);
+    const newer = h.svc.view().pairing;
+    expect(newer.phase).toBe('open');
+    h.gates.cancel!();
+    await closing;
+    expect(h.svc.view().pairing).toEqual(newer);
+    h.hold.cancel = false;
+    await h.svc.closePairing();
+    expect(h.svc.view().pairing.phase).toBe('idle');
+    expect(() => s.rt.fake.register(s.today.id).simulatePaired()).toThrow();
+    h.svc.dispose();
   });
   test('a sheet closed while its code is still being made: the late code is cancelled and the sheet stays closed', async () => {
     const s = await setup();
