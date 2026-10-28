@@ -21,7 +21,7 @@ People who run workshops, training sessions and small events, and want a registe
 ## Downloads
 
 - [AttendWell for Mac]({{MAC_DMG_URL}}) — the organiser app, for Macs with Apple silicon. {{MAC_TRUST}}
-- [AttendWell for iPad source]({{IPAD_SOURCE_URL}}) — the door app. It is not on the App Store, and there is no official download or TestFlight build. The source is open, so a developer can build, sign and distribute it to iPads independently. The app has a Try a demo option with made-up names, so you can see the check-in screens without an organiser app.
+- [AttendWell for iPad source]({{IPAD_SOURCE_URL}}) — the door app. There is no public iPad download or App Store listing. TestFlight testing is private. The source is open, so a developer can build, sign and distribute it to iPads independently. The app has a Try a demo option with made-up names, so you can see the check-in screens without an organiser app.
 
 ## What you need
 

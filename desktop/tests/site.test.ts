@@ -38,7 +38,7 @@ describe('site build', () => {
     const { build } = (await import(buildPath)) as { build: (r: unknown) => Array<[string, string]> };
     const index = build(release)[0]![1];
     expect(index).toContain('href="https://github.com/techczech/attendwell/tree/main/ipad"');
-    expect(index).toContain('no official download or TestFlight build');
+    expect(index).toContain('TestFlight testing is private.');
     expect(index).not.toMatch(/Windows|Coming soon/);
   });
   test('the Mac pages claim notarisation only when release.json says so', async () => {
