@@ -17,6 +17,14 @@ import path from 'node:path';
 import {pinnedRequest,isFingerprint,bodyFailed} from './participant-tls.ts';
 
 export const GATEWAY_BODY_LIMIT=65536;
+// Test connection: a path the gateway answers itself, never forwarded. It answers 200 only for a single-use token the
+// runtime registered a moment ago (expectProbe) and records the receipt on that registration; every other token, and any
+// unregistered one, gets 404. The answer is public and proves nothing alone: another server can send the same bytes, so
+// the test passes only on the receipt. It carries no name, code or credential.
+export const PROBE_PREFIX='/_aw/probe/';
+export const PROBE_TOKEN=/^[0-9a-f]{32}$/;
+export const PROBE_ANSWER=JSON.stringify({attendwell:'probe'});
+export type ProbeReceipt={readonly received:boolean;withdraw:()=>void};
 // Where the register's participant listener is: a Unix socket path (macOS), or a loopback port with the SHA-256
 // fingerprint (hex) of the certificate made for that register spawn (Windows, or macOS when forced).
 export type Upstream={socketPath:string}|{port:number;fingerprint:string};
@@ -55,6 +63,9 @@ export type ParticipantGateway={
  start:()=>Promise<number>;
  // The register's participant listener while it runs, or null (then every request gets 503).
  setUpstream:(upstream:Upstream|null)=>void;
+ // Accepts one probe request carrying `token`. `received` turns true if that request reached this gateway; a used or
+ // withdrawn token is gone.
+ expectProbe:(token:string)=>ProbeReceipt;
  close:()=>Promise<void>;
  readonly port:number|null;
  readonly upstream:Upstream|null;
@@ -65,6 +76,7 @@ export function createParticipantGateway(opts:{bodyLimit?:number;upstreamTimeout
  let upstream:Upstream|null=null;let port:number|null=null;
  let server:http.Server|null=null;
  const sockets=new Set<net.Socket>();
+ const probes=new Map<string,()=>void>();
 
  const reply=(res:http.ServerResponse,status:number,error:string,extra:Record<string,string>={})=>{
   if(res.headersSent){res.destroy();return;}
@@ -76,6 +88,14 @@ export function createParticipantGateway(opts:{bodyLimit?:number;upstreamTimeout
   // Origin-form only: an absolute-form target (`GET http://elsewhere/`) never chooses where the request goes.
   if(!raw.startsWith('/')||raw.startsWith('//'))return reply(res,400,'Bad request.');
   let url:URL;try{url=new URL(raw,'http://gateway.invalid')}catch{return reply(res,400,'Bad request.')}
+  if(url.pathname.startsWith(PROBE_PREFIX)){
+   const token=url.pathname.slice(PROBE_PREFIX.length);
+   const receive=req.method==='GET'?probes.get(token):undefined;
+   if(!receive)return reply(res,404,'Not found.');
+   probes.delete(token);receive();
+   req.resume();
+   res.writeHead(200,{...SECURITY,Connection:'close'});res.end(PROBE_ANSWER);return;
+  }
   if(!gatewayAllows(url.pathname))return reply(res,404,'Not found.');
   if(upstream===null)return reply(res,503,GATEWAY_UNAVAILABLE,{'Retry-After':'2'});
   const declared=req.headers['content-length'];
@@ -166,8 +186,14 @@ export function createParticipantGateway(opts:{bodyLimit?:number;upstreamTimeout
    if(!isFingerprint(u.fingerprint))throw new Error('Invalid participant listener certificate fingerprint.');
    upstream={port:p,fingerprint:u.fingerprint};
   },
+  expectProbe(token){
+   if(!PROBE_TOKEN.test(token))throw new Error('Invalid probe token.');
+   let received=false;
+   probes.set(token,()=>{received=true;});
+   return {get received(){return received},withdraw(){probes.delete(token);}};
+  },
   async close(){
-   upstream=null;
+   upstream=null;probes.clear();
    const s=server;server=null;port=null;
    if(!s)return;
    await new Promise<void>(resolve=>{s.close(()=>resolve());for(const sock of sockets)sock.destroy();});

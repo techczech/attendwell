@@ -6,3 +6,4 @@ export type {TunnelSettings,TunnelState} from './tunnel-supervisor.ts';
 export {GATEWAY_BODY_LIMIT} from './participant-gateway.ts';
 export {FAILURE_TEXT as TUNNEL_FAILURE_TEXT,type TunnelFailure} from './cloudflared-output.ts';
 export {platformKey,resourcePaths,type PlatformKey} from './platform.ts';
+export type {ConnectionTestResult} from './connection-test.ts';

@@ -46,7 +46,7 @@ export interface RuntimePort {
     /** The runtime's `participant-origin-changed` event. */
     onOriginChanged(listener: (change: OriginChange) => void): () => void;
   };
-  /** Settings > Connection > Test connection. Absent in the real runtime until it grows the call: the app then shows "not available yet". */
+  /** Settings > Connection > Test connection. Checks the current public address; without an open address it returns setup advice. */
   testConnection?(): Promise<ConnectionTest>;
   shutdown(): Promise<void>;
 }

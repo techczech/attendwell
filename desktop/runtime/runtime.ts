@@ -5,6 +5,7 @@ import {rmdirSync} from 'node:fs';
 import {createWorkshopsLibrary,type WorkshopsLibrary,type WorkshopRecord,type AttendedCounter} from './workshops-library.ts';
 import {ServiceSupervisor,type ServiceState,type ServiceLaunch} from './service-supervisor.ts';
 import {TunnelSupervisor,type TunnelSettings,type TunnelState,TunnelError} from './tunnel-supervisor.ts';
+import {probeAddress,noAddressResult,type ConnectionTestResult} from './connection-test.ts';
 import {createParticipantGateway,type Upstream} from './participant-gateway.ts';
 import type {ParticipantTls} from './participant-tls.ts';
 import {nodeProcessHost,freeLoopbackPort,portAcceptsConnections,socketAcceptsConnections,loopbackJson,reconcileOrphans,checkRunDir,participantSocketDir,type ProcessHost} from './process-control.ts';
@@ -27,6 +28,8 @@ export type RuntimeOptions={
  // How the gateway reaches the register's participant listener. 'auto': a Unix socket on macOS, loopback TCP with a
  // pinned certificate on Windows. 'tcp-tls': the Windows path on any platform (tests and the headless check on macOS).
  participantTransport?:'auto'|'tcp-tls';participantTls?:()=>ParticipantTls;
+ // Test connection: how the probe reaches the public address, and how long it may take.
+ connectionFetch?:typeof fetch;connectionTimeoutMs?:number;
  log?:(line:string)=>void;tunnelStartTimeoutMs?:number;serviceProbe?:(l:ServiceLaunch,participant:Upstream|null)=>Promise<boolean>;serviceBackoffMs?:number[];tunnelBackoffMs?:number[];
 };
 
@@ -98,6 +101,12 @@ export function createRuntime(opts:RuntimeOptions){
  service.on('upstream',(u:Upstream|null)=>{gateway.setUpstream(u);if(u)lastParticipant=u;});
  service.on('state',changed);
  tunnel.on('state',changed);
+ // Test connection: at most one probe at a time (repeated calls share it). It never joins the lifecycle queue and never
+ // touches the register, the tunnel or the pairing; a changed address or an ended session only cancels it.
+ let probing:Promise<ConnectionTestResult>|null=null;
+ let cancelProbe:(()=>void)|null=null;
+ tunnel.on('state',(t:TunnelState)=>{if(t.state!=='online')cancelProbe?.();});
+ tunnel.on('origin-changed',()=>cancelProbe?.());
 
  // One queue for every lifecycle operation: start, retry, end, shutdown, and the restart after a new quick-tunnel
  // address. Each runs only after the previous one has finished, so no two of them start or stop children at once.
@@ -159,6 +168,7 @@ export function createRuntime(opts:RuntimeOptions){
    return verifyStopped(null,gatewayPort,s.stopped,t.stopped);
   }
   session='ending';changed();
+  cancelProbe?.();
   const t=await tunnel.stop();
   if(l&&active&&service.state.state==='running'){
    const roster=await loopbackJson(l.organiserPort,'/api/roster',`127.0.0.1:${l.organiserPort}`,3000,service.organiserBearer??undefined) as {participants?:{present?:boolean}[]}|null;
@@ -257,6 +267,18 @@ export function createRuntime(opts:RuntimeOptions){
    });
   },
   endSession():Promise<StopReport>{return serial(end);},
+  // Checks that the current public check-in address reaches this computer's gateway. Safe during a session.
+  testConnection():Promise<ConnectionTestResult>{
+   if(probing)return probing;
+   const t=tunnel.state,l=launch;
+   if(disposed||session!=='running'||!l||t.state!=='online'||gateway.port===null)return Promise.resolve(noAddressResult(disposed?'idle':session,t));
+   const url=t.url,ac=new AbortController();
+   const run=probeAddress({url,gateway,fetchImpl:opts.connectionFetch??fetch,timeoutMs:opts.connectionTimeoutMs,signal:ac.signal,
+    current:()=>!disposed&&session==='running'&&launch===l&&tunnel.state.state==='online'&&tunnel.state.url===url});
+   const p=run.finally(()=>{if(probing===p){probing=null;cancelProbe=null;}});
+   probing=p;cancelProbe=()=>ac.abort();
+   return p;
+  },
   // The register of one workshop on loopback only (no gateway, no tunnel, participant window untouched), so names can be added
   // before check-in and after it. While that workshop's check-in runs, the session's own register is returned (live: true).
   // One lease at a time: opening another workshop's register stops the previous lease.
