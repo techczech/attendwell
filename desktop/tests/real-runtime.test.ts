@@ -202,3 +202,10 @@ test('readRegister under Node: never creates the register or a side file; sees w
   live.close();
   expect(JSON.parse(c.stdout)).toEqual({ n: 6, here: ['a', 'b'], held: 1 });
 }, 20000);
+
+test('Test connection is offered, and says there is no address to test while no check-in is open', async () => {
+  const { rt } = setup();
+  expect(typeof rt.testConnection).toBe('function');
+  expect(await rt.testConnection!()).toMatchObject({ ok: false, reason: 'no-session' });
+  await rt.shutdown();
+});

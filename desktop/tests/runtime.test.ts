@@ -11,6 +11,7 @@ import {resourcePaths} from '../runtime/platform.ts';
 import {PidFile} from '../runtime/process-control.ts';
 import {fakeHost,until,secretsOf,simulatedAcl,SIM_KEY,SIM_WINDOWS,type FakeChild,type FakeHost} from './fakes.ts';
 import {createParticipantTls,participantTlsPem} from '../runtime/participant-tls.ts';
+import {PROBE_ANSWER} from '../runtime/participant-gateway.ts';
 
 const dirs:string[]=[];
 const servers=new Set<http.Server>();
@@ -42,7 +43,7 @@ function viaGateway(port:number,p:string):Promise<{status:number;body:string}>{
 }
 
 type Res=ReturnType<typeof resourcePaths>;
-type SetupOpts={settings?:RuntimeSettings;transport?:'auto'|'tcp-tls';tunnel?:(c:FakeChild,n:number)=>void;healthy?:()=>boolean;before?:(o:{dataRoot:string;runDir:string;host:FakeHost;res:Res})=>void};
+type SetupOpts={fetch?:typeof fetch;settings?:RuntimeSettings;transport?:'auto'|'tcp-tls';tunnel?:(c:FakeChild,n:number)=>void;healthy?:()=>boolean;before?:(o:{dataRoot:string;runDir:string;host:FakeHost;res:Res})=>void};
 function setup(o:SetupOpts={}){
  const root=mkdtempSync(path.join(tmpdir(),'attendwell-rt-'));dirs.push(root);
  const resourcesRoot=path.join(root,'resources');const res=resourcePaths(resourcesRoot,SIM_KEY);
@@ -56,7 +57,7 @@ function setup(o:SetupOpts={}){
  o.before?.({dataRoot,runDir:path.join(dataRoot,'run'),host,res});
  const sidecars=()=>host.children.filter(c=>c.req.command===res.sidecar);
  const tunnelsList=()=>host.children.filter(c=>c.req.command===res.cloudflared);
- const rt=createRuntime({dataRoot,resourcesRoot,sidecar:res.sidecar,cloudflared:res.cloudflared,assets:res.assets,...simulatedAcl(),settings:o.settings??{tunnel:{mode:'quick'}},host,...(o.transport?{participantTransport:o.transport}:{}),countAttended:()=>0,
+ const rt=createRuntime({dataRoot,resourcesRoot,sidecar:res.sidecar,cloudflared:res.cloudflared,assets:res.assets,...simulatedAcl(),settings:o.settings??{tunnel:{mode:'quick'}},host,...(o.transport?{participantTransport:o.transport}:{}),countAttended:()=>0,...(o.fetch?{connectionFetch:o.fetch,connectionTimeoutMs:300}:{}),
   serviceProbe:async()=>{const c=sidecars().at(-1);return !!c&&!c.done&&(o.healthy?.()??true);},serviceBackoffMs:[5,5,5],tunnelBackoffMs:[5]});
  const snaps:RuntimeSnapshot[]=[];rt.status.on('change',(s:RuntimeSnapshot)=>snaps.push(s));
  const gatewayPort=()=>Number(/:(\d+)$/.exec(tunnelsList()[0].req.args.at(-1)!)![1]);
@@ -509,3 +510,118 @@ test('shutdown while a register that never becomes healthy will not stop: shutdo
  expect(rt.childPids().service).toBe(sidecars()[0].pid); // still recorded, never forgotten
  sidecars()[0].exit(0);
 },15000);
+
+// Test connection: the fake "Cloudflare" forwards a request for the public address to the real gateway the tunnel points at.
+const viaTunnel=(gw:()=>number,seen:string[]=[]):typeof fetch=>((input:string|URL|Request,init?:RequestInit)=>{
+ const u=new URL(String(input));seen.push(u.origin);
+ return fetch(`http://127.0.0.1:${gw()}${u.pathname}${u.search}`,{...init,redirect:'manual'});
+}) as typeof fetch;
+
+test('Test connection succeeds through the gateway, sends only a random token, and leaves the running session untouched',async()=>{
+ const seen:string[]=[];const urls:string[]=[];
+ let gw=0;
+ const fetcher:typeof fetch=((input:string|URL|Request,init?:RequestInit)=>{urls.push(String(input));return viaTunnel(()=>gw,seen)(input,init);}) as typeof fetch;
+ const {rt,sidecars,tunnelsList,gatewayPort,host}=setup({fetch:fetcher});
+ workshop(rt);await rt.startSession();gw=gatewayPort();
+ const pids=host.children.map(c=>c.pid);const before=JSON.stringify(rt.status.get());
+ expect(await rt.testConnection()).toEqual({ok:true});
+ expect(seen).toEqual([URL_A]);
+ expect(urls[0]).toMatch(/^https:\/\/gentle-example-river-test\.trycloudflare\.com\/_aw\/probe\/[0-9a-f]{32}$/);
+ expect(JSON.stringify(rt.status.get())).toBe(before);
+ expect(host.children.map(c=>c.pid)).toEqual(pids);
+ expect(sidecars().every(c=>!c.done)).toBe(true);expect(tunnelsList().every(c=>!c.done)).toBe(true);
+ expect(reached.get(sidecars()[0].pid)??0).toBe(0); // the register never saw the probe
+ expect(await viaGateway(gw,'/check-in')).toMatchObject({status:200}); // check-in still served
+ await rt.shutdown();
+});
+
+test('Test connection: no session, address not online, and repeated clicks share one probe',async()=>{
+ let gw=0,calls=0;
+ const fetcher:typeof fetch=((i:string|URL|Request,init?:RequestInit)=>{calls++;return viaTunnel(()=>gw)(i,init);}) as typeof fetch;
+ const {rt,gatewayPort}=setup({fetch:fetcher});
+ expect(await rt.testConnection()).toMatchObject({ok:false,reason:'no-session'});
+ workshop(rt);await rt.startSession();gw=gatewayPort();
+ const [a,b]=await Promise.all([rt.testConnection(),rt.testConnection()]);
+ expect(a).toEqual({ok:true});expect(b).toBe(a);expect(calls).toBe(1);
+ expect(await rt.testConnection()).toEqual({ok:true});expect(calls).toBe(2);
+ await rt.shutdown();
+ expect(calls).toBe(2);
+ expect(await rt.testConnection()).toMatchObject({ok:false,reason:'no-session'});
+});
+
+test('Test connection: a tunnel that failed to start has no address to test',async()=>{
+ const {rt,res,sidecars}=setup({fetch:(()=>{throw new Error('must not fetch');}) as unknown as typeof fetch});
+ rmSync(res.cloudflared);
+ workshop(rt);await rt.startSession();
+ expect(await rt.testConnection()).toMatchObject({ok:false,reason:'failed'});
+ expect(sidecars()[0].done).toBe(false); // the local register is left running
+ await rt.shutdown();
+});
+
+test('Test connection: unreachable, timeout and another server answering are told apart; each leaves no token behind',async()=>{
+ const mode={v:'down'};let gw=0;
+ const fetcher:typeof fetch=((i:string|URL|Request,init?:RequestInit)=>{
+  if(mode.v==='down')return Promise.reject(new TypeError('getaddrinfo ENOTFOUND'));
+  if(mode.v==='hang')return new Promise((_,rej)=>init?.signal?.addEventListener('abort',()=>rej(new Error('aborted'))));
+  if(mode.v==='other')return Promise.resolve(new Response('<html>hello</html>',{status:200}));
+  if(mode.v==='impostor')return Promise.resolve(new Response(PROBE_ANSWER,{status:200}));
+  if(mode.v==='edge')return Promise.resolve(new Response('error 1033',{status:530}));
+  return viaTunnel(()=>gw)(i,init);
+ }) as typeof fetch;
+ const {rt,gatewayPort}=setup({fetch:fetcher});
+ workshop(rt);await rt.startSession();gw=gatewayPort();
+ expect(await rt.testConnection()).toMatchObject({ok:false,reason:'unreachable'});
+ mode.v='hang';expect(await rt.testConnection()).toMatchObject({ok:false,reason:'timeout'});
+ mode.v='other';expect(await rt.testConnection()).toMatchObject({ok:false,reason:'other-server'});
+ mode.v='impostor';expect(await rt.testConnection()).toMatchObject({ok:false,reason:'other-server'}); // the exact answer, but the gateway saw nothing
+ mode.v='edge';expect(await rt.testConnection()).toMatchObject({ok:false,reason:'not-ready'});
+ mode.v='ok';expect(await rt.testConnection()).toEqual({ok:true});
+ await rt.shutdown();
+});
+
+test('Test connection is cancelled, not answered, when the session ends or the address changes during the probe',async()=>{
+ let gw=0;const release:(()=>void)[]=[];
+ const slow:typeof fetch=((i:string|URL|Request,init?:RequestInit)=>new Promise((res,rej)=>{
+  init?.signal?.addEventListener('abort',()=>rej(new Error('aborted')));
+  release.push(()=>viaTunnel(()=>gw)(i,init).then(res,rej));
+ })) as typeof fetch;
+ const {rt,gatewayPort,tunnelsList}=setup({fetch:slow});
+ workshop(rt);await rt.startSession();gw=gatewayPort();
+ const ended=rt.testConnection();await until(()=>release.length===1);
+ await rt.endSession();
+ expect(await ended).toMatchObject({ok:false,reason:'changed'});
+ // A new session gets a fresh probe, not the old one.
+ await rt.startSession();gw=Number(/:(\d+)$/.exec(tunnelsList().at(-1)!.req.args.at(-1)!)![1]);
+ const again=rt.testConnection();await until(()=>release.length===2);release[1]();
+ expect(await again).toEqual({ok:true});
+ await rt.shutdown();
+});
+
+test('A probe cancelled by a reconnect stays cancelled when the same address comes back',async()=>{
+ let gw=0;let finish:(()=>void)|null=null;
+ // Ignores the abort, as a late answer would.
+ const slow:typeof fetch=((i:string|URL|Request,init?:RequestInit)=>new Promise((res,rej)=>{finish=()=>viaTunnel(()=>gw)(i,{...init,signal:undefined}).then(res,rej);})) as typeof fetch;
+ const {rt,gatewayPort,tunnelsList}=setup({fetch:slow,tunnel:ONLINE(URL_A)});
+ workshop(rt);await rt.startSession();gw=gatewayPort();
+ const p=rt.testConnection();await until(()=>finish!==null);
+ tunnelsList()[0].exit(1);
+ await until(()=>tunnelsList().length===2&&rt.status.get().tunnel.state==='online');
+ expect(rt.status.get().tunnel).toMatchObject({state:'online',url:URL_A});
+ finish!();
+ expect(await p).toMatchObject({ok:false,reason:'changed'});
+ await rt.shutdown();
+});
+
+test('A stale answer is not a success: the address read at the start must still be current when the answer arrives',async()=>{
+ let gw=0;let finish:(()=>void)|null=null;
+ const slow:typeof fetch=((i:string|URL|Request,init?:RequestInit)=>new Promise((res,rej)=>{finish=()=>viaTunnel(()=>gw)(i,init).then(res,rej);})) as typeof fetch;
+ const {rt,gatewayPort,tunnelsList}=setup({fetch:slow});
+ workshop(rt);await rt.startSession();gw=gatewayPort();
+ const p=rt.testConnection();await until(()=>finish!==null);
+ // The tunnel drops and comes back on a new address while the probe waits.
+ tunnelsList()[0].exit(1);
+ await until(()=>tunnelsList().length===2&&rt.status.get().tunnel.state==='online');
+ finish!();
+ expect(await p).toMatchObject({ok:false,reason:'changed'});
+ await rt.shutdown();
+});

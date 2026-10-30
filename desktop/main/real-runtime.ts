@@ -132,6 +132,7 @@ export function createRealRuntime(opts: RealRuntimeOptions): RealRuntime {
       onChange(listener) { changeListeners.add(listener); return () => { changeListeners.delete(listener); }; },
       onOriginChanged(listener) { originListeners.add(listener); return () => { originListeners.delete(listener); }; },
     },
+    async testConnection() { return rt.testConnection(); },
     async shutdown() {
       const r = await rt.shutdown();
       shutdownReport = [...r.leftovers];

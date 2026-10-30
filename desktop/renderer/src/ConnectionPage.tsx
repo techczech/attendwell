@@ -1,5 +1,5 @@
 // Settings > Connection: how iPads reach this laptop (quick tunnel, no account), the check-in address now, and Test connection.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ConnectionApi, ConnectionView } from '../../shared/ipc.ts';
 import type { ConnectionTest } from '../../shared/runtime-types.ts';
 import { Icon } from './icons.tsx';
@@ -23,12 +23,20 @@ export function ConnectionPage(): JSX.Element {
   const [view, setView] = useState<ConnectionView | null>(null);
   const [test, setTest] = useState<TestState>({ kind: 'idle' });
   const [copied, setCopied] = useState(false);
+  const testRun = useRef(0);
   useEffect(() => { void api.view().then(setView); return api.onChanged(setView); }, []);
+  const url = view ? (view.tunnel.state === 'online' || view.tunnel.state === 'reconnecting' ? view.tunnel.url : null) : null;
+  // A result belongs to the address it tested: when the address or its state changes, the old result is dropped.
+  useEffect(() => { testRun.current++; setTest({ kind: 'idle' }); }, [url, view?.tunnel.state]);
   if (!view) return <div className="aw-conn" />;
   const st = connectionStatus(view.tunnel);
-  const url = view.tunnel.state === 'online' ? view.tunnel.url : view.tunnel.state === 'reconnecting' ? view.tunnel.url : null;
   const host = url ? url.replace(/^https?:\/\//, '') : null;
-  const runTest = async (): Promise<void> => { setTest({ kind: 'testing' }); setTest({ kind: 'done', result: await api.test() }); };
+  const runTest = async (): Promise<void> => {
+    const run = ++testRun.current;
+    setTest({ kind: 'testing' });
+    const result = await api.test();
+    if (run === testRun.current) setTest({ kind: 'done', result });
+  };
 
   return (
     <div className="aw-conn">
@@ -58,8 +66,8 @@ export function ConnectionPage(): JSX.Element {
         <div className="aw-row between top">
           <div>
             <b>Test connection</b>
-            <p>Opens a test address for a few seconds and checks that it reaches this laptop. Safe to run during a session.</p>
-            {test.kind === 'done' && test.result.ok ? <p className="aw-ok" role="status"><Icon name="circle-check" /> Cloudflare answered and the check-in address reached this laptop.</p> : null}
+            <p>Asks the current check-in address to reach this laptop and waits a few seconds for the answer. It sends no names or codes and does not disturb a session, so it is safe to run during one. It needs an open check-in address: open a workshop and start check-in first.</p>
+            {test.kind === 'done' && test.result.ok ? <p className="aw-ok" role="status"><Icon name="circle-check" /> The check-in address reached this laptop just now.</p> : null}
             {test.kind === 'done' && !test.result.ok ? <p className="aw-bad" role="alert"><Icon name="circle-alert" /> {test.result.advice}</p> : null}
             {test.kind === 'testing' ? <p role="status">Testing…</p> : null}
           </div>

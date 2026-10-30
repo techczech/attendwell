@@ -1,12 +1,13 @@
 import {test,expect,afterEach} from 'bun:test';
 import http from 'node:http';
+import {randomBytes} from 'node:crypto';
 import https from 'node:https';
 import net from 'node:net';
 import tls from 'node:tls';
 import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {createParticipantGateway,gatewayAllows,GATEWAY_BODY_LIMIT,type ParticipantGateway,type Upstream} from '../runtime/participant-gateway.ts';
+import {createParticipantGateway,gatewayAllows,GATEWAY_BODY_LIMIT,PROBE_ANSWER,type ParticipantGateway,type Upstream} from '../runtime/participant-gateway.ts';
 import {freeLoopbackPort} from '../runtime/process-control.ts';
 import {spawn} from 'node:child_process';
 import {createParticipantTls,participantTlsPem,type ParticipantTls} from '../runtime/participant-tls.ts';
@@ -494,4 +495,32 @@ test('Windows path: client abort while the handshake is held back; the register 
   expect(escapes()).toEqual([]);
  });
  expect(escaped).toEqual([]);
+});
+
+test('probe path: answered by the gateway itself, only for a registered single-use token, even with no upstream, and the receipt records it',async()=>{
+ const {g,port}=await gateway();
+ const token=randomBytes(16).toString('hex');
+ expect((await raw(port,`GET /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)).status).toBe(404); // not registered
+ const receipt=g.expectProbe(token);
+ expect((await raw(port,`POST /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nContent-Length: 0\r\nConnection: close\r\n\r\n`)).status).toBe(404);
+ expect((await raw(port,`GET /_aw/probe/${'0'.repeat(32)} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)).status).toBe(404);
+ expect(receipt.received).toBe(false); // neither the wrong method nor another token counts as receipt
+ const ok=await raw(port,`GET /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`);
+ expect(ok.status).toBe(200);expect(ok.body).toBe(PROBE_ANSWER);expect(receipt.received).toBe(true);
+ expect((await raw(port,`GET /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)).status).toBe(404); // used once
+ const withdrawn=g.expectProbe(token);withdrawn.withdraw();
+ expect((await raw(port,`GET /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)).status).toBe(404);
+ expect(withdrawn.received).toBe(false);
+ expect(()=>g.expectProbe('short')).toThrow();
+ // The probe path is not a forwarded path.
+ expect(gatewayAllows(`/_aw/probe/${token}`)).toBe(false);
+});
+
+test('probe path never reaches the upstream, and a registered token does not open other paths',async()=>{
+ const sock=path.join(mkdtempSync(path.join(tmpdir(),'aw-gw-')),'p.sock');cleanups.push(async()=>{rmSync(path.dirname(sock),{recursive:true,force:true});});
+ const up=await upstream(sock);const {g,port}=await gateway();g.setUpstream({socketPath:sock});
+ const token=randomBytes(16).toString('hex');g.expectProbe(token);
+ expect((await raw(port,`GET /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)).status).toBe(200);
+ expect((await raw(port,`GET /_aw/probe/${token}/../api/roster HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)).status).toBe(404);
+ expect(up.seen).toHaveLength(0);
 });
