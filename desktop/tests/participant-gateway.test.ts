@@ -505,8 +505,9 @@ test('probe path: answered by the gateway itself, only for a registered single-u
  expect((await raw(port,`POST /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nContent-Length: 0\r\nConnection: close\r\n\r\n`)).status).toBe(404);
  expect((await raw(port,`GET /_aw/probe/${'0'.repeat(32)} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)).status).toBe(404);
  expect(receipt.received).toBe(false); // neither the wrong method nor another token counts as receipt
- const ok=await raw(port,`GET /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`);
- expect(ok.status).toBe(200);expect(ok.body).toBe(PROBE_ANSWER);expect(receipt.received).toBe(true);
+ // Decode HTTP framing with the same standard client used by the connection probe.
+ const ok=await fetch(`http://127.0.0.1:${port}/_aw/probe/${token}`);
+ expect(ok.status).toBe(200);expect(await ok.text()).toBe(PROBE_ANSWER);expect(receipt.received).toBe(true);
  expect((await raw(port,`GET /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)).status).toBe(404); // used once
  const withdrawn=g.expectProbe(token);withdrawn.withdraw();
  expect((await raw(port,`GET /_aw/probe/${token} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)).status).toBe(404);
