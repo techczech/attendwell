@@ -71,12 +71,27 @@ function showMain(): void {
   mainWindow.focus();
 }
 
+/** Shows a window created with show: false once its page has loaded. Under Electron 44 on macOS, 'ready-to-show' never fired for
+ *  the main window (the page loaded and drew, but the window stayed hidden), so the finished load and a short timer are fallbacks. */
+function revealWhenLoaded(win: BrowserWindow): void {
+  if (TEST) return;
+  let done = false;
+  const timers: ReturnType<typeof setTimeout>[] = [];
+  const finish = (): void => { done = true; for (const t of timers) clearTimeout(t); };
+  // Never pops up a window while the app is quitting.
+  const reveal = (): void => { if (done || win.isDestroyed()) return; finish(); if (!shuttingDown) win.show(); };
+  win.once('ready-to-show', reveal);
+  win.webContents.once('did-finish-load', () => { if (!done) timers.push(setTimeout(reveal, 100)); });
+  timers.push(setTimeout(reveal, 3000));
+  win.once('closed', finish);
+}
+
 function createMainWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1360, height: 792, minWidth: 1000, minHeight: 620, title: APP_NAME, backgroundColor: '#e6ebf0', show: false,
     webPreferences: { preload: join(__dirname, '../preload/index.js'), sandbox: true, contextIsolation: true, nodeIntegration: false, webviewTag: false },
   });
-  win.once('ready-to-show', () => { if (!TEST) win.show(); });
+  revealWhenLoaded(win);
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   win.webContents.on('will-navigate', (e, url) => { if (url !== win.webContents.getURL()) e.preventDefault(); });
   win.on('closed', () => { if (mainWindow === win) mainWindow = null; });
@@ -407,7 +422,8 @@ async function start(): Promise<void> {
   if (!app.isPackaged && !TEST && platform === 'mac') app.dock?.setIcon(join(__dirname, '../../build/icon.png'));
   createMainWindow();
 
-  app.on('activate', () => { if (!TEST && BrowserWindow.getAllWindows().length === 0) createMainWindow(); });
+  // Clicking the Dock icon brings back the main window, including one that is still hidden or was closed.
+  app.on('activate', () => showMain());
   app.on('window-all-closed', () => { if (platform !== 'mac' || TEST) app.quit(); });
   app.on('before-quit', (e) => {
     // A second Quit while the runtime is still stopping waits for it: the register and cloudflared are never left running.
