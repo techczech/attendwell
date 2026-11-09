@@ -11,21 +11,28 @@ export type NameRow={row:number;name:string;email:string;status?:string;date?:st
 export type SkipReason='no-name'|'name-too-long'|'bad-email'|'cancelled'|'other-date'|'no-status-label';
 export type RowResult={
  row:number;name:string;email:string;
- /** added: a new person. merged: the same email as an earlier row of this list (`mergedWith`). known: the same email as someone
-  *  already in the register. skipped: not added (`reason`). */
- result:'added'|'merged'|'known'|'skipped';
+ /** added: a new person. merged: the same email as another row of this list (`mergedWith`). known: the same email as someone
+  *  already in the register, booking unchanged. updated: the same email as someone already in the register whose booking this
+  *  list changes (`from` -> `booking`; only with updateBookings). skipped: not added (`reason`). */
+ result:'added'|'merged'|'known'|'updated'|'skipped';
  mergedWith?:number;reason?:SkipReason;
  /** For other-date: the row's date (YYYY-MM-DD). */
  date?:string;
  booking?:Booking;sourceStatus?:string;
+ /** For updated: the booking the register holds now. */
+ from?:Booking;
+ /** For updated: that person is already checked in (attendance is never changed by a list). */
+ present?:boolean;
 };
+/** Someone already in the register, as a list is planned against them. `manual`: added by the organiser; a list never changes them. */
+export type ExistingPerson={name:string;email:string;booking?:string;present?:boolean;manual?:boolean};
 /** What the register keeps about each list added: where it came from and what it did. Never a copy of the list. */
 // Every list ever added to a register, by listKey: never truncated (each write adds at least one person, so it stays small).
 export type AddedLists=Record<string,{addedAt:string;filename:string|null}>;
-export type NameListRecord={kind:'paste'|'file';filename:string|null;sha256:string|null;listKey:string;addedAt:string;rows:number;added:number;merged:number;known:number;skipped:number};
+export type NameListRecord={kind:'paste'|'file';filename:string|null;sha256:string|null;listKey:string;addedAt:string;rows:number;added:number;merged:number;known:number;skipped:number;updated?:number};
 export type NamesPlan={
  rows:RowResult[];
- counts:{added:number;merged:number;known:number;skipped:number;blank:number};
+ counts:{added:number;merged:number;known:number;updated:number;skipped:number;blank:number};
  /** Names that would be on the list more than once with no email to tell them apart: both are kept, and a self check-in under
   *  that name is held for the organiser (store-attendance duplicate-name). */
  sameName:string[];
@@ -33,7 +40,7 @@ export type NamesPlan={
  total:number;
  /** Identity of the list's content: the same rows give the same key, however they were pasted or saved. */
  listKey:string;
- /** This exact list was added before: adding it again changes nothing. */
+ /** This exact list was added before. Adding it again adds nobody; it is refused unless it still changes a booking. */
  alreadyAdded:{addedAt:string;filename:string|null}|null;
  /** Adding would take the register past its limit. */
  full:boolean;
@@ -68,25 +75,54 @@ export function listKeyOf(rows:NameRow[]):string{
  return createHash('sha256').update(JSON.stringify(canon)).digest('hex');
 }
 
-export function planNames(input:{existing:{name:string;email:string}[];addedLists:AddedLists;rows:NameRow[];workshopDate:string;statuses:Record<string,Booking>;limit?:number}):NamesPlan{
- const known=new Map<string,true>();
- for(const p of input.existing){const e=cleanEmail(p.email);if(e)known.set(e,true);}
+// A live booking beats a cancelled one when one email has several rows (cancelled, then booked again).
+const RANK:Record<Booking,number>={confirmed:3,waiting:2,cancelled:1};
+
+/**
+ * updateBookings: a row with a booking status whose email matches someone already in the register (not an organiser addition)
+ * sets that person's booking, cancelled included; the person is `updated` when the booking changes, `known` when it does not.
+ * Several rows for one such email: the best booking wins (confirmed, then waiting, then cancelled) and the others are `merged`.
+ * Rows without a status never change a booking. Without updateBookings a list only adds, as before.
+ */
+export function planNames(input:{existing:ExistingPerson[];addedLists:AddedLists;rows:NameRow[];workshopDate:string;statuses:Record<string,Booking>;limit?:number;updateBookings?:boolean}):NamesPlan{
+ const known=new Map<string,ExistingPerson>();
+ for(const p of input.existing){const e=cleanEmail(p.email);if(e&&!known.has(e))known.set(e,p);}
+ type Read={skip:RowResult}|{base:{row:number;name:string;email:string};status:string;booking:Booking;sourceStatus:string|null};
+ const read=(r:NameRow):Read|null=>{
+  const name=cleanText(r.name);const email=cleanEmail(r.email);const status=cleanText(r.status??'');
+  if(!name&&!email&&!status)return null;
+  const base={row:r.row,name,email};
+  if(!name)return {skip:{...base,result:'skipped',reason:'no-name'}};
+  if(name.length>200)return {skip:{...base,name:name.slice(0,200),result:'skipped',reason:'name-too-long'}};
+  if(email&&(email.length>254||!EMAIL.test(email)))return {skip:{...base,result:'skipped',reason:'bad-email'}};
+  if(r.date&&DAY.test(r.date)&&r.date!==input.workshopDate)return {skip:{...base,result:'skipped',reason:'other-date',date:r.date}};
+  return {base,status,...classifyStatus(r.status,input.statuses)};
+ };
+ const reads=input.rows.map(read);
+ // Who this list may update, and which of their rows speaks for them.
+ type Ok=Extract<Read,{base:unknown}>;
+ const updatable=(x:Ok):boolean=>!!input.updateBookings&&!!x.status&&!!x.sourceStatus&&!!x.base.email&&known.has(x.base.email)&&!known.get(x.base.email)!.manual;
+ const speaker=new Map<string,{row:number;booking:Booking}>();
+ for(const x of reads)if(x&&'base' in x&&updatable(x)){const s=speaker.get(x.base.email);if(!s||RANK[x.booking]>RANK[s.booking])speaker.set(x.base.email,{row:x.base.row,booking:x.booking});}
  const firstByEmail=new Map<string,number>();
  const rows:RowResult[]=[];let blank=0;
- for(const r of input.rows){
-  const name=cleanText(r.name);const email=cleanEmail(r.email);
-  if(!name&&!email&&!cleanText(r.status??'')){blank+=1;continue;}
-  const base={row:r.row,name,email};
-  if(!name){rows.push({...base,result:'skipped',reason:'no-name'});continue;}
-  if(name.length>200){rows.push({...base,name:name.slice(0,200),result:'skipped',reason:'name-too-long'});continue;}
-  if(email&&(email.length>254||!EMAIL.test(email))){rows.push({...base,result:'skipped',reason:'bad-email'});continue;}
-  if(r.date&&DAY.test(r.date)&&r.date!==input.workshopDate){rows.push({...base,result:'skipped',reason:'other-date',date:r.date});continue;}
-  const {booking,sourceStatus}=classifyStatus(r.status,input.statuses);
+ for(const x of reads){
+  if(!x){blank+=1;continue;}
+  if('skip' in x){rows.push(x.skip);continue;}
+  const {base,booking}=x;const email=base.email;
+  if(updatable(x)){
+   const s=speaker.get(email)!;const sourceStatus=x.sourceStatus!;
+   if(s.row!==base.row){rows.push({...base,result:'merged',mergedWith:s.row,booking,sourceStatus});continue;}
+   const p=known.get(email)!;
+   rows.push(p.booking===booking?{...base,result:'known',booking,sourceStatus}:{...base,result:'updated',booking,sourceStatus,from:(p.booking??'confirmed') as Booking,present:!!p.present});
+   continue;
+  }
+  const sourceStatus=x.sourceStatus;
   if(booking==='cancelled'){rows.push({...base,result:'skipped',reason:'cancelled'});continue;}
   if(!sourceStatus){rows.push({...base,result:'skipped',reason:'no-status-label'});continue;}
   if(email&&known.has(email)){rows.push({...base,result:'known',booking,sourceStatus});continue;}
   if(email&&firstByEmail.has(email)){rows.push({...base,result:'merged',mergedWith:firstByEmail.get(email)!,booking,sourceStatus});continue;}
-  if(email)firstByEmail.set(email,r.row);
+  if(email)firstByEmail.set(email,base.row);
   rows.push({...base,result:'added',booking,sourceStatus});
  }
  const count=(k:RowResult['result'])=>rows.filter(r=>r.result===k).length;
@@ -99,6 +135,6 @@ export function planNames(input:{existing:{name:string;email:string}[];addedList
  const listKey=listKeyOf(input.rows);
  const prior=Object.prototype.hasOwnProperty.call(input.addedLists,listKey)?input.addedLists[listKey]:undefined;
  const total=input.existing.length+added.length;
- return {rows,counts:{added:added.length,merged:count('merged'),known:count('known'),skipped:count('skipped'),blank},sameName,total,listKey,
+ return {rows,counts:{added:added.length,merged:count('merged'),known:count('known'),updated:count('updated'),skipped:count('skipped'),blank},sameName,total,listKey,
   alreadyAdded:prior?{addedAt:prior.addedAt,filename:prior.filename}:null,full:total>(input.limit??MAX_REGISTER)};
 }

@@ -47,6 +47,8 @@ export type SessionAction =
   | { kind: 'start' }
   | { kind: 'retry' }
   | { kind: 'end' }
+  /** The participant check-in window: open (until the end time plus a margin), extend by half an hour, or close now. */
+  | { kind: 'window'; action: 'open' | 'extend' | 'close' }
   | { kind: 'mark'; id: string; present: boolean }
   | { kind: 'undo' }
   | { kind: 'resolve'; id: string; action: 'check-in' | 'dismiss' }
@@ -67,6 +69,7 @@ export type SessionAction =
   | { kind: 'names-map'; mapping: NamesMapping }
   | { kind: 'names-add'; token: string }
   | { kind: 'names-close' }
+  | { kind: 'names-update-bookings'; on: boolean }
   | { kind: 'recovery-choose-file' }
   | { kind: 'recovery-file'; path: string }
   | { kind: 'recovery-import' }
@@ -97,6 +100,7 @@ export function parseSessionAction(v: unknown): SessionAction {
   switch (o.kind) {
     case 'show': return { kind: 'show', workshopId: id(o.workshopId) };
     case 'leave': case 'start': case 'retry': case 'end': case 'undo': case 'pair-new': case 'pair-close': case 'export-csv': return { kind: o.kind };
+    case 'window': if (o.action !== 'open' && o.action !== 'extend' && o.action !== 'close') throw new Error('Bad argument'); return { kind: 'window', action: o.action };
     case 'mark': if (typeof o.present !== 'boolean') throw new Error('Bad argument'); return { kind: 'mark', id: id(o.id), present: o.present };
     case 'resolve': if (o.action !== 'check-in' && o.action !== 'dismiss') throw new Error('Bad argument'); return { kind: 'resolve', id: id(o.id), action: o.action };
     case 'add': return { kind: 'add', name: text(o.name, 200, 1), email: text(o.email ?? '', 254), markHere: o.markHere === true };
@@ -117,6 +121,7 @@ export function parseSessionAction(v: unknown): SessionAction {
       const m = (o.mapping ?? {}) as Record<string, unknown>;
       return { kind: 'names-map', mapping: { header: m.header === true, name: column(m.name), first: column(m.first), last: column(m.last), email: column(m.email), status: column(m.status), date: column(m.date) } };
     }
+    case 'names-update-bookings': if (typeof o.on !== 'boolean') throw new Error('Bad argument'); return { kind: 'names-update-bookings', on: o.on };
     case 'recovery-file': return { kind: 'recovery-file', path: text(o.path, 4096, 1) };
     case 'names-add': if (typeof o.token !== 'string' || !/^[0-9a-f]{64}$/.test(o.token)) throw new Error('Bad argument'); return { kind: 'names-add', token: o.token };
     case 'names-choose-file': case 'names-close': case 'recovery-choose-file': case 'recovery-import': case 'recovery-close': return { kind: o.kind };

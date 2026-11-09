@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { repairBanner, repairTargets } from '../../shared/devices-model.ts';
 import { clockOf, summaryOf, type RegisterView } from '../../shared/register-model.ts';
-import { connectionModel, pairAvailability, pastBanner, toolbarModel, type SessionView } from '../../shared/session-model.ts';
+import { connectionModel, pairAvailability, pastBanner, toolbarModel, windowModel, type SessionView } from '../../shared/session-model.ts';
 import type { WorkshopSummary } from '../../shared/runtime-types.ts';
 import { longDate, shortPath, timeRange } from '../../shared/workshops.ts';
 import { Icon } from './icons.tsx';
 import { Keys } from './Keys.tsx';
-import { ConnectionPanel, DevicesPanel, PairButton } from './Rail.tsx';
+import { CheckInWindowPanel, ConnectionPanel, DevicesPanel, PairButton } from './Rail.tsx';
 import { RegisterPanel, type RegisterUi } from './RegisterPanel.tsx';
 
 export interface SessionActions {
@@ -21,6 +21,7 @@ export interface SessionActions {
   onPair(targetId?: string): void;
   onCopyAddress(): void;
   onRetry(): void;
+  onWindow(action: 'open' | 'extend' | 'close'): void;
   onMark(id: string, present: boolean): void;
   onResolve(id: string, action: 'check-in' | 'dismiss'): void;
   onExport(): void;
@@ -96,6 +97,10 @@ export function SessionScreen(p: SessionScreenProps): JSX.Element {
           canAddNames={sv.phase !== 'ending'} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} />
         <aside className="rail" aria-label="Connection and iPads">
           <ConnectionPanel model={conn} host={sv.hostName} compact={devices.length >= 4} onCopy={a.onCopyAddress} onRetry={a.onRetry} onChooseFolder={a.onChooseFolder} />
+          {editable && sv.window ? (
+            <CheckInWindowPanel model={windowModel(sv.window, p.now)} openUntil={clockOf(new Date(p.now + sv.openMinutes * 60_000).toISOString())} busy={sv.busy}
+              onOpen={() => a.onWindow('open')} onExtend={() => a.onWindow('extend')} onClose={() => a.onWindow('close')} />
+          ) : null}
           <DevicesPanel list={sv.devices} live={live && sv.phase !== 'ending'} closedAt={sv.closedAt} repair={repairIds} now={p.now} selectedId={p.selectedDeviceId}
             canAct={editable} onSelect={a.onSelectDevice} onRename={a.onRenameDevice} onPairAgain={(id) => a.onPair(id)} onRevoke={a.onRevokeDevice} onDismissHold={a.onDismissHold}
             canImport={sv.phase !== 'ending'} onImportRecovery={a.onImportRecovery} />

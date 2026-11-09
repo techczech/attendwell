@@ -122,6 +122,73 @@ describe('the register', () => {
  });
 });
 
+describe('updating bookings from a newer export', () => {
+ // A register built from an earlier CoSy export: two booked, one waiting (admitted by the organiser), one walk-in added by hand.
+ const earlier=()=>{
+  const s=fresh();
+  s.addNames({source:{kind:'file',filename:'cosy-1.csv',sha256:'a'.repeat(64)},rows:rows(['Aisha Rahman','aisha@example.ac.uk','Confirmed'],['Ben Okoye','ben@example.ac.uk','Confirmed'],['Marta Silva','marta@example.ac.uk','Waiting list'])},'owner');
+  s.addParticipant({name:'Dev Patel',email:'dev@example.ac.uk'},'owner');
+  const id=(n:string)=>s.list().participants.find(p=>p.name===n)!;
+  s.admit(id('Marta Silva').id,true,id('Marta Silva').version,'owner');
+  s.setAttendance(id('Ben Okoye').id,true,id('Ben Okoye').version,'owner');
+  return {s,id};
+ };
+ const newer=rows(['Aisha Rahman','aisha@example.ac.uk','Cancelled'],['Ben Okoye','BEN@example.ac.uk','Cancelled'],['Marta Silva','marta@example.ac.uk','Confirmed'],
+  ['Dev Patel','dev@example.ac.uk','Cancelled'],['Priya Varma','priya@example.ac.uk','Waiting list'],['Ola Nowak','ola@example.ac.uk','Cancelled']);
+ const update=(r:NameRow[],dryRun=false)=>({source:{kind:'file' as const,filename:'cosy-2.csv'},rows:r,updateBookings:true,dryRun});
+ test('without updateBookings a list only adds: people already here keep their booking', () => {
+  const {s,id}=earlier();
+  const r=s.addNames({source:{kind:'file',filename:'cosy-2.csv'},rows:newer},'owner');
+  expect(r.plan.counts).toMatchObject({added:1,updated:0});
+  expect(id('Aisha Rahman').booking).toBe('confirmed');
+ });
+ test('the preview shows each booking change and writes nothing; the write changes bookings, never attendance or organiser additions', () => {
+  const {s,id}=earlier();
+  const before=JSON.stringify(s.list().participants);
+  const p=s.addNames(update(newer,true),'owner',{dryRun:true});
+  expect(p.written).toBe(false);
+  expect(JSON.stringify(s.list().participants)).toBe(before);
+  expect(p.plan.rows.map(r=>[r.name,r.result,r.from??null,r.booking??null])).toEqual([
+   ['Aisha Rahman','updated','confirmed','cancelled'],['Ben Okoye','updated','confirmed','cancelled'],['Marta Silva','updated','waiting','confirmed'],
+   ['Dev Patel','skipped',null,null],['Priya Varma','added',null,'waiting'],['Ola Nowak','skipped',null,null]]);
+  expect(p.plan.rows[1]!.present).toBe(true);
+  expect(p.plan.counts).toMatchObject({added:1,updated:3,skipped:2});
+  const done=s.addNames(update(newer),'owner');
+  expect(done.written).toBe(true);
+  expect(id('Aisha Rahman')).toMatchObject({booking:'cancelled',sourceStatus:'Cancelled',present:false});
+  // Cancelled, but the check-in stands: a list never changes attendance.
+  expect(id('Ben Okoye')).toMatchObject({booking:'cancelled',present:true});
+  // A booking change revokes waiting-list admission, as a full import does.
+  expect(id('Marta Silva')).toMatchObject({booking:'confirmed',sourceStatus:'Confirmed',admitted:false});
+  expect(id('Dev Patel')).toMatchObject({booking:'confirmed',sourceStatus:'Manual addition'});
+  expect(id('Priya Varma')).toMatchObject({booking:'waiting'});
+  // Cancelled people drop off the iPad's names list.
+  expect(s.participantNames().map(n=>n.name)).toEqual(['Dev Patel','Marta Silva']);
+  expect(s.nameLists().at(-1)).toMatchObject({updated:3,added:1});
+  expect((s.db.query("SELECT COUNT(*) AS n FROM audit WHERE verb='update-bookings'").get() as {n:number}).n).toBe(1);
+ });
+ test('rows without a status never change a booking; an unchanged booking keeps admission', () => {
+  const {s,id}=earlier();
+  const r=s.addNames(update(rows(['Aisha Rahman','aisha@example.ac.uk'],['Marta Silva','marta@example.ac.uk','Waiting list'])),'owner');
+  expect(r.plan.rows.map(x=>x.result)).toEqual(['known','known']);
+  expect(r.written).toBe(false);
+  expect(id('Marta Silva')).toMatchObject({booking:'waiting',admitted:true});
+ });
+ test('one email on several rows: a live booking beats a cancelled one, the other rows merge into it', () => {
+  const {s,id}=earlier();
+  const r=s.addNames(update(rows(['Aisha Rahman','aisha@example.ac.uk','Cancelled'],['Ben Okoye','ben@example.ac.uk','Cancelled'],['Ben Okoye','ben@example.ac.uk','Confirmed'])),'owner');
+  expect(r.plan.rows.map(x=>[x.result,x.mergedWith??null])).toEqual([['updated',null],['merged',3],['known',null]]);
+  expect(id('Ben Okoye').booking).toBe('confirmed');
+ });
+ test('the same list again is refused once its booking changes are in', () => {
+  const {s}=earlier();
+  const list=rows(['Aisha Rahman','aisha@example.ac.uk','Cancelled']);
+  s.addNames({source:{kind:'paste'},rows:list},'owner');
+  expect(s.addNames(update(list),'owner').plan.counts.updated).toBe(1);
+  expect(()=>s.addNames(update(list),'owner')).toThrow('already added');
+ });
+});
+
 describe('the organiser route', () => {
  test('dryRun previews, the add returns the roster, and the same list twice is a 409', async () => {
   const s=setup();

@@ -183,3 +183,18 @@ describe('the organiser key', () => {
     store.close();
   });
 });
+
+describe('the participant window', () => {
+  test('reads it with the roster, opens it for a number of minutes, and closes it early, as the register says', async () => {
+    // The register's own routes run on the wall clock (the rig's fake clock is for devices), so this test starts from a fresh window.
+    const { s, client } = rig();
+    expect((await client.roster()).window).toMatchObject({ open: expect.any(Boolean), closedEarly: false });
+    const opened = await client.setCheckInWindow('open', 90);
+    expect(opened.open).toBe(true);
+    expect(opened.closesAt! - opened.openedAt!).toBe(90 * 60_000);
+    expect(await client.checkInWindow()).toMatchObject({ open: true });
+    expect(await client.setCheckInWindow('close')).toMatchObject({ open: false, closedEarly: true });
+    await expect(client.setCheckInWindow('open', 0)).rejects.toThrow('between 1 and 1440');
+    expect(s.store.participantWindow().open).toBe(false);
+  });
+});

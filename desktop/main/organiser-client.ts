@@ -3,7 +3,7 @@
 // this one interface, so the screens are tested against a fake (fake-organiser.ts) and the real thing is tested against the real service.
 import type { DeviceList } from '../shared/devices-model.ts';
 import type { PairingOffer } from '../shared/pairing-model.ts';
-import type { Roster, RosterConflict, RosterPerson } from '../shared/register-model.ts';
+import type { CheckInWindow, Roster, RosterConflict, RosterPerson } from '../shared/register-model.ts';
 import type { AddNamesRequest, AddNamesResult, RecoveryReport } from '../shared/names-model.ts';
 
 export class OrganiserError extends Error {
@@ -25,7 +25,18 @@ export interface OrganiserClient {
   addNames(input: AddNamesRequest, dryRun: boolean): Promise<AddNamesResult>;
   /** An iPad's recovery file, through the same idempotent operations path as a live upload. */
   importRecovery(file: unknown, dryRun: boolean): Promise<RecoveryReport>;
+  /** The participant check-in window: read it, open it for `minutes` from now (also extends or shortens an open one), or close it. */
+  checkInWindow(): Promise<CheckInWindow>;
+  setCheckInWindow(action: 'open', minutes: number): Promise<CheckInWindow>;
+  setCheckInWindow(action: 'close'): Promise<CheckInWindow>;
 }
+
+const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+export const asWindow = (v: unknown): CheckInWindow | null => {
+  const r = v as Record<string, unknown> | null;
+  if (!r || typeof r !== 'object' || typeof r.open !== 'boolean') return null;
+  return { open: r.open, openedAt: num(r.openedAt), closesAt: num(r.closesAt), closedEarly: r.closedEarly === true };
+};
 
 /** Given the organiser address the runtime reports (`service.organiserUrl`), the client for it. */
 export type OrganiserFactory = (organiserUrl: string) => OrganiserClient;
@@ -43,7 +54,7 @@ export function loopbackOrigin(url: string): string {
 }
 
 const asRoster = (v: unknown): Roster => {
-  const o = v as { participants?: unknown[]; conflicts?: unknown[] };
+  const o = v as { participants?: unknown[]; conflicts?: unknown[]; participantWindow?: unknown };
   const participants: RosterPerson[] = (Array.isArray(o?.participants) ? o.participants : []).map((p) => {
     const r = p as Record<string, unknown>;
     return {
@@ -55,7 +66,8 @@ const asRoster = (v: unknown): Roster => {
     const r = c as Record<string, unknown>;
     return { participantId: String(r.participantId), name: String(r.name ?? ''), reason: String(r.reason ?? ''), queuedAt: typeof r.queuedAt === 'string' ? r.queuedAt : null, receivedAt: typeof r.receivedAt === 'string' ? r.receivedAt : null, count: Number(r.count ?? 1) };
   });
-  return { participants, conflicts };
+  const window = asWindow(o?.participantWindow);
+  return window ? { participants, conflicts, window } : { participants, conflicts };
 };
 
 /**
@@ -100,5 +112,15 @@ export function createHttpOrganiser(organiserUrl: string, fetchImpl: typeof fetc
       return { plan: r.plan, written: r.written === true, roster: asRoster(r.roster) };
     },
     importRecovery: (file, dryRun) => call<RecoveryReport>('POST', '/api/organiser/recovery-import', { file, dryRun }),
+    checkInWindow: async () => {
+      const w = asWindow(await call('GET', '/api/check-in-window'));
+      if (!w) throw new OrganiserError('The register did not say whether check-in is open.', 0);
+      return w;
+    },
+    setCheckInWindow: async (action: 'open' | 'close', minutes?: number) => {
+      const w = asWindow(await call('POST', '/api/check-in-window', action === 'open' ? { action, minutes } : { action }));
+      if (!w) throw new OrganiserError('The register did not say whether check-in is open.', 0);
+      return w;
+    },
   };
 }

@@ -289,7 +289,8 @@ export function App(): JSX.Element | null {
             actions={{
               onUi: setUi, onShowAll: showAll, onStart: () => void act({ kind: 'start' }), onEnd: () => setOverlay({ kind: 'end' }), onReopen: () => void act({ kind: 'start' }),
               onAdd: () => setOverlay({ kind: 'add-person' }), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
-              onRetry: () => void act({ kind: 'retry' }), onMark: (id, present) => void act({ kind: 'mark', id, present }),
+              onRetry: () => void act({ kind: 'retry' }),
+              onWindow: (action) => void act({ kind: 'window', action }, action === 'close' ? 'Check-in on the iPad is closed.' : 'Check-in on the iPad is open.'), onMark: (id, present) => void act({ kind: 'mark', id, present }),
               onResolve: (id, action) => void act({ kind: 'resolve', id, action }), onExport: () => void exportCsv(), onReview: () => setOverlay({ kind: 'review' }),
               onSelectDevice: setDeviceId, onRenameDevice: (id) => setOverlay({ kind: 'rename', id }), onRevokeDevice: (id) => setOverlay({ kind: 'revoke', id }),
               onDismissHold: (id) => void act({ kind: 'dismiss-hold', id }), onChooseFolder: () => void api.chooseFolder().then((p) => { if (p) void api.setRegistersFolder(p); }),
@@ -338,7 +339,7 @@ export function App(): JSX.Element | null {
         <PasteNamesSheet onPreview={(text) => api.sheetAct({ kind: 'names-paste', text })} onAdd={addNames} onClose={() => closeSheet('names-close')} />
       ) : null}
       {overlay?.kind === 'names-import' ? (
-        <ImportNamesSheet initial={overlay.view} onMap={(mapping) => api.sheetAct({ kind: 'names-map', mapping })} onAdd={addNames} onClose={() => closeSheet('names-close')} />
+        <ImportNamesSheet initial={overlay.view} onMap={(mapping) => api.sheetAct({ kind: 'names-map', mapping })} onUpdateBookings={(on) => api.sheetAct({ kind: 'names-update-bookings', on })} onAdd={addNames} onClose={() => closeSheet('names-close')} />
       ) : null}
       {overlay?.kind === 'recovery' ? (
         <RecoverySheet onChoose={() => api.sheetAct({ kind: 'recovery-choose-file' })} onDropPath={(path) => api.sheetAct({ kind: 'recovery-file', path })}

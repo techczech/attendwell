@@ -489,6 +489,66 @@ describe('ending and reopening check-in', () => {
   });
 });
 
+describe('check-in on the iPad (the participant window)', () => {
+  test('Start check-in opens it until the end time plus half an hour, even when an earlier window has run out', async () => {
+    const s = await setup();
+    const reg = s.rt.fake.register(s.today.id);
+    // Yesterday's 30-minute window, long expired.
+    reg.win = { openedAt: T0 - 86_400_000, closesAt: T0 - 86_400_000 + 1_800_000, closedEarly: false };
+    await online(s);
+    await settle();
+    expect(reg.log).toContain('window open 180');
+    expect(s.svc.view().window).toMatchObject({ open: true, closesAt: T0 + 180 * 60_000 });
+  });
+  test('a window already open for longer is left alone', async () => {
+    const s = await setup();
+    const reg = s.rt.fake.register(s.today.id);
+    reg.win = { openedAt: T0, closesAt: T0 + 300 * 60_000, closedEarly: false };
+    await online(s);
+    await settle();
+    expect(reg.log.filter((l) => l.startsWith('window open'))).toEqual([]);
+    expect(s.svc.view().window!.closesAt).toBe(T0 + 300 * 60_000);
+  });
+  test('close, extend and open from the rail; a register restart keeps a deliberate close', async () => {
+    const s = await setup();
+    await online(s);
+    await settle();
+    const reg = s.rt.fake.register(s.today.id);
+    expect((await s.svc.setWindow('extend')).ok).toBe(true);
+    expect(s.svc.view().window!.closesAt).toBe(T0 + 210 * 60_000);
+    expect((await s.svc.setWindow('close')).ok).toBe(true);
+    expect(s.svc.view().window).toMatchObject({ open: false, closedEarly: true });
+    // The tunnel restarts with the register (a new organiser address): the close stands.
+    s.rt.fake.changeOrigin();
+    await settle(); await settle();
+    await s.svc.refresh();
+    expect(reg.log.filter((l) => l.startsWith('window open'))).toEqual(['window open 180', 'window open 210']);
+    expect(s.svc.view().window).toMatchObject({ open: false, closedEarly: true });
+    s.clock.ms += 60 * 60_000;
+    expect((await s.svc.setWindow('open')).ok).toBe(true);
+    expect(s.svc.view().window).toMatchObject({ open: true, closesAt: T0 + 180 * 60_000 });
+  });
+  test('Reopen check-in opens it again after an organiser closed it', async () => {
+    const s = await setup();
+    await online(s);
+    await settle();
+    await s.svc.setWindow('close');
+    await s.svc.end();
+    await settle();
+    expect(s.svc.view().window).toBeNull();
+    s.clock.ms += 10 * 60_000;
+    expect((await s.svc.start()).ok).toBe(true);
+    await settle(); await settle();
+    expect(s.svc.view().window).toMatchObject({ open: true, closesAt: T0 + 180 * 60_000 });
+  });
+  test('the controls need the register: before check-in starts they are refused', async () => {
+    const s = await setup();
+    await s.svc.show(s.today.id);
+    expect((await s.svc.setWindow('open')).ok).toBe(false);
+    expect(s.svc.view().window).toBeNull();
+  });
+});
+
 describe('other workshops', () => {
   test('a past workshop is read-only from the library, with no connection to the register', async () => {
     const s = await setup();

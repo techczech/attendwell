@@ -1,7 +1,7 @@
 // The right column: connection status, the paired iPads (Kiosk wording) and the Pair an iPad button.
 import { useState } from 'react';
 import { deviceRow, holdText, type DeviceHold, type DeviceList, type DeviceRow, type DeviceRecord } from '../../shared/devices-model.ts';
-import type { Availability, ConnectionModel } from '../../shared/session-model.ts';
+import type { Availability, ConnectionModel, WindowModel } from '../../shared/session-model.ts';
 import { Icon } from './icons.tsx';
 import { Keys } from './Keys.tsx';
 
@@ -35,6 +35,28 @@ export function ConnectionPanel({ model, host, compact, onCopy, onRetry, onChoos
         {model.retry ? <button type="button" className="btn primary wide" onClick={onRetry}><Icon name="refresh-cw" />Try again</button> : null}
         {model.chooseFolder ? <button type="button" className="btn" onClick={onChooseFolder}>Choose folder…</button> : null}
         <div className="conn-host"><Icon name="laptop" size={15} />{host}<span aria-hidden="true">·</span>Quick tunnel</div>
+      </div>
+    </section>
+  );
+}
+
+/** Whether people can check themselves in on the iPad now, and the organiser's controls for it. */
+export function CheckInWindowPanel({ model, openUntil, busy, onOpen, onExtend, onClose }: {
+  model: WindowModel; openUntil: string | null; busy: boolean; onOpen(): void; onExtend(): void; onClose(): void;
+}): JSX.Element {
+  return (
+    <section className="panel rail-panel" aria-label="Check-in on the iPad">
+      <div className="panel-head"><span>Check-in on the iPad</span><span className={`pill ${model.tone}`}>{model.chip}</span></div>
+      <div className="conn-body">
+        <div className={`conn-state ${model.tone}`} role="status">
+          <Icon name={model.tone === 'good' ? 'circle-check' : 'lock'} size={22} />
+          <div><b>{model.headline}</b><span>{model.detail}</span></div>
+        </div>
+        <div className="window-actions">
+          {model.canOpen ? <button type="button" className="btn primary" disabled={busy} onClick={onOpen}><Icon name="play" />Open check-in{openUntil ? ` until ${openUntil}` : ''}</button> : null}
+          {model.canExtend ? <button type="button" className="btn" disabled={busy} onClick={onExtend}><Icon name="plus" />30 min</button> : null}
+          {model.canClose ? <button type="button" className="btn" disabled={busy} onClick={onClose}><Icon name="lock" />Close now</button> : null}
+        </div>
       </div>
     </section>
   );

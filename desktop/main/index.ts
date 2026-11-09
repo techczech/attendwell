@@ -321,6 +321,7 @@ async function start(): Promise<void> {
       case 'start': return sess.start();
       case 'retry': return sess.retry();
       case 'end': return sess.end();
+      case 'window': return sess.setWindow(a.action);
       case 'mark': return sess.mark(a.id, a.present);
       case 'undo': return sess.undoLast();
       case 'resolve': return sess.resolve(a.id, a.action);
@@ -362,6 +363,7 @@ async function start(): Promise<void> {
         return path ? names.openRecovery(id, path) : { ok: true, value: null };
       }
       case 'names-map': return names.remap(a.mapping);
+      case 'names-update-bookings': return names.setUpdateBookings(a.on);
       case 'names-add': return names.add(a.token);
       case 'recovery-import': return names.importRecovery();
       case 'names-close': case 'recovery-close': await names.close(); return { ok: true, value: null };

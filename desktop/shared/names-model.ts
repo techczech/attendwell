@@ -10,6 +10,8 @@ export type { NameListRecord, NameRow, NamesPlan, RecoveryReport, RecoveryRow, R
 export interface AddNamesRequest {
   source: { kind: 'paste' | 'file'; filename?: string | null; sha256?: string | null };
   rows: NameRow[];
+  /** Also set the booking of people already in the register from this list's status column (server/names-list.ts). */
+  updateBookings?: boolean;
 }
 export interface AddNamesResult { plan: NamesPlan; written: boolean; roster: Roster }
 
@@ -35,6 +37,10 @@ export interface NamesSheetView {
   /** The preview's token: Add sends it back, and main adds only if it is still the latest preview's. Null with no plan. */
   token: string | null;
   written: boolean;
+  /** The list may update the booking status of people already in the register (only offered when it has a status column). */
+  updateBookings: boolean;
+  /** The list has a booking status column, so the update can be offered. */
+  canUpdateBookings: boolean;
   error: string | null;
 }
 
@@ -56,15 +62,21 @@ export function shortDay(day: string): string {
 
 export function addLabel(plan: NamesPlan | null): string {
   const n = plan?.counts.added ?? 0;
+  const u = plan?.counts.updated ?? 0;
+  if (u && !n) return `Update ${plural(u, 'booking', 'bookings')}`;
+  if (u) return `Add ${plural(n, 'person', 'people')}, update ${plural(u, 'booking', 'bookings')}`;
   return n === 0 ? 'Add people' : `Add ${plural(n, 'person', 'people')}`;
 }
+
+export const BOOKING_LABELS: Record<string, string> = { confirmed: 'Booked', waiting: 'Waiting list', cancelled: 'Cancelled' };
+const bookingLabel = (b: string | undefined): string => BOOKING_LABELS[b ?? ''] ?? b ?? '';
 
 /** Why the Add button is off, or null when it is on. */
 export function addBlocked(plan: NamesPlan | null): string | null {
   if (!plan) return 'Paste or choose a list first.';
-  if (plan.alreadyAdded) return 'This list was already added. Adding it again changes nothing.';
+  if (plan.alreadyAdded && !plan.counts.updated) return 'This list was already added. Adding it again changes nothing.';
   if (plan.full) return `The register holds up to 500 people; with this list it would hold ${plan.total}.`;
-  if (plan.counts.added === 0) return 'There is nobody new on this list.';
+  if (plan.counts.added === 0 && !plan.counts.updated) return 'There is nobody new on this list.';
   return null;
 }
 
@@ -81,6 +93,7 @@ export function resultText(r: RowResult): string {
     case 'added': return 'Added';
     case 'merged': return `Merged with row ${r.mergedWith} (same email)`;
     case 'known': return 'Already in the register (same email)';
+    case 'updated': return `Booking: ${bookingLabel(r.from)} → ${bookingLabel(r.booking)}${r.present ? ' (already checked in; stays checked in)' : ''}`;
     default: return r.reason === 'other-date' && r.date ? `Skipped: date is ${shortDay(r.date)}, not this workshop` : `Skipped: ${REASONS[r.reason ?? ''] ?? 'not readable'}`;
   }
 }
@@ -97,20 +110,31 @@ export function pasteTally(plan: NamesPlan): TallyLine[] {
     out.push({ tone: 'info', figure: merged.length, text: `${merged.length === 1 ? 'duplicate' : 'duplicates'} merged: ${names.slice(0, 3).join(', ')}${names.length > 3 ? ' and others' : ''} (same email)` });
   }
   if (plan.counts.known) out.push({ tone: 'info', figure: plan.counts.known, text: 'already in the register (same email)' });
+  if (plan.counts.updated) out.push({ tone: 'info', figure: plan.counts.updated, text: bookingChangeText(plan) });
   if (plan.counts.blank) out.push({ tone: 'neutral', figure: plan.counts.blank, text: plan.counts.blank === 1 ? 'blank line skipped' : 'blank lines skipped' });
   const skipped = plan.rows.filter((r) => r.result === 'skipped');
   if (skipped.length) out.push({ tone: 'warn', figure: skipped.length, text: `${skipped.length === 1 ? 'line' : 'lines'} skipped: ${[...new Set(skipped.map((r) => resultText(r).replace(/^Skipped: /, '')))].join('; ')}` });
   return out;
 }
 
-/** The import sheet's three cards. */
+/** "booking changes: 1 now booked, 1 cancelled" (people already in the register). */
+export function bookingChangeText(plan: NamesPlan): string {
+  const up = plan.rows.filter((r) => r.result === 'updated');
+  const by = (b: string): number => up.filter((r) => r.booking === b).length;
+  const parts = [[by('confirmed'), 'now booked'], [by('waiting'), 'now on the waiting list'], [by('cancelled'), 'cancelled']].filter(([n]) => n).map(([n, t]) => `${n} ${t}`);
+  return `${up.length === 1 ? 'booking change' : 'booking changes'}${parts.length ? `: ${parts.join(', ')}` : ''}`;
+}
+
+/** The import sheet's cards: added, merged, skipped, and booking changes when there are any. */
 export function importTally(plan: NamesPlan): TallyLine[] {
   const merged = plan.counts.merged + plan.counts.known;
-  return [
+  const out: TallyLine[] = [
     { tone: 'good', figure: plan.counts.added, text: plan.counts.added === 1 ? 'person will be on the list' : 'people will be on the list' },
     { tone: 'info', figure: merged, text: merged === 1 ? 'duplicate merged by email address' : 'duplicates merged by email address' },
     { tone: 'warn', figure: plan.counts.skipped, text: plan.counts.skipped === 1 ? 'row skipped, reason below' : 'rows skipped, reasons below' },
   ];
+  if (plan.counts.updated) out.splice(1, 0, { tone: 'info', figure: plan.counts.updated, text: bookingChangeText(plan) });
+  return out;
 }
 
 /** Lines held for confirmation: one per name that would be on the register more than once. */
@@ -118,10 +142,11 @@ export function sameNameText(name: string): string {
   return `${name} appears more than once. Both are kept; a check-in for this name is held for you to confirm.`;
 }
 
-/** Rows the import table shows: the first two added, then every row that was not simply added, then "and N more rows added". */
+/** Rows the import table shows: the first two added, then every booking change, then every other row that was not simply added,
+ *  then "and N more rows added". */
 export function previewRows(plan: NamesPlan, firstAdded = 2, max = 60): { rows: RowResult[]; moreAdded: number } {
   const added = plan.rows.filter((r) => r.result === 'added');
-  const notable = plan.rows.filter((r) => r.result !== 'added');
+  const notable = [...plan.rows.filter((r) => r.result === 'updated'), ...plan.rows.filter((r) => r.result !== 'added' && r.result !== 'updated')];
   const rows = [...added.slice(0, firstAdded), ...notable].slice(0, max);
   return { rows, moreAdded: added.length - Math.min(firstAdded, added.length) };
 }

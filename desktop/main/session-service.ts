@@ -3,10 +3,10 @@
 // state machine, and follows the runtime's states. The window renders `view()`; every action is a method that returns a Result.
 import { reduce, IDLE, type PairingState } from '../shared/pairing-model.ts';
 import type { DeviceList } from '../shared/devices-model.ts';
-import type { Roster } from '../shared/register-model.ts';
+import type { CheckInWindow, Roster } from '../shared/register-model.ts';
 import type { Result } from '../shared/ipc.ts';
 import type { RuntimeSnapshot, WorkshopSummary } from '../shared/runtime-types.ts';
-import { phaseOf, type SessionPhase, type SessionView } from '../shared/session-model.ts';
+import { defaultWindowMinutes, extendMinutes, phaseOf, type SessionPhase, type SessionView } from '../shared/session-model.ts';
 import { OrganiserError, type OrganiserClient, type OrganiserFactory } from './organiser-client.ts';
 import type { RuntimePort } from './runtime-port.ts';
 
@@ -52,6 +52,13 @@ export class SessionService {
   private closedAt: string | null = null;
   private lastAddress: string | null = null;
   private undo: Undo[] = [];
+  /** The participant window as the running register last reported it. */
+  private window: CheckInWindow | null = null;
+  /**
+   * Set by Start or Reopen check-in: once the register answers, the participant window is opened (until the end time plus the
+   * margin). Only that deliberate action opens it; a register restarted mid-session keeps whatever window the organiser left.
+   */
+  private openWindowOnConnect = false;
   private busy = false;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private disposed = false;
@@ -87,6 +94,8 @@ export class SessionService {
       lastAddress: this.lastAddress, canUndo: this.undo.length > 0 && this.client !== null, registerOpen: this.client !== null && this.rosterError === null, busy: this.busy,
       otherLive: runtime.session !== 'idle' && runtime.workshopId !== this.viewing,
       pairLabel: this.pairLabel,
+      window: this.client !== null ? this.window : null,
+      openMinutes: defaultWindowMinutes(w, this.now()),
     };
   }
 
@@ -105,7 +114,7 @@ export class SessionService {
         await this.closePairing();
         this.viewing = id; this.roster = null; this.rosterError = null; this.devices = null; this.undo = [];
         this.addressSince = null; this.addressChangedAt = null; this.lastOnlineAt = null; this.failedAt = null; this.closedAt = null; this.lastAddress = null;
-        this.client = null; this.clientUrl = null;
+        this.client = null; this.clientUrl = null; this.window = null;
       }
       await this.loadWorkshop(id);
       await this.adopt(this.d.port.status.get());
@@ -146,7 +155,7 @@ export class SessionService {
         this.lastAddress = s.tunnel.url; this.lastOnlineAt = this.iso(); this.failedAt = null;
       } else if (s.tunnel.state === 'failed') this.failedAt ??= this.iso();
       if (s.service.state === 'running' && s.session === 'running') {
-        if (this.clientUrl !== s.service.organiserUrl) { this.client = this.d.organiser(s.service.organiserUrl); this.clientUrl = s.service.organiserUrl; void this.refresh(); }
+        if (this.clientUrl !== s.service.organiserUrl) { this.client = this.d.organiser(s.service.organiserUrl); this.clientUrl = s.service.organiserUrl; void this.connected(this.client); }
         this.startTimer();
       }
     }
@@ -154,10 +163,25 @@ export class SessionService {
     if (this.viewing !== null && s.workshopId === this.viewing && this.workshop === null) await this.loadWorkshop(this.viewing);
   }
 
+  /** A register answered at a new address: after Start or Reopen check-in, open the participant window first, then read it. */
+  private async connected(c: OrganiserClient): Promise<void> {
+    if (this.openWindowOnConnect) {
+      this.openWindowOnConnect = false;
+      const minutes = defaultWindowMinutes(this.workshop, this.now());
+      try {
+        const w = await c.checkInWindow();
+        // An open window that already runs at least that long is left alone; anything else (closed, expired, shorter) is opened.
+        this.window = w.open && (w.closesAt ?? 0) >= this.now() + minutes * 60_000 ? w : await c.setCheckInWindow('open', minutes);
+        this.log(`Start check-in: check-in on the iPad is open for ${minutes} minutes.`);
+      } catch (e) { this.log(`Start check-in: opening check-in on the iPad failed: ${say(e, 'no answer')}`); }
+    }
+    await this.refresh();
+  }
+
   /** The register stopped (ended here, or by the runtime): read it from disk and keep the last device list. */
   private async afterClose(): Promise<void> {
     this.stopTimer();
-    this.client = null; this.clientUrl = null;
+    this.client = null; this.clientUrl = null; this.window = null; this.openWindowOnConnect = false;
     if (this.viewing === null) return;
     this.closedAt ??= this.iso();
     this.ended.add(this.viewing);
@@ -188,6 +212,7 @@ export class SessionService {
       const [roster, devices] = await Promise.all([c.roster(), c.devices()]);
       if (c !== this.client) return;
       this.roster = roster; this.devices = devices; this.rosterError = null;
+      if (roster.window !== undefined) this.window = roster.window;
       // A list read before the code on the sheet was issued does not have it yet: it must not mark that code as gone.
       if (gen === this.pairGen) await this.afterPoll(devices);
     } catch (e) {
@@ -228,11 +253,30 @@ export class SessionService {
     if (r.session !== 'idle') return { ok: false, error: r.workshopId === id ? 'Check-in is already open.' : "Another workshop's check-in is open. End it first." };
     return this.guarded(async () => {
       try {
+        this.openWindowOnConnect = true;
         await this.d.port.openWorkshop(id);
         await this.d.port.startSession();
         await this.loadWorkshop(id);
         return OK;
-      } catch (e) { return this.failed('Start check-in', e, 'Check-in could not start.'); }
+      } catch (e) { this.openWindowOnConnect = false; return this.failed('Start check-in', e, 'Check-in could not start.'); }
+    });
+  }
+
+  /**
+   * The participant window, from the rail: open (until the end time plus the margin), extend by half an hour, or close now. A
+   * close stays closed until an organiser opens it again or starts check-in again; restarts of the register never reopen it.
+   */
+  async setWindow(action: 'open' | 'extend' | 'close'): Promise<Result> {
+    const c = this.need();
+    if (!c) return { ok: false, error: SessionService.OFFLINE };
+    return this.guarded(async () => {
+      try {
+        const now = this.now();
+        this.window = action === 'close' ? await c.setCheckInWindow('close')
+          : await c.setCheckInWindow('open', action === 'extend' ? extendMinutes(this.window, now) : defaultWindowMinutes(this.workshop, now));
+        this.log(`Check-in on the iPad: ${action === 'close' ? 'closed' : `open until ${new Date(this.window.closesAt ?? now).toISOString()}`}.`);
+        return OK;
+      } catch (e) { return this.failed(action === 'close' ? 'Close check-in on the iPad' : 'Open check-in on the iPad', e, 'Check-in on the iPad could not be changed.'); }
     });
   }
 
