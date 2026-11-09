@@ -4,7 +4,7 @@ import type { DeviceList, DeviceRecord, PairingInfo } from '../shared/devices-mo
 import type { PairingOffer } from '../shared/pairing-model.ts';
 import type { CheckInWindow, Roster, RosterConflict, RosterPerson } from '../shared/register-model.ts';
 import { OrganiserError, type OrganiserClient } from './organiser-client.ts';
-import { planNames, type NameListRecord } from '../../server/names-list.ts';
+import { PLAN_CHANGED, planNames, type NameListRecord } from '../../server/names-list.ts';
 import type { AddNamesRequest, AddNamesResult, RecoveryReport } from '../shared/names-model.ts';
 
 /** The example workshop's booking labels (server/workshop-config.ts exampleWorkshop.sourceStatuses). */
@@ -111,15 +111,17 @@ export class FakeRegister implements OrganiserClient {
   /** The same plan as the register (server/names-list.ts), on the fake's people. */
   async addNames(input: AddNamesRequest, dryRun: boolean): Promise<AddNamesResult> {
     this.check(`names ${dryRun ? 'preview' : 'add'} ${input.rows.length}`);
-    const existing = this.people.map((p) => ({ name: p.name, email: p.email, booking: p.booking, present: p.present, manual: p.id.startsWith('manual-') }));
+    const existing = this.people.map((p) => ({ id: p.id, name: p.name, email: p.email, booking: p.booking, present: p.present, manual: p.id.startsWith('manual-') }));
     const plan = planNames({ existing, addedLists: Object.fromEntries(this.nameLists.map((l) => [l.listKey, { addedAt: l.addedAt, filename: l.filename }])), rows: input.rows, workshopDate: this.o.eventDate ?? '', statuses: { ...STATUSES }, updateBookings: input.updateBookings === true });
     if (dryRun) return { plan, written: false, roster: this.snapshot() };
     if (plan.alreadyAdded && !plan.counts.updated) throw new OrganiserError('This list was already added. Nothing was changed.', 409);
     if (plan.full) throw new OrganiserError(`The register holds up to 500 people; with this list it would hold ${plan.total}.`, 409);
     if (!plan.counts.added && !plan.counts.updated) return { plan, written: false, roster: this.snapshot() };
+    if (input.planKey !== plan.planKey) throw new OrganiserError(input.planKey ? PLAN_CHANGED : 'Preview the list before applying it.', 409);
     for (const r of plan.rows) {
       if (r.result !== 'updated') continue;
-      for (const p of this.people) if (p.email === r.email && !p.id.startsWith('manual-')) { p.booking = r.booking!; p.admitted = false; p.version += 1; }
+      const p = this.people.find((x) => x.id === r.id && !x.id.startsWith('manual-'));
+      if (p) { p.booking = r.booking!; p.admitted = false; p.version += 1; }
     }
     for (const r of plan.rows) {
       if (r.result !== 'added') continue;

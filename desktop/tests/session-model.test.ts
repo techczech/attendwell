@@ -107,7 +107,7 @@ describe('toolbar and banners', () => {
 const view = (over: Partial<SessionView> = {}): SessionView => ({
   workshopId: 'w1', phase: 'online', runtime: running({ state: 'online', url: 'u' }), hostName: 'Mac', roster: { participants: [{ id: 'p', name: 'P', email: '', booking: 'confirmed', present: false, admitted: false, version: 0, updatedAt: null }], conflicts: [] },
   rosterError: null, devices: null, pairing: IDLE, pairLabel: null, addressSince: null, addressChangedAt: null, lastOnlineAt: null, failedAt: null, closedAt: null, lastAddress: null, canUndo: false,
-  registerOpen: true, busy: false, otherLive: false, window: null, openMinutes: 60, ...over,
+  registerOpen: true, busy: false, otherLive: false, window: null, openMinutes: 60, windowError: null, ...over,
 });
 const ctx = (v: SessionView, sel = NO_SELECTION): CommandCtx => ({ ...IDLE_CTX, view: 'session', liveSession: true, session: sessionCtxOf(v, sel) });
 const why = (id: string, c: CommandCtx) => registry.byId(id)!.available!(c);

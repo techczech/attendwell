@@ -53,7 +53,7 @@ export function SessionScreen(p: SessionScreenProps): JSX.Element {
   const { sv, workshop: w, actions: a } = p;
   const search = useRef<HTMLInputElement>(null);
   useEffect(() => { if (p.searchTick > 0) search.current?.focus(); }, [p.searchTick]);
-  const tb = toolbarModel(sv.phase);
+  const tb = toolbarModel(sv.phase, sv.windowError !== null);
   const live = sv.phase === 'connecting' || sv.phase === 'online' || sv.phase === 'trouble' || sv.phase === 'ending';
   const conn = connectionModel({ phase: sv.phase, runtime: sv.runtime, lastOnlineAt: sv.lastOnlineAt, closedAt: sv.closedAt, failedAt: sv.failedAt, lastAddress: sv.lastAddress, addressChangedAt: sv.addressChangedAt });
   const avail = pairAvailability(sv.phase, sv.runtime, sv.otherLive);
@@ -96,6 +96,7 @@ export function SessionScreen(p: SessionScreenProps): JSX.Element {
           onUi={a.onUi} onMark={a.onMark} onResolve={a.onResolve} onRepair={() => a.onPair(banner?.targetId ?? undefined)} onExport={a.onExport} onReview={a.onReview}
           canAddNames={sv.phase !== 'ending'} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} />
         <aside className="rail" aria-label="Connection and iPads">
+          {sv.windowError ? <div className="warn-card" role="alert"><Icon name="circle-alert" size={16} /><span>{sv.windowError}</span></div> : null}
           <ConnectionPanel model={conn} host={sv.hostName} compact={devices.length >= 4} onCopy={a.onCopyAddress} onRetry={a.onRetry} onChooseFolder={a.onChooseFolder} />
           {editable && sv.window ? (
             <CheckInWindowPanel model={windowModel(sv.window, p.now)} openUntil={clockOf(new Date(p.now + sv.openMinutes * 60_000).toISOString())} busy={sv.busy}

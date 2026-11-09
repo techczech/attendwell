@@ -123,10 +123,12 @@ describe('name lists and recovery files', () => {
     const preview = await client.addNames(input, true);
     expect(preview).toMatchObject({ written: false, plan: { counts: { added: 1, known: 1 } } });
     expect(s.store.list().participants.some((p) => p.name === 'Imogen Pryce')).toBe(false);
-    const done = await client.addNames(input, false);
+    // A write brings back the preview's planKey; without it the register refuses.
+    await expect(client.addNames(input, false)).rejects.toThrow('Preview the list');
+    const done = await client.addNames({ ...input, planKey: preview.plan.planKey }, false);
     expect(done.written).toBe(true);
     expect(done.roster.participants.find((p) => p.name === 'Imogen Pryce')).toMatchObject({ email: 'imogen.pryce@example.ac.uk', present: false, version: 0 });
-    await expect(client.addNames(input, false)).rejects.toThrow('already added');
+    await expect(client.addNames({ ...input, planKey: preview.plan.planKey }, false)).rejects.toThrow('already added');
     for (const c of calls.filter((x) => x.path === '/api/names')) expect(c).toMatchObject({ method: 'POST', origin: organiserOrigin, marker: '1' });
   });
   test('a recovery file is previewed and imported through the device path', async () => {

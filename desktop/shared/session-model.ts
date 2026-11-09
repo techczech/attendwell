@@ -140,14 +140,15 @@ export interface ToolbarModel {
   reopen: boolean;
 }
 
-export function toolbarModel(phase: SessionPhase): ToolbarModel {
+export function toolbarModel(phase: SessionPhase, windowFailed = false): ToolbarModel {
   return {
     addPerson: phase === 'online' || phase === 'trouble' || phase === 'connecting' ? 'enabled' : 'disabled',
     end: phase === 'online' || phase === 'trouble' || phase === 'connecting',
     closedMarker: phase === 'closed',
     readOnlyMarker: phase === 'past',
     start: phase === 'ready',
-    reopen: phase === 'closed' || phase === 'past',
+    // Also while check-in is open but its window on the iPad could not be opened: Reopen tries that again.
+    reopen: phase === 'closed' || phase === 'past' || (windowFailed && (phase === 'online' || phase === 'trouble' || phase === 'connecting')),
   };
 }
 
@@ -240,6 +241,8 @@ export interface SessionView {
   window: CheckInWindow | null;
   /** Minutes Open check-in would open the window for now (until the end time plus the margin). */
   openMinutes: number;
+  /** Start or Reopen check-in could not open the window on the iPad: the reason, until Reopen (or Open check-in) succeeds. */
+  windowError: string | null;
 }
 
 export interface SessionSelection {

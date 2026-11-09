@@ -2,7 +2,7 @@ import {Database} from 'bun:sqlite';
 import {randomUUID,randomBytes,createHmac} from 'node:crypto';
 import {isEligible,eligibleSql} from './eligibility-attendance';
 import {exampleWorkshop,MANUAL_SOURCE_STATUS,type Booking,type WorkshopConfig} from './workshop-config';
-import {planNames,MAX_LIST_ROWS,type AddedLists,type NameListRecord,type NameRow,type NamesPlan} from './names-list';
+import {planNames,MAX_LIST_ROWS,PLAN_CHANGED,type AddedLists,type NameListRecord,type NameRow,type NamesPlan} from './names-list';
 export type {Booking} from './workshop-config';
 export type ImportedPerson={id:string;name:string;email:string;booking:Booking;sourceStatus:string};
 export type RosterImport={sessionId:string;date:string;source:{filename:string;sha256:string;exportedAt:string};participants:ImportedPerson[]};
@@ -27,9 +27,10 @@ export function validateRoster(input:unknown,workshop:WorkshopConfig=exampleWork
  return r;
 }
 // Body of an add-names request: where the list came from (no copy of it) and its rows as the desktop app read them.
-function validateNames(input:unknown):{source:{kind:'paste'|'file';filename:string|null;sha256:string|null};rows:NameRow[];updateBookings:boolean}{
- const i=input as {source?:{kind?:unknown;filename?:unknown;sha256?:unknown};rows?:unknown;updateBookings?:unknown};
+function validateNames(input:unknown):{source:{kind:'paste'|'file';filename:string|null;sha256:string|null};rows:NameRow[];updateBookings:boolean;planKey:string|null}{
+ const i=input as {source?:{kind?:unknown;filename?:unknown;sha256?:unknown};rows?:unknown;updateBookings?:unknown;planKey?:unknown};
  if(i?.updateBookings!==undefined&&typeof i.updateBookings!=='boolean')throw new InputError('Say whether to update booking status.');
+ if(i?.planKey!==undefined&&i.planKey!==null&&(typeof i.planKey!=='string'||!/^[a-f0-9]{64}$/.test(i.planKey)))throw new InputError('The preview key is not valid.');
  const s=i?.source;
  if(!s||(s.kind!=='paste'&&s.kind!=='file'))throw new InputError('Say where the list came from.');
  const filename=s.filename===undefined||s.filename===null?null:s.filename;
@@ -44,7 +45,7 @@ function validateNames(input:unknown):{source:{kind:'paste'|'file';filename:stri
    ||(r.date!==undefined&&r.date!==null&&!(typeof r.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(r.date))))throw new InputError('A row of the list is not valid.');
   return {row:r.row as number,name:r.name as string,email:r.email as string,...(r.status!==undefined?{status:r.status as string}:{}),...(typeof r.date==='string'?{date:r.date}:{})};
  });
- return {source:{kind:s.kind,filename:filename as string|null,sha256:sha256 as string|null},rows,updateBookings:i.updateBookings===true};
+ return {source:{kind:s.kind,filename:filename as string|null,sha256:sha256 as string|null},rows,updateBookings:i.updateBookings===true,planKey:typeof i.planKey==='string'?i.planKey:null};
 }
 const emailOK=(s:string)=>/^[A-Za-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?\.[A-Za-z]{2,}$/.test(s);
 const opOK=(x:unknown):x is string=>typeof x==='string'&&/^[A-Za-z0-9-]{8,80}$/.test(x);
@@ -204,13 +205,14 @@ export class AttendanceStore {
  // Adds a pasted or imported list next to the people already here: merged by email (case-insensitive, never by name alone),
  // same-email rows of one list merged, rows refused with their reason. dryRun answers the same plan and writes nothing.
  // With updateBookings, a newer booking export also sets the booking of people already here, matched by email (cancelled
- // included); organiser additions are never changed, and a booking change revokes waiting-list admission, as in import().
- // Attendance is never touched; the same list twice changes nothing; the list itself is never stored, only its provenance.
+ // included); organiser additions are never changed, an email shared by several people changes none of them, and a booking change
+ // revokes waiting-list admission, as in import(). A write must bring the preview's planKey back and is refused when the plan now
+ // differs. Attendance is never touched; the same list twice adds nobody; the list itself is never stored, only its provenance.
  addNames(input:unknown,actor:string,{dryRun=false}:{dryRun?:boolean}={}):{plan:NamesPlan;written:boolean}{
   const v=validateNames(input);
   return this.db.transaction(()=>{
-   const existing=(this.db.query('SELECT name,email,booking,sourceStatus,present FROM people WHERE active=1').all() as {name:string;email:string;booking:string;sourceStatus:string;present:number}[])
-    .map(p=>({name:p.name,email:p.email,booking:p.booking,present:!!p.present,manual:p.sourceStatus===MANUAL_SOURCE_STATUS}));
+   const existing=(this.db.query('SELECT id,name,email,booking,sourceStatus,present FROM people WHERE active=1').all() as {id:string;name:string;email:string;booking:string;sourceStatus:string;present:number}[])
+    .map(p=>({id:p.id,name:p.name,email:p.email,booking:p.booking,present:!!p.present,manual:p.sourceStatus===MANUAL_SOURCE_STATUS}));
    const lists=this.nameLists();
    const keys=this.nameListKeys();
    const plan=planNames({existing,addedLists:keys,rows:v.rows,workshopDate:this.workshop.date,statuses:this.workshop.sourceStatuses,updateBookings:v.updateBookings});
@@ -218,9 +220,14 @@ export class AttendanceStore {
    if(plan.alreadyAdded&&!plan.counts.updated)throw new InputError('This list was already added. Nothing was changed.',409);
    if(plan.full)throw new InputError(`The register holds up to 500 people; with this list it would hold ${plan.total}.`,409);
    if(!plan.counts.added&&!plan.counts.updated)return {plan,written:false};
+   // The write does only what the approved preview showed: the same additions and the same booking transitions.
+   if(v.planKey===null)throw new InputError('Preview the list before applying it.',409);
+   if(v.planKey!==plan.planKey)throw new InputError(PLAN_CHANGED,409);
+   if(plan.alreadyAdded&&plan.counts.added)throw new InputError('This list was already added. Nothing was changed.',409);
    // SET expressions read the old row, so admission survives only when booking and label stay the same (never, for an update).
-   const rebook=this.db.query('UPDATE people SET admitted=CASE WHEN booking=?1 AND sourceStatus=?2 THEN admitted ELSE 0 END,booking=?1,sourceStatus=?2,version=version+1 WHERE active=1 AND email=?3 AND sourceStatus<>?4');
-   for(const r of plan.rows)if(r.result==='updated')rebook.run(r.booking!,r.sourceStatus!,r.email,MANUAL_SOURCE_STATUS);
+   // By participant id: the one record the preview named, never every record that shares its email.
+   const rebook=this.db.query('UPDATE people SET admitted=CASE WHEN booking=?1 AND sourceStatus=?2 THEN admitted ELSE 0 END,booking=?1,sourceStatus=?2,version=version+1 WHERE id=?3 AND active=1 AND sourceStatus<>?4');
+   for(const r of plan.rows)if(r.result==='updated')rebook.run(r.booking!,r.sourceStatus!,r.id!,MANUAL_SOURCE_STATUS);
    if(plan.counts.updated)this.audit(actor,'update-bookings');
    // Ids from an email are stable (the same person from a later list is the same record); without an email each row is new.
    const upsert=this.db.query('INSERT INTO people(id,name,email,booking,sourceStatus) VALUES(?1,?2,?3,?4,?5) ON CONFLICT(id) DO UPDATE SET name=?2,email=?3,booking=?4,sourceStatus=?5,admitted=0,active=1,version=version+1 WHERE active=0');

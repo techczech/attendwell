@@ -7,7 +7,7 @@ import { buildRegister, stepSelection, SORT_ORDER, type Roster } from '../../sha
 import { repairsIn, sessionCtxOf, statusChip, type SessionSelection, type SessionView } from '../../shared/session-model.ts';
 import { getStartedButton } from '../../shared/get-started.ts';
 import type { AppSnapshot, SessionAction } from '../../shared/ipc.ts';
-import type { NamesSheetView } from '../../shared/names-model.ts';
+import { addedText, type NamesSheetView } from '../../shared/names-model.ts';
 import { allWorkshops, countWorkshops, longDate, shortPath } from '../../shared/workshops.ts';
 import { TEXT_SIZE_PX } from '../../shared/settings-schema.ts';
 import { api } from './api.ts';
@@ -165,9 +165,8 @@ export function App(): JSX.Element | null {
   const addNames = useCallback(async (token: string) => {
     const r = await api.sheetAct({ kind: 'names-add', token });
     if (r.ok && r.value && 'source' in r.value && r.value.written) {
-      const n = r.value.plan?.counts.added ?? 0;
       closeSheet('names-close');
-      flash(`Added ${n} ${n === 1 ? 'person' : 'people'} to the register`);
+      flash(addedText(r.value.plan));
     }
     return r;
   }, [closeSheet, flash]);

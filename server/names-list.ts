@@ -8,7 +8,9 @@ import type {Booking} from './workshop-config';
 
 /** One row of a list as the desktop app read it: its row number in the source, and the cells it mapped. */
 export type NameRow={row:number;name:string;email:string;status?:string;date?:string|null};
-export type SkipReason='no-name'|'name-too-long'|'bad-email'|'cancelled'|'other-date'|'no-status-label';
+/** ambiguous-email: updating bookings, but more than one person in the register has this email, so none of them is changed.
+ *  already-added: this exact list was added before; adding it again adds nobody (its rows without an email would be new people). */
+export type SkipReason='no-name'|'name-too-long'|'bad-email'|'cancelled'|'other-date'|'no-status-label'|'ambiguous-email'|'already-added';
 export type RowResult={
  row:number;name:string;email:string;
  /** added: a new person. merged: the same email as another row of this list (`mergedWith`). known: the same email as someone
@@ -21,11 +23,13 @@ export type RowResult={
  booking?:Booking;sourceStatus?:string;
  /** For updated: the booking the register holds now. */
  from?:Booking;
+ /** For updated: the participant whose booking changes (the write changes this record only). */
+ id?:string;
  /** For updated: that person is already checked in (attendance is never changed by a list). */
  present?:boolean;
 };
 /** Someone already in the register, as a list is planned against them. `manual`: added by the organiser; a list never changes them. */
-export type ExistingPerson={name:string;email:string;booking?:string;present?:boolean;manual?:boolean};
+export type ExistingPerson={id?:string;name:string;email:string;booking?:string;present?:boolean;manual?:boolean};
 /** What the register keeps about each list added: where it came from and what it did. Never a copy of the list. */
 // Every list ever added to a register, by listKey: never truncated (each write adds at least one person, so it stays small).
 export type AddedLists=Record<string,{addedAt:string;filename:string|null}>;
@@ -44,7 +48,12 @@ export type NamesPlan={
  alreadyAdded:{addedAt:string;filename:string|null}|null;
  /** Adding would take the register past its limit. */
  full:boolean;
+ /** Fingerprint of what the write would do: the people it adds and each booking transition (participant, from, to). The write is
+  *  refused unless the request brings back the planKey of the preview the organiser approved, so it does only what was shown. */
+ planKey:string;
 };
+/** The write path's refusal when the register changed between the preview and the write. */
+export const PLAN_CHANGED='The register changed after the preview. Check the new preview, then apply it.';
 
 export const MAX_REGISTER=500;
 export const MAX_LIST_ROWS=2000;
@@ -82,11 +91,20 @@ const RANK:Record<Booking,number>={confirmed:3,waiting:2,cancelled:1};
  * updateBookings: a row with a booking status whose email matches someone already in the register (not an organiser addition)
  * sets that person's booking, cancelled included; the person is `updated` when the booking changes, `known` when it does not.
  * Several rows for one such email: the best booking wins (confirmed, then waiting, then cancelled) and the others are `merged`.
- * Rows without a status never change a booking. Without updateBookings a list only adds, as before.
+ * Rows without a status never change a booking. Without updateBookings a list only adds, as before. An email shared by more than one
+ * such person changes none of them (skipped, ambiguous-email). A list added before adds nobody again (already-added).
  */
 export function planNames(input:{existing:ExistingPerson[];addedLists:AddedLists;rows:NameRow[];workshopDate:string;statuses:Record<string,Booking>;limit?:number;updateBookings?:boolean}):NamesPlan{
  const known=new Map<string,ExistingPerson>();
- for(const p of input.existing){const e=cleanEmail(p.email);if(e&&!known.has(e))known.set(e,p);}
+ // Who a booking update may change, by email: active people a list added (never organiser additions).
+ const candidates=new Map<string,ExistingPerson[]>();
+ for(const p of input.existing){
+  const e=cleanEmail(p.email);if(!e)continue;
+  if(!known.has(e))known.set(e,p);
+  if(!p.manual){const c=candidates.get(e);if(c)c.push(p);else candidates.set(e,[p]);}
+ }
+ const listKey=listKeyOf(input.rows);
+ const prior=Object.prototype.hasOwnProperty.call(input.addedLists,listKey)?input.addedLists[listKey]:undefined;
  type Read={skip:RowResult}|{base:{row:number;name:string;email:string};status:string;booking:Booking;sourceStatus:string|null};
  const read=(r:NameRow):Read|null=>{
   const name=cleanText(r.name);const email=cleanEmail(r.email);const status=cleanText(r.status??'');
@@ -101,7 +119,9 @@ export function planNames(input:{existing:ExistingPerson[];addedLists:AddedLists
  const reads=input.rows.map(read);
  // Who this list may update, and which of their rows speaks for them.
  type Ok=Extract<Read,{base:unknown}>;
- const updatable=(x:Ok):boolean=>!!input.updateBookings&&!!x.status&&!!x.sourceStatus&&!!x.base.email&&known.has(x.base.email)&&!known.get(x.base.email)!.manual;
+ const speaks=(x:Ok):boolean=>!!input.updateBookings&&!!x.status&&!!x.sourceStatus&&!!x.base.email;
+ const updatable=(x:Ok):boolean=>speaks(x)&&candidates.get(x.base.email)?.length===1;
+ const ambiguous=(x:Ok):boolean=>speaks(x)&&(candidates.get(x.base.email)?.length??0)>1;
  const speaker=new Map<string,{row:number;booking:Booking}>();
  for(const x of reads)if(x&&'base' in x&&updatable(x)){const s=speaker.get(x.base.email);if(!s||RANK[x.booking]>RANK[s.booking])speaker.set(x.base.email,{row:x.base.row,booking:x.booking});}
  const firstByEmail=new Map<string,number>();
@@ -110,11 +130,12 @@ export function planNames(input:{existing:ExistingPerson[];addedLists:AddedLists
   if(!x){blank+=1;continue;}
   if('skip' in x){rows.push(x.skip);continue;}
   const {base,booking}=x;const email=base.email;
+  if(ambiguous(x)){rows.push({...base,result:'skipped',reason:'ambiguous-email'});continue;}
   if(updatable(x)){
    const s=speaker.get(email)!;const sourceStatus=x.sourceStatus!;
    if(s.row!==base.row){rows.push({...base,result:'merged',mergedWith:s.row,booking,sourceStatus});continue;}
-   const p=known.get(email)!;
-   rows.push(p.booking===booking?{...base,result:'known',booking,sourceStatus}:{...base,result:'updated',booking,sourceStatus,from:(p.booking??'confirmed') as Booking,present:!!p.present});
+   const p=candidates.get(email)![0]!;
+   rows.push(p.booking===booking?{...base,result:'known',booking,sourceStatus}:{...base,result:'updated',booking,sourceStatus,from:(p.booking??'confirmed') as Booking,present:!!p.present,...(p.id!==undefined?{id:p.id}:{})});
    continue;
   }
   const sourceStatus=x.sourceStatus;
@@ -123,6 +144,8 @@ export function planNames(input:{existing:ExistingPerson[];addedLists:AddedLists
   if(email&&known.has(email)){rows.push({...base,result:'known',booking,sourceStatus});continue;}
   if(email&&firstByEmail.has(email)){rows.push({...base,result:'merged',mergedWith:firstByEmail.get(email)!,booking,sourceStatus});continue;}
   if(email)firstByEmail.set(email,base.row);
+  // The same list again adds nobody: re-adding is idempotent, whatever else it still changes.
+  if(prior){rows.push({...base,result:'skipped',reason:'already-added'});continue;}
   rows.push({...base,result:'added',booking,sourceStatus});
  }
  const count=(k:RowResult['result'])=>rows.filter(r=>r.result===k).length;
@@ -132,9 +155,10 @@ export function planNames(input:{existing:ExistingPerson[];addedLists:AddedLists
  for(const n of [...input.existing.map(p=>p.name),...added.map(r=>r.name)]){const k=nameKey(n);const e=seen.get(k);if(e)e.n+=1;else seen.set(k,{name:cleanText(n),n:1});}
  const addedKeys=new Set(added.map(r=>nameKey(r.name)));
  const sameName=[...seen.entries()].filter(([k,v])=>v.n>1&&addedKeys.has(k)).map(([,v])=>v.name);
- const listKey=listKeyOf(input.rows);
- const prior=Object.prototype.hasOwnProperty.call(input.addedLists,listKey)?input.addedLists[listKey]:undefined;
  const total=input.existing.length+added.length;
+ const planKey=createHash('sha256').update(JSON.stringify([listKey,
+  added.map(r=>[r.row,r.name,r.email,r.booking,r.sourceStatus]),
+  rows.filter(r=>r.result==='updated').map(r=>[r.id??r.email,r.from,r.booking,r.sourceStatus])])).digest('hex');
  return {rows,counts:{added:added.length,merged:count('merged'),known:count('known'),updated:count('updated'),skipped:count('skipped'),blank},sameName,total,listKey,
-  alreadyAdded:prior?{addedAt:prior.addedAt,filename:prior.filename}:null,full:total>(input.limit??MAX_REGISTER)};
+  alreadyAdded:prior?{addedAt:prior.addedAt,filename:prior.filename}:null,full:total>(input.limit??MAX_REGISTER),planKey};
 }

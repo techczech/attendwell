@@ -12,6 +12,8 @@ export interface AddNamesRequest {
   rows: NameRow[];
   /** Also set the booking of people already in the register from this list's status column (server/names-list.ts). */
   updateBookings?: boolean;
+  /** For a write: the planKey of the preview the organiser approved; the register refuses the write if its plan now differs. */
+  planKey?: string;
 }
 export interface AddNamesResult { plan: NamesPlan; written: boolean; roster: Roster }
 
@@ -42,6 +44,8 @@ export interface NamesSheetView {
   /** The list has a booking status column, so the update can be offered. */
   canUpdateBookings: boolean;
   error: string | null;
+  /** Said above the preview without blocking Add (the register changed after the last preview; this is the new one). */
+  notice?: string | null;
 }
 
 export interface RecoverySheetView {
@@ -68,13 +72,23 @@ export function addLabel(plan: NamesPlan | null): string {
   return n === 0 ? 'Add people' : `Add ${plural(n, 'person', 'people')}`;
 }
 
+/** The status line after a list was applied: what it added and what it updated. */
+export function addedText(plan: NamesPlan | null): string {
+  const n = plan?.counts.added ?? 0;
+  const u = plan?.counts.updated ?? 0;
+  const bookings = plural(u, 'booking', 'bookings');
+  if (u && !n) return `Updated ${bookings}`;
+  if (u) return `Added ${plural(n, 'person', 'people')} to the register and updated ${bookings}`;
+  return `Added ${plural(n, 'person', 'people')} to the register`;
+}
+
 export const BOOKING_LABELS: Record<string, string> = { confirmed: 'Booked', waiting: 'Waiting list', cancelled: 'Cancelled' };
 const bookingLabel = (b: string | undefined): string => BOOKING_LABELS[b ?? ''] ?? b ?? '';
 
 /** Why the Add button is off, or null when it is on. */
 export function addBlocked(plan: NamesPlan | null): string | null {
   if (!plan) return 'Paste or choose a list first.';
-  if (plan.alreadyAdded && !plan.counts.updated) return 'This list was already added. Adding it again changes nothing.';
+  if (plan.alreadyAdded && !plan.counts.updated) return 'This list was already added. Adding it again adds nobody.';
   if (plan.full) return `The register holds up to 500 people; with this list it would hold ${plan.total}.`;
   if (plan.counts.added === 0 && !plan.counts.updated) return 'There is nobody new on this list.';
   return null;
@@ -86,6 +100,7 @@ const REASONS: Record<string, string> = {
   'bad-email': 'email address not valid',
   cancelled: 'booking cancelled',
   'no-status-label': 'this workshop has no booking status for it',
+  'already-added': 'this list was already added',
 };
 
 export function resultText(r: RowResult): string {
@@ -94,7 +109,9 @@ export function resultText(r: RowResult): string {
     case 'merged': return `Merged with row ${r.mergedWith} (same email)`;
     case 'known': return 'Already in the register (same email)';
     case 'updated': return `Booking: ${bookingLabel(r.from)} → ${bookingLabel(r.booking)}${r.present ? ' (already checked in; stays checked in)' : ''}`;
-    default: return r.reason === 'other-date' && r.date ? `Skipped: date is ${shortDay(r.date)}, not this workshop` : `Skipped: ${REASONS[r.reason ?? ''] ?? 'not readable'}`;
+    default:
+      if (r.reason === 'ambiguous-email') return 'Not changed: more than one person with this email';
+      return r.reason === 'other-date' && r.date ? `Skipped: date is ${shortDay(r.date)}, not this workshop` : `Skipped: ${REASONS[r.reason ?? ''] ?? 'not readable'}`;
   }
 }
 
@@ -142,13 +159,20 @@ export function sameNameText(name: string): string {
   return `${name} appears more than once. Both are kept; a check-in for this name is held for you to confirm.`;
 }
 
-/** Rows the import table shows: the first two added, then every booking change, then every other row that was not simply added,
- *  then "and N more rows added". */
-export function previewRows(plan: NamesPlan, firstAdded = 2, max = 60): { rows: RowResult[]; moreAdded: number } {
+/** Rows the import table shows: the first two added, then booking changes, then other rows that were not simply added, at most
+ *  `max` in all; then what was left out: "and N more rows added", "and N more booking changes", "and N more rows not listed". */
+export function previewRows(plan: NamesPlan, firstAdded = 2, max = 60): { rows: RowResult[]; moreAdded: number; moreChanges: number; moreOther: number } {
   const added = plan.rows.filter((r) => r.result === 'added');
-  const notable = [...plan.rows.filter((r) => r.result === 'updated'), ...plan.rows.filter((r) => r.result !== 'added' && r.result !== 'updated')];
-  const rows = [...added.slice(0, firstAdded), ...notable].slice(0, max);
-  return { rows, moreAdded: added.length - Math.min(firstAdded, added.length) };
+  const changes = plan.rows.filter((r) => r.result === 'updated');
+  const other = plan.rows.filter((r) => r.result !== 'added' && r.result !== 'updated');
+  const rows = [...added.slice(0, firstAdded), ...changes, ...other].slice(0, max);
+  const shown = (k: (r: RowResult) => boolean): number => rows.filter(k).length;
+  return {
+    rows,
+    moreAdded: added.length - shown((r) => r.result === 'added'),
+    moreChanges: changes.length - shown((r) => r.result === 'updated'),
+    moreOther: other.length - shown((r) => r.result !== 'added' && r.result !== 'updated'),
+  };
 }
 
 /** The recovery result line, in the Kiosk wording: before importing (preview) and after. */

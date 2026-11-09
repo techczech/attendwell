@@ -13,7 +13,7 @@ type Answer = Promise<Result<SheetAnswer>>;
 const asNames = (r: Result<SheetAnswer>): NamesSheetView | null => (r.ok && r.value && 'source' in r.value ? r.value : null);
 const asRecovery = (r: Result<SheetAnswer>): RecoverySheetView | null => (r.ok && r.value && 'report' in r.value ? r.value : null);
 
-const EMPTY_PASTE: NamesSheetView = { source: 'paste', filename: null, columns: null, mapping: null, plan: null, token: null, written: false, updateBookings: true, canUpdateBookings: false, error: null };
+const EMPTY_PASTE: NamesSheetView = { source: 'paste', filename: null, columns: null, mapping: null, plan: null, token: null, written: false, updateBookings: false, canUpdateBookings: false, error: null };
 const TALLY_ICON: Record<TallyLine['tone'], string> = { good: 'user-check', info: 'users', warn: 'circle-alert', neutral: 'x' };
 
 function Tally({ lines, variant }: { lines: TallyLine[]; variant: 'stack' | 'cards' }): JSX.Element {
@@ -30,7 +30,14 @@ function Notes({ view }: { view: NamesSheetView | null }): JSX.Element | null {
   const plan = view?.plan;
   const items: string[] = [];
   if (view?.error) items.push(view.error);
-  if (plan?.alreadyAdded) items.push(`This list was already added${plan.alreadyAdded.filename ? ` from ${plan.alreadyAdded.filename}` : ''}. Adding it again changes nothing.`);
+  if (view?.notice) items.push(view.notice);
+  if (plan?.alreadyAdded) {
+    const from = plan.alreadyAdded.filename ? ` from ${plan.alreadyAdded.filename}` : '';
+    // Applying it again adds nobody; it can still change bookings, and then the replay is not "nothing".
+    if (plan.counts.updated) items.push(`This list was already added${from}. Applying it again adds nobody; it only makes the booking changes shown.`);
+    else if (view?.canUpdateBookings && !view.updateBookings) items.push(`This list was already added${from}. Adding it again adds nobody. Tick "Update booking status" to see whether it changes any bookings.`);
+    else items.push(`This list was already added${from}. Adding it again changes nothing.`);
+  }
   if (plan?.full) items.push(`The register holds up to 500 people; with this list it would hold ${plan.total}.`);
   return (
     <>
@@ -77,7 +84,10 @@ export function PasteNamesSheet({ onPreview, onAdd, onClose }: { onPreview(text:
     setBusy(true);
     const r = await onAdd(view.token);
     setBusy(false);
-    if (!r.ok) setError(r.error);
+    if (!r.ok) { setError(r.error); return; }
+    // Not written (the register changed after the preview): main sent the new preview, with a note saying so.
+    const v = asNames(r);
+    if (v && !v.written) { setError(null); setView(v); }
   };
   const plan = view?.plan ?? null;
   const shown: NamesSheetView | null = view && !fresh ? { ...view, token: null } : view;
@@ -144,7 +154,9 @@ export function ImportNamesSheet({ initial, onMap, onUpdateBookings, onAdd, onCl
     setBusy(true);
     const r = await onAdd(view.token);
     setBusy(false);
-    if (!r.ok) setError(r.error);
+    if (!r.ok) { setError(r.error); return; }
+    const v = asNames(r);
+    if (v && !v.written) { setError(null); setView(v); }
   };
   const plan = view.plan;
   const shown = plan ? previewRows(plan) : null;
@@ -190,6 +202,8 @@ export function ImportNamesSheet({ initial, onMap, onUpdateBookings, onAdd, onCl
             </div>
           ))}
           {shown.moreAdded > 0 ? <div className="pt-row more" role="row"><span /><span>and {shown.moreAdded} more {shown.moreAdded === 1 ? 'row' : 'rows'} added</span></div> : null}
+          {shown.moreChanges > 0 ? <div className="pt-row more" role="row"><span /><span>and {shown.moreChanges} more booking {shown.moreChanges === 1 ? 'change' : 'changes'}</span></div> : null}
+          {shown.moreOther > 0 ? <div className="pt-row more" role="row"><span /><span>and {shown.moreOther} more {shown.moreOther === 1 ? 'row' : 'rows'} not listed</span></div> : null}
         </div>
       ) : null}
     </Sheet>

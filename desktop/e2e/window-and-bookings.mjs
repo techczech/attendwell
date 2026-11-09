@@ -49,6 +49,9 @@ try {
 
   write(['Aisha Rahman,aisha.rahman@example.ac.uk,Cancelled', 'Henrik Olsen,henrik.olsen@example.ac.uk,Booked', 'Sofia Marchetti,sofia.marchetti@example.ac.uk,Booked', 'Tom Whitfield,tom.whitfield@example.ac.uk,Booked']);
   await page.keyboard.press('Meta+Shift+I');
+  // Booking changes are offered unticked: the list only adds until the organiser ticks the box.
+  await page.waitForSelector('[role=dialog] button:has-text("Add 1 person")');
+  await page.check('[role=dialog] .update-bookings input[type=checkbox]');
   await page.waitForSelector('[role=dialog] button:has-text("Add 1 person, update 2 bookings")');
   await shot('w03-import-updates-preview');
   const before = JSON.stringify(await people());

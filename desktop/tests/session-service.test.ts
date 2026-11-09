@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { OrganiserError, type OrganiserFactory } from '../main/organiser-client.ts';
 import { createFakeRuntime, type FakeRuntime } from '../main/fake-runtime.ts';
 import { SessionService, quitPlan } from '../main/session-service.ts';
-import { repairsIn } from '../shared/session-model.ts';
+import { repairsIn, toolbarModel } from '../shared/session-model.ts';
 import type { Roster, RosterPerson } from '../shared/register-model.ts';
 
 const dirs: string[] = [];
@@ -540,6 +540,27 @@ describe('check-in on the iPad (the participant window)', () => {
     expect((await s.svc.start()).ok).toBe(true);
     await settle(); await settle();
     expect(s.svc.view().window).toMatchObject({ open: true, closesAt: T0 + 180 * 60_000 });
+  });
+  test('a failed open is shown on the session screen and Reopen check-in tries again', async () => {
+    const s = await setup();
+    const reg = s.rt.fake.register(s.today.id);
+    reg.win = { openedAt: T0 - 86_400_000, closesAt: T0 - 86_400_000 + 1_800_000, closedEarly: false };
+    reg.failNext = new OrganiserError('The register did not answer.', 0);
+    await s.svc.show(s.today.id);
+    const started = await s.svc.start();
+    await settle(); await settle();
+    // Check-in itself is open; the window is not, and the organiser is told, either by Start or on the screen.
+    expect(s.svc.view().phase).toBe('online');
+    expect(s.svc.view().windowError).toContain('could not be opened');
+    if (!started.ok) expect(started.error).toContain('could not be opened');
+    expect(toolbarModel(s.svc.view().phase, s.svc.view().windowError !== null).reopen).toBe(true);
+    expect(reg.log.filter((l) => l.startsWith('window open'))).toEqual([]);
+    // Reopen again: this time it opens.
+    expect((await s.svc.start()).ok).toBe(true);
+    expect(reg.log).toContain('window open 180');
+    expect(s.svc.view()).toMatchObject({ windowError: null, window: { open: true, closesAt: T0 + 180 * 60_000 } });
+    expect(toolbarModel(s.svc.view().phase, false).reopen).toBe(false);
+    expect(await s.svc.start()).toEqual({ ok: false, error: 'Check-in is already open.' });
   });
   test('the controls need the register: before check-in starts they are refused', async () => {
     const s = await setup();
