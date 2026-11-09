@@ -1,7 +1,7 @@
 ---
 title: Plan — reliable, simple sync between the Mac app and the iPad
 type: plan
-status: proposed
+status: proposed (revision 2)
 created: 2026-11-09
 ---
 
@@ -11,111 +11,114 @@ created: 2026-11-09
 
 At the 9 November 2026 workshop the iPad saved every check-in, but none of them reached the Mac:
 
-1. **The address changed.** The Mac app uses a Cloudflare *quick tunnel*, and it gets a new random address every time check-in starts. Check-in started at 08:18, then again at 10:00. The iPad was paired to the 08:18 address and never reached the Mac after 08:24.
-2. **Quick tunnels are best-effort.** They have no uptime guarantee and drop connections. That matches the "connection breaking up" seen this evening.
-3. **The Mac has to be reachable.** The iPad can only send while the Mac is awake, online and running its tunnel. When the Mac sleeps or changes network, nothing gets through.
+1. **The address changed.** The Mac app uses a Cloudflare *quick tunnel*, and it gets a new random address every time check-in starts. Check-in started at 08:18, then again at 10:00. The iPad was paired to the 08:18 address and never reached the Mac after 08:24. Nothing told the iPad about the new address.
+2. **Quick tunnels are best-effort.** They have no uptime guarantee and drop connections. That matches the "connection breaking up" seen in the evening.
+3. **Everything goes through the internet.** The iPad and the Mac sit in the same room, yet every check-in travels through Cloudflare and depends on both devices' internet connections.
 4. **Check-in closed by itself.** A 30-minute check-in window from the day before had stayed closed (fixed in PR #5).
-5. **Too many locks.** The iPad needs a pairing code, an organiser PIN, organiser proofs, held check-ins for review, and re-pairing after every change of address. Each lock is one more way for a check-in to go nowhere. Most of them protect against threats that don't matter here: the iPad only ever shows names, and anyone at the door can see who has checked in.
+5. **Too many locks.** The iPad needs a pairing code, an organiser PIN, organiser proofs, held check-ins for review, and re-pairing after every change of address. Each lock is one more way for a check-in to go nowhere. They protect against threats that don't matter here: the iPad shows only names, and anyone at the door can see who has checked in.
 
-## What Dominik asked for (9 Nov 2026)
+## Requirements (Dominik, 9 Nov 2026)
 
-- Close to 100% reliable. Pair once, in a rush, on any network, and it keeps working.
+- Close to 100% reliable. Quick to set up, and quick to resume after a restart, a sleep or a network change.
+- **Works without anyone's own account or server.** Other organisers must be able to use AttendWell as downloaded. No Cloudflare account, no iCloud.
+- **Same room is enough.** The organiser is always in the room with the iPad; remote access is not needed.
 - The Mac drives everything. What the Mac pushes appears on the iPad. Opening, closing and hiding are done on the Mac.
 - No organiser PIN or organiser mode on the iPad, and fewer passwords overall.
-- The Mac shows check-ins live, so nobody has to go to the iPad to see them.
-- Names are not secret. Email addresses stay on the Mac. Nothing should sit openly on a public web page.
-- Bluetooth or Cloudflare both acceptable. What matters is robust and quick to set up again.
+- The Mac shows check-ins live.
+- Email addresses stay on the Mac. Nothing sits openly on a public web page.
+- Nice to have: set the iPad up from one Mac, then manage check-in from another Mac.
 
-## Recommended design: a small relay both devices talk to
+## Recommended design: nearby connection first, tunnel as fallback, file as last resort
 
-Replace "the iPad calls the Mac through a tunnel" with **a relay that both devices call out to**: one Cloudflare Worker with one Durable Object per workshop, on Dominik's own Cloudflare account, at a fixed address.
+### 1. Primary path: Apple's nearby peer-to-peer connection (Multipeer Connectivity)
 
-```
-Mac app  ──outbound HTTPS/WebSocket──▶  relay (fixed address, one room per workshop)  ◀──outbound HTTPS──  iPad
-```
+Multipeer Connectivity is the Apple framework behind AirDrop-style sharing. It connects nearby Apple devices over Bluetooth and peer-to-peer Wi-Fi, and over the shared Wi-Fi if there is one. **It needs no internet, no shared network, no account and no server.** It works on eduroam, a hotel network or no network at all, as long as both devices are in the room with Bluetooth and Wi-Fi switched on (they don't need to be joined to a network).
 
-Why this fixes the failures:
+Why this rather than plain Bluetooth: plain Bluetooth Low Energy is slow and fiddly to keep connected. Multipeer uses Bluetooth to find the other device and then moves data over the much faster peer-to-peer Wi-Fi. It reconnects by itself, and Apple maintains it.
 
-| Failure on 9 Nov | With a relay |
-|---|---|
-| New tunnel address after each restart | The address never changes. The iPad pairs once per workshop. |
-| Quick tunnel dropping | The relay runs on Cloudflare's network; neither device hosts a server. |
-| Mac asleep, offline or on another network | The iPad still sends to the relay. The Mac catches up when it wakes. |
-| iPad and Mac on different networks | Irrelevant: each device only needs internet access. |
-| Check-in window closed by surprise | The Mac app sets open or closed explicitly, and the iPad shows that state. |
+How it fits the Mac app: the Mac app is Electron, which cannot call Apple frameworks directly. A small Swift helper program is bundled inside the app, as the register service already is. The helper handles the nearby connection and talks to the register service on the Mac. Windows has no Multipeer; Windows organisers use the tunnel path below.
 
-### What the relay holds
+### 2. Fallback path: the quick tunnel, with automatic re-handshake
 
-- For each workshop room: the workshop title, the names list (id, display name, status: confirmed / waiting-admitted / hidden), the open-or-closed flag, and the check-in events (person id, time, device id, an operation id so retries count once).
-- **No email addresses**, and none of the other booking data. The Mac keeps the full register.
-- The room key is a long random secret in the QR code. Without it the room cannot be read or written. No room is listed, indexed or browsable. This replaces the pairing code, PIN and organiser proof.
-- Rooms delete themselves a set time after the workshop (default 7 days) or when the Mac archives the workshop.
+Keep the quick tunnel for organisers on Windows and for when the nearby link can't form. Fix its main weakness:
 
-### How the devices sync
+- **Whenever the nearby link is up, the Mac sends the iPad the current tunnel address.** A new address after a restart reaches the iPad within seconds, with no rescanning.
+- The iPad also asks again on launch and when it returns to the foreground.
+- If neither works, a **Show iPad code** QR on the Mac carries the new address. Scanning it reconnects the same iPad without losing anything (no PIN, no new device record).
+- The iPad tries both paths: nearby first, tunnel second, and sends through whichever answers.
 
-- **Mac → relay:** pushes the names list and the open/closed state whenever either changes. Each push is a full snapshot with a version number, so a missed push is corrected by the next one. The Mac holds a WebSocket to the relay and receives check-ins the moment they arrive, plus a catch-up pull ("everything since cursor N") on every reconnect.
-- **iPad → relay:** check-ins go into a local queue first (as now) and are sent with retry and backoff until the relay acknowledges them. Operation ids make each send idempotent, so repeating it never double-counts. The iPad pulls the names and state on launch, on foreground, and every few seconds while open.
-- **Fallbacks that need no network:** the iPad recovery file stays (AirDrop to the Mac and import). Optionally, the same sync over the local network when both devices are on one Wi-Fi, found by Bonjour. That is phase 3, only if the relay ever proves insufficient.
+### 3. Last resort: the recovery file over AirDrop
 
-### Pairing
+It stays as now: save on the iPad, AirDrop to the Mac and import. It needs no connection at all.
 
-1. On the Mac: open the workshop and click **Show iPad code**. A QR code appears; it holds the relay address, room id and room key.
-2. On the iPad: scan it. Done. There is no PIN to set.
-3. The pairing survives restarts of either app, changes of network and Mac sleep. To move the iPad to another workshop, scan that workshop's code. To cut off a lost iPad, click **Reset iPad code** on the Mac, which rotates the room key.
+## The sync model (the same whatever the path)
 
-### What the iPad shows and does
+Reliability comes from the data model, not the cable. Every path carries the same few messages:
 
-- The check-in screen only: search, tap your name, confirm.
-- A small status line: "Sent to laptop" / "Saved here, will send" with a count. No organiser screens, PIN or handover flow.
-- An unobtrusive menu with three items: **Save recovery file**, **Scan new code**, **About**.
+- **Mac → iPad: a snapshot.** Workshop title, the names list (id, display name, shown or hidden), open or closed, and a version number. A full snapshot every time anything changes, so a missed message is corrected by the next one. No emails.
+- **iPad → Mac: check-ins.** Each check-in is saved on the iPad first, with an operation id. It is resent until the Mac acknowledges it. The Mac records each operation id once, so retries never double-count.
+- **On every (re)connection both sides exchange "what's the latest you have".** The iPad sends anything unacknowledged; the Mac sends the current snapshot. Resumption is automatic and takes a second or two.
+- **The iPad keeps its own complete log** of the check-ins it took, acknowledged or not, until the workshop is archived. This makes handing over to a second Mac possible: the new Mac connects, and the iPad replays its log.
+- **The Mac never refuses a check-in from its own iPad.** A check-in after closing is recorded and shown as "late". A name the Mac doesn't know (for example, removed meanwhile) is recorded and flagged. Nothing is held on the iPad waiting for review.
 
-### What the Mac shows
+## Pairing and trust (simplified)
 
-- A live list of who has checked in, with time and iPad, updated within a second or two of each tap.
-- A connection badge for the relay and each iPad ("last heard 5 s ago", "3 waiting to send").
-- Controls: open/close check-in, hide or unhide a name, add a person, import or refresh the booking list (PR #5), show or reset the iPad code, export attendees.
+1. On the Mac: open the workshop and click **Show iPad code**. A QR code appears with the workshop id, a shared key and the current tunnel address.
+2. On the iPad: scan it. There is no PIN to set.
+3. From then on the iPad finds that Mac nearby on its own, and the pairing survives restarts, sleep and network changes.
+4. **A second Mac:** open the same workshop file on it (exported from the first Mac, or the same booking list imported), then show its code and scan it on the iPad. The iPad replays its log to the new Mac. Phase 4, not needed for the first release.
+5. **Lost iPad:** click **Reset iPad code** on the Mac. That changes the key, so the old iPad can no longer connect.
+
+The shared key encrypts the nearby link and authenticates the tunnel requests, so a stranger in the room or on the web cannot read the list or add check-ins. That is the only security on the iPad path.
 
 ## Security we keep and security we drop
 
 **Keep**
-- Email addresses and booking exports never leave the Mac.
-- The relay requires the room key and never lists rooms; HTTPS only.
-- Rooms expire, and the Mac can delete one at once.
-- A separate Mac key, kept on the Mac, for the Mac's own writes (names, open/closed), so a lost iPad cannot change the list. The iPad key can only add check-ins and read names.
+- Email addresses and booking exports never leave the Mac. The iPad gets display names only.
+- One shared key per workshop, from the QR code; the Mac can reset it.
+- The tunnel serves only the iPad routes, and only to holders of the key. Nothing is browsable on the web.
 
 **Drop**
-- The iPad organiser PIN and organiser mode, organiser proofs and re-pairing with a PIN.
-- Holding check-ins for review because of a stale version or a closed window. A check-in from a paired iPad is accepted. A check-in that arrives after closing is recorded and flagged "late" on the Mac, never refused.
-- One-time pairing codes with wrong-attempt lockouts.
-- The quick tunnel, the Pages proxy and the participant web listener for the iPad path.
+- The iPad organiser PIN and organiser mode, organiser proofs and PIN-based re-pairing.
+- One-time pairing codes with wrong-attempt lockouts and pairing sessions.
+- Holding check-ins for review because of a stale version or a closed window.
+- Device revocation lists, beyond resetting the workshop key.
+- The participant web page and the Pages proxy, if nobody else uses them (check before deleting).
 
-## Reliability targets and how they are tested
+## What the iPad shows
 
-- A check-in tapped on a paired iPad reaches the Mac with 100% delivery, within 3 s when both are online, and within 10 s of the Mac coming back online otherwise.
-- No duplicates: the same operation id is recorded once.
-- Test harness (automated, in CI and locally):
-  - Relay unit tests (Durable Object with Miniflare): idempotency, cursors, expiry, key checks.
-  - Soak test: a simulated iPad sends 500 check-ins while the network is cut and restored at random, the relay restarts and the Mac goes offline for 2 minutes. Pass: every check-in arrives exactly once.
-  - Mac sleep and network-change test on real hardware before release (manual checklist in `runbook-operations.md`).
-  - iPad: the queue survives app kill and relaunch mid-send (XCTest on the store, plus one simulator run).
-- One rehearsal on real devices on two different networks (iPad on a phone hotspot, Mac on eduroam) before the next workshop.
+- The check-in screen only: search, tap your name, confirm.
+- A small status line: "Connected to Dominik's MacBook Pro (nearby)" or "(internet)", or "Saved here: 3 to send".
+- One small menu: **Scan new code**, **Save recovery file**, **About**. No organiser screens.
+
+## What the Mac shows
+
+- A live list of who has checked in, with time, updated within a second of each tap.
+- A connection badge per iPad: "Nearby", "Via internet" or "Last heard 2 min ago, 3 waiting".
+- Controls: open/close check-in, hide or unhide a name, add a person, refresh the booking list (PR #5), show or reset the iPad code, import a recovery file, export attendees.
+
+## Reliability targets and tests
+
+- 100% delivery of check-ins from a paired iPad, exactly once. Within 2 s when nearby. Within 10 s of reconnection otherwise.
+- Automatic resumption, with no taps, after: Mac sleep and wake, Mac app restart, a new tunnel address, the iPad app being killed and relaunched, Wi-Fi switched or lost.
+- Tests:
+  - **Sync core** (shared rules for snapshots, acknowledgements and idempotency): unit tests on both sides against the same message fixtures.
+  - **Soak test with a simulated iPad:** 500 check-ins while connections drop at random, the Mac service restarts and the tunnel address changes. Pass: every check-in arrives exactly once.
+  - **On real devices, before release:** the iPad and Mac on different Wi-Fi networks; the Mac with Wi-Fi off but Bluetooth on; Mac sleep for 5 minutes during check-ins; the Mac app quit and reopened; airplane mode on the iPad with Wi-Fi and Bluetooth back on. Written as a checklist in `runbook-operations.md`.
+  - One full rehearsal with the second-Mac handover once phase 4 exists.
 
 ## Phases
 
-1. **Ship PR #5** (reopen check-in, status-updating import) as 1.0.2. It's small and already built.
-2. **Relay and Mac side** (biggest step): Worker + Durable Object in `cloudflare/relay/`, deploy instructions for Dominik's account, Mac sync client with live list and connection badge, QR with room key. Keep the old tunnel path behind a setting until phase 4.
-3. **iPad side:** new transport (relay), remove the PIN, organiser screen and handover; keep the queue, recovery file and names cache. TestFlight build.
-4. **Prove and remove:** soak test, two-network rehearsal, then delete the tunnel, Pages proxy and pairing/PIN code and their ADRs (supersede ADR 0003). Release 1.1.
-5. **Optional:** a local-network path via Bonjour, only if rehearsals show it is needed.
+0. **Ship PR #5** (reopen check-in, status-updating import) as 1.0.2. It's already built.
+1. **Spike (first, small): prove the nearby link.** A bundled Swift helper on the Mac and the iPad app exchange messages over Multipeer. Measure connection time, reconnection after sleep, behaviour on eduroam, and whether the macOS permissions (Local Network, Bluetooth) work for a helper inside a signed Electron app. **Stop and report** if the helper can't hold a reliable link; fall back to plan B below.
+2. **Sync core and Mac side:** the message model above, the Swift helper, live check-in list, connection badges, QR with key and tunnel address, tunnel re-handshake.
+3. **iPad side:** nearby plus tunnel transports, the simplified screens, PIN and organiser mode removed, log kept for replay. TestFlight build.
+4. **Prove and remove:** soak test and device checklist, then delete the pairing, PIN, proof and hold machinery and supersede ADR 0003. Release 1.1. Then the second-Mac handover.
 
-Rough size: phase 2 is two or three focused build sessions, phase 3 one or two, phase 4 one. Most of the deleted code is security machinery, so the app gets smaller.
+Most of the deleted code is security machinery, so both apps get smaller.
 
-## Decisions for Dominik
-
-1. **Relay on Cloudflare (recommended)** versus keeping a direct connection with a fixed named tunnel. A named tunnel fixes the changing address but still needs the Mac awake and reachable at every tap; the relay does not. Both need his Cloudflare account and a hostname.
-2. **Names on the relay.** Display names (no emails), behind a room key, deleted after 7 days by default. OK, or a shorter expiry?
-3. **Bluetooth.** Not recommended as the main path: the Mac app is Electron, so Bluetooth would need a native helper, and its range is a room. Kept as a possible later phase, after the local-network option.
+**Plan B, if the spike fails:** the iPad and Mac find each other with Bonjour on the shared Wi-Fi and talk directly. With the Mac's own hotspot or the iPhone's hotspot as the shared network when the venue blocks devices from seeing each other (eduroam often does), the quick tunnel stays the fallback.
 
 ## Today's data (9 Nov 2026)
 
-The 9 November check-ins are on the iPad. Move them with the recovery file (iPad → Organiser → Save recovery file → AirDrop to Mac → Mac app → Import iPad recovery file). That needs no network connection between the devices.
+The 9 November check-ins are on the iPad. Move them with the recovery file (iPad → Organiser → Save recovery file → AirDrop to the Mac → Mac app → Import iPad recovery file).
