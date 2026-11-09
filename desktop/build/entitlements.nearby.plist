@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- The nearby helper (Swift, Multipeer Connectivity) is not sandboxed, so it needs no network entitlements: Local Network is a
+       user permission (Info.plist keys), not an entitlement. Under the hardened runtime, though, Bluetooth is a resource that
+       needs this entitlement (Xcode lists it under Hardened Runtime > Resource Access > Bluetooth; it is not sandbox-only):
+       Multipeer discovers and connects over Bluetooth and peer-to-peer Wi-Fi, and macOS would deny the helper's Bluetooth
+       access without it. Nothing else is given: no JIT, no unsigned memory, no library-validation exception. -->
+  <key>com.apple.security.device.bluetooth</key><true/>
+</dict>
+</plist>

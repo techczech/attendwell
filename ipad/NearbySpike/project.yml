@@ -1,0 +1,76 @@
+# Generate with: xcodegen generate --spec project.yml  (run from ipad/NearbySpike). The generated NearbySpike.xcodeproj is committed.
+# Spike only (branch spike/multipeer-nearby-link): proves the nearby link; not the AttendWell app.
+name: NearbySpike
+options:
+  bundleIdPrefix: net.dominiklukes.attendwell
+  deploymentTarget:
+    iOS: "16.0"
+packages:
+  NearbyLink:
+    path: ../../desktop/nearby
+targets:
+  NearbySpike:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - Sources
+    dependencies:
+      - package: NearbyLink
+        product: NearbyLink
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: Nearby Spike
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSLocalNetworkUsageDescription: AttendWell Nearby Spike finds the Mac running check-in in the room.
+        NSBonjourServices:
+          - _attendwell-nb._tcp
+          - _attendwell-nb._udp
+        NSBluetoothAlwaysUsageDescription: AttendWell Nearby Spike finds the Mac running check-in in the room.
+        NSCameraUsageDescription: Scan the pairing code shown on the Mac.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.dominiklukes.attendwell.nearbyspike
+        DEVELOPMENT_TEAM: M7H45AGG8A
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "2"
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: NO
+  NearbySpikeTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - Tests/NearbySpikeTests
+    dependencies:
+      - package: NearbyLink
+        product: NearbyLink
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: net.dominiklukes.attendwell.nearbyspike.tests
+        DEVELOPMENT_TEAM: M7H45AGG8A
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: YES
+      configs:
+        Debug:
+          "CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"
+schemes:
+  NearbySpike:
+    build:
+      targets:
+        NearbySpike: all
+    test:
+      config: Debug
+      targets:
+        - NearbySpikeTests
+    run:
+      config: Debug

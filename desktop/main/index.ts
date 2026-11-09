@@ -28,6 +28,7 @@ import { openSettings } from './settings.ts';
 import { guardedExternal, isRealDirectory, revealFolder } from './safe-paths.ts';
 import { effectiveEnv, readTestBuildMarker } from './test-mode.ts';
 import { UPDATE_IDENTITY, createUpdateService } from './updates.ts';
+import { startNearbySpike } from './nearby-spike.ts';
 
 // Test switches are read through this environment only (main/test-mode.ts): a release build sees none of them.
 const ENV = effectiveEnv({ isPackaged: app.isPackaged, testBuild: readTestBuildMarker(app.getAppPath()) });
@@ -128,6 +129,8 @@ async function start(): Promise<void> {
   // The diagnostic log (main/app-log.ts): the register's and cloudflared's output, the check-in's states and failed actions.
   const appLog = openAppLog(userData);
   appLog.write(`AttendWell ${version} started (${app.isPackaged ? 'packaged' : 'development'}, ${process.platform} ${process.arch}); registers folder ${folder}; programs in ${resourcesRoot}.`);
+  // Spike only: ATTENDWELL_NEARBY_SPIKE=1 (honoured only where the other test switches are) starts the nearby helper; see main/nearby-spike.ts.
+  const nearbySpike = startNearbySpike({ env: ENV, userData, resourcesRoot });
   const bundle = createRuntimeBundle({ dataRoot: expandForPort(folder), resourcesRoot, env: ENV, log: (line) => appLog.write(line) });
   const port = bundle.port;
   port.status.onChange(runtimeChangeLogger((line) => appLog.write(line)));
@@ -436,6 +439,7 @@ async function start(): Promise<void> {
       return;
     }
     updates.checker.stop();
+    nearbySpike?.stop();
     shuttingDown = true;
     sess.dispose();
     e.preventDefault();

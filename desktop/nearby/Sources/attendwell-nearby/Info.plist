@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>net.dominiklukes.attendwell.nearby</string>
+<key>CFBundleName</key><string>attendwell-nearby</string>
+<key>CFBundleVersion</key><string>1</string>
+<key>NSLocalNetworkUsageDescription</key><string>AttendWell finds the check-in iPad in the room.</string>
+<key>NSBonjourServices</key><array><string>_attendwell-nb._tcp</string><string>_attendwell-nb._udp</string></array>
+<key>NSBluetoothAlwaysUsageDescription</key><string>AttendWell finds the check-in iPad in the room.</string>
+</dict></plist>

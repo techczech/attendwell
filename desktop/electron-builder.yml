@@ -40,6 +40,15 @@ mac:
   signIgnore:
     - /Contents/Resources/sidecar/[^/]+/attendwell-service$
     - /Contents/Resources/cloudflared/[^/]+/cloudflared$
+    - /Contents/Resources/nearby/[^/]+/attendwell-nearby$
+  # Nearby spike: the keys macOS needs before it will show the Local Network and Bluetooth prompts to the app (and the helper
+  # it starts) and let Multipeer Connectivity advertise over Bonjour.
+  extendInfo:
+    NSLocalNetworkUsageDescription: AttendWell finds the check-in iPad in the room.
+    NSBonjourServices:
+      - _attendwell-nb._tcp
+      - _attendwell-nb._udp
+    NSBluetoothAlwaysUsageDescription: AttendWell finds the check-in iPad in the room.
   # No signing here: identity null stops electron-builder from picking a certificate that happens to be installed (dist:mac overrides it).
   identity: null
   extraResources:
@@ -47,6 +56,8 @@ mac:
       to: sidecar/darwin-${arch}
     - from: resources/cloudflared/darwin-${arch}
       to: cloudflared/darwin-${arch}
+    - from: resources/nearby/darwin-${arch}
+      to: nearby/darwin-${arch}
 dmg:
   artifactName: ${productName}-${version}-${arch}.${ext}
   title: ${productName} ${version}
