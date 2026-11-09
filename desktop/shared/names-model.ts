@@ -159,13 +159,15 @@ export function sameNameText(name: string): string {
   return `${name} appears more than once. Both are kept; a check-in for this name is held for you to confirm.`;
 }
 
-/** Rows the import table shows: the first two added, then booking changes, then other rows that were not simply added, at most
- *  `max` in all; then what was left out: "and N more rows added", "and N more booking changes", "and N more rows not listed". */
+/** Rows the import table shows: the first two added, then every booking change (never cut: each one is applied, so each one must
+ *  be visible before Add), then other rows that were not simply added while fewer than `max` rows are shown; then what was left
+ *  out: "and N more rows added", "and N more rows not listed". `moreChanges` stays 0. */
 export function previewRows(plan: NamesPlan, firstAdded = 2, max = 60): { rows: RowResult[]; moreAdded: number; moreChanges: number; moreOther: number } {
   const added = plan.rows.filter((r) => r.result === 'added');
   const changes = plan.rows.filter((r) => r.result === 'updated');
   const other = plan.rows.filter((r) => r.result !== 'added' && r.result !== 'updated');
-  const rows = [...added.slice(0, firstAdded), ...changes, ...other].slice(0, max);
+  const head = [...added.slice(0, firstAdded), ...changes];
+  const rows = [...head, ...other.slice(0, Math.max(0, max - head.length))];
   const shown = (k: (r: RowResult) => boolean): number => rows.filter(k).length;
   return {
     rows,

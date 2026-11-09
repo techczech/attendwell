@@ -27,16 +27,15 @@ describe('names wording', () => {
     expect(addBlocked({ ...p, alreadyAdded: { addedAt: '2026-10-21T09:00:00Z', filename: null } })).toContain('already added');
     expect(addBlocked(plan([['', 'x@example.ac.uk']]))).toBe('There is nobody new on this list.');
   });
-  test('booking changes past the preview cap are counted, and the completion line names updates', () => {
+  test('every booking change is listed in the preview, even past the row cap, and the completion line names updates', () => {
     const existing = Array.from({ length: 100 }, (_, i) => ({ id: `p${i}`, name: `Person ${i}`, email: `p${i}@example.ac.uk`, booking: 'confirmed' }));
     const p = planNames({
       existing, addedLists: {}, workshopDate: '2026-10-30', statuses: exampleWorkshop.sourceStatuses, updateBookings: true,
       rows: [...existing.map((e, i) => ({ row: i + 2, name: e.name, email: e.email, status: 'Cancelled' })), { row: 200, name: 'New One', email: '' }, { row: 201, name: 'New Two', email: '' }],
     });
     const shown = previewRows(p);
-    expect(shown.rows).toHaveLength(60);
-    expect(shown.rows.filter((r) => r.result === 'updated')).toHaveLength(58);
-    expect(shown).toMatchObject({ moreAdded: 0, moreChanges: 42, moreOther: 0 });
+    expect(shown.rows.filter((r) => r.result === 'updated')).toHaveLength(100);
+    expect(shown).toMatchObject({ moreAdded: 0, moreChanges: 0, moreOther: 0 });
     expect(addLabel(p)).toBe('Add 2 people, update 100 bookings');
     expect(addedText(p)).toBe('Added 2 people to the register and updated 100 bookings');
     expect(addedText({ ...p, counts: { ...p.counts, added: 0, updated: 3 } })).toBe('Updated 3 bookings');
