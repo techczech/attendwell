@@ -194,6 +194,53 @@ describe('against the real register handler', () => {
     expect(await r.names.add(tok(again))).toMatchObject({ ok: false, error: 'This list was already added. Nothing was changed.' });
     expect(r.s.store.list().participants).toHaveLength(8);
   });
+  test('a newer booking export updates bookings by email (cancelled included) only once ticked, and only adds before', async () => {
+    const r = await realRig();
+    r.s.store.setAttendance('b', true, 0, 'test');
+    const file = join(r.dir, 'cosy-newer.csv');
+    writeFileSync(file, 'User Fullname,User Email,Start Date,Status\nAlex Example,alex@example.org,15/01/2030 13:00,Cancelled\nBea Example,BEA@example.org,15/01/2030 13:00,Cancelled\nWaiting Example,wait@example.org,15/01/2030 13:00,Booked\nNew Person,new@example.org,15/01/2030 13:00,Waiting List\n');
+    const p = await r.names.openFile(r.w.id, file);
+    if (!p.ok) throw new Error(p.error);
+    // Offered, not ticked: the list only adds until the organiser asks for booking changes.
+    expect(p.value).toMatchObject({ canUpdateBookings: true, updateBookings: false });
+    expect(p.value.plan!.counts).toMatchObject({ added: 1, updated: 0 });
+    const on = await r.names.setUpdateBookings(true);
+    if (!on.ok) throw new Error(on.error);
+    // Alex Example and Alex Duplicate share alex@example.org: neither is changed.
+    expect(on.value.plan!.rows.map((x) => [x.name, x.result])).toEqual([['Alex Example', 'skipped'], ['Bea Example', 'updated'], ['Waiting Example', 'updated'], ['New Person', 'added']]);
+    expect(addLabel(on.value.plan!)).toBe('Add 1 person, update 2 bookings');
+    expect(importTally(on.value.plan!)[1]!.text).toBe('booking changes: 1 now booked, 1 cancelled');
+    expect(previewRows(on.value.plan!).rows.map(resultText)).toEqual(['Added', 'Booking: Booked → Cancelled (already checked in; stays checked in)', 'Booking: Waiting list → Booked', 'Not changed: more than one person with this email']);
+    // The token of the unticked preview no longer adds.
+    expect(await r.names.add(tok(p))).toMatchObject({ ok: false });
+    const done = await r.names.add(tok(on));
+    expect(done.ok && done.value.written).toBe(true);
+    const by = (id: string) => r.s.store.list().participants.find((x) => x.id === id)!;
+    expect([by('a').booking, by('d').booking, by('b').booking, by('w').booking]).toEqual(['confirmed', 'confirmed', 'cancelled', 'confirmed']);
+    expect(by('b').present).toBe(true);
+  });
+  test('Add applies only the plan the preview showed: when the register changed meanwhile it writes nothing and shows the new preview', async () => {
+    const r = await realRig();
+    const file = join(r.dir, 'cosy.csv');
+    writeFileSync(file, 'User Fullname,User Email,Start Date,Status\nBea Example,bea@example.org,15/01/2030 13:00,Booked\nNew Person,new@example.org,15/01/2030 13:00,Booked\n');
+    await r.names.openFile(r.w.id, file);
+    const p = await r.names.setUpdateBookings(true);
+    if (!p.ok) throw new Error(p.error);
+    expect(p.value.plan!.rows.map((x) => x.result)).toEqual(['known', 'added']);
+    // Meanwhile Bea is cancelled by another list.
+    const other = { source: { kind: 'paste' }, rows: [{ row: 1, name: 'Bea Example', email: 'bea@example.org', status: 'Cancelled' }], updateBookings: true };
+    r.s.store.addNames({ ...other, planKey: r.s.store.addNames(other, 'owner', { dryRun: true }).plan.planKey }, 'owner');
+    const stale = await r.names.add(tok(p));
+    if (!stale.ok) throw new Error(stale.error);
+    expect(stale.value).toMatchObject({ written: false, notice: expect.stringContaining('changed after the preview') });
+    expect(stale.value.plan!.rows.map((x) => [x.result, x.from ?? null])).toEqual([['updated', 'cancelled'], ['added', null]]);
+    expect(r.s.store.list().participants.find((x) => x.id === 'b')!.booking).toBe('cancelled');
+    expect(r.s.store.list().participants.some((x) => x.name === 'New Person')).toBe(false);
+    // The old token stays refused; the new preview's token applies what it now shows.
+    expect(await r.names.add(tok(p))).toMatchObject({ ok: false });
+    expect((await r.names.add(tok(stale))).ok).toBe(true);
+    expect(r.s.store.list().participants.find((x) => x.id === 'b')!.booking).toBe('confirmed');
+  });
   test('a recovery file replayed twice gives no duplicates, and the iPad sending the same check-ins live is answered already_applied', async () => {
     const r = await realRig();
     const { credential, deviceId } = await r.s.pairDevice({ label: 'Door iPad' });

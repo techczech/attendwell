@@ -10,6 +10,10 @@ export type { NameListRecord, NameRow, NamesPlan, RecoveryReport, RecoveryRow, R
 export interface AddNamesRequest {
   source: { kind: 'paste' | 'file'; filename?: string | null; sha256?: string | null };
   rows: NameRow[];
+  /** Also set the booking of people already in the register from this list's status column (server/names-list.ts). */
+  updateBookings?: boolean;
+  /** For a write: the planKey of the preview the organiser approved; the register refuses the write if its plan now differs. */
+  planKey?: string;
 }
 export interface AddNamesResult { plan: NamesPlan; written: boolean; roster: Roster }
 
@@ -35,7 +39,13 @@ export interface NamesSheetView {
   /** The preview's token: Add sends it back, and main adds only if it is still the latest preview's. Null with no plan. */
   token: string | null;
   written: boolean;
+  /** The list may update the booking status of people already in the register (only offered when it has a status column). */
+  updateBookings: boolean;
+  /** The list has a booking status column, so the update can be offered. */
+  canUpdateBookings: boolean;
   error: string | null;
+  /** Said above the preview without blocking Add (the register changed after the last preview; this is the new one). */
+  notice?: string | null;
 }
 
 export interface RecoverySheetView {
@@ -56,15 +66,31 @@ export function shortDay(day: string): string {
 
 export function addLabel(plan: NamesPlan | null): string {
   const n = plan?.counts.added ?? 0;
+  const u = plan?.counts.updated ?? 0;
+  if (u && !n) return `Update ${plural(u, 'booking', 'bookings')}`;
+  if (u) return `Add ${plural(n, 'person', 'people')}, update ${plural(u, 'booking', 'bookings')}`;
   return n === 0 ? 'Add people' : `Add ${plural(n, 'person', 'people')}`;
 }
+
+/** The status line after a list was applied: what it added and what it updated. */
+export function addedText(plan: NamesPlan | null): string {
+  const n = plan?.counts.added ?? 0;
+  const u = plan?.counts.updated ?? 0;
+  const bookings = plural(u, 'booking', 'bookings');
+  if (u && !n) return `Updated ${bookings}`;
+  if (u) return `Added ${plural(n, 'person', 'people')} to the register and updated ${bookings}`;
+  return `Added ${plural(n, 'person', 'people')} to the register`;
+}
+
+export const BOOKING_LABELS: Record<string, string> = { confirmed: 'Booked', waiting: 'Waiting list', cancelled: 'Cancelled' };
+const bookingLabel = (b: string | undefined): string => BOOKING_LABELS[b ?? ''] ?? b ?? '';
 
 /** Why the Add button is off, or null when it is on. */
 export function addBlocked(plan: NamesPlan | null): string | null {
   if (!plan) return 'Paste or choose a list first.';
-  if (plan.alreadyAdded) return 'This list was already added. Adding it again changes nothing.';
+  if (plan.alreadyAdded && !plan.counts.updated) return 'This list was already added. Adding it again adds nobody.';
   if (plan.full) return `The register holds up to 500 people; with this list it would hold ${plan.total}.`;
-  if (plan.counts.added === 0) return 'There is nobody new on this list.';
+  if (plan.counts.added === 0 && !plan.counts.updated) return 'There is nobody new on this list.';
   return null;
 }
 
@@ -74,6 +100,7 @@ const REASONS: Record<string, string> = {
   'bad-email': 'email address not valid',
   cancelled: 'booking cancelled',
   'no-status-label': 'this workshop has no booking status for it',
+  'already-added': 'this list was already added',
 };
 
 export function resultText(r: RowResult): string {
@@ -81,7 +108,10 @@ export function resultText(r: RowResult): string {
     case 'added': return 'Added';
     case 'merged': return `Merged with row ${r.mergedWith} (same email)`;
     case 'known': return 'Already in the register (same email)';
-    default: return r.reason === 'other-date' && r.date ? `Skipped: date is ${shortDay(r.date)}, not this workshop` : `Skipped: ${REASONS[r.reason ?? ''] ?? 'not readable'}`;
+    case 'updated': return `Booking: ${bookingLabel(r.from)} → ${bookingLabel(r.booking)}${r.present ? ' (already checked in; stays checked in)' : ''}`;
+    default:
+      if (r.reason === 'ambiguous-email') return 'Not changed: more than one person with this email';
+      return r.reason === 'other-date' && r.date ? `Skipped: date is ${shortDay(r.date)}, not this workshop` : `Skipped: ${REASONS[r.reason ?? ''] ?? 'not readable'}`;
   }
 }
 
@@ -97,20 +127,31 @@ export function pasteTally(plan: NamesPlan): TallyLine[] {
     out.push({ tone: 'info', figure: merged.length, text: `${merged.length === 1 ? 'duplicate' : 'duplicates'} merged: ${names.slice(0, 3).join(', ')}${names.length > 3 ? ' and others' : ''} (same email)` });
   }
   if (plan.counts.known) out.push({ tone: 'info', figure: plan.counts.known, text: 'already in the register (same email)' });
+  if (plan.counts.updated) out.push({ tone: 'info', figure: plan.counts.updated, text: bookingChangeText(plan) });
   if (plan.counts.blank) out.push({ tone: 'neutral', figure: plan.counts.blank, text: plan.counts.blank === 1 ? 'blank line skipped' : 'blank lines skipped' });
   const skipped = plan.rows.filter((r) => r.result === 'skipped');
   if (skipped.length) out.push({ tone: 'warn', figure: skipped.length, text: `${skipped.length === 1 ? 'line' : 'lines'} skipped: ${[...new Set(skipped.map((r) => resultText(r).replace(/^Skipped: /, '')))].join('; ')}` });
   return out;
 }
 
-/** The import sheet's three cards. */
+/** "booking changes: 1 now booked, 1 cancelled" (people already in the register). */
+export function bookingChangeText(plan: NamesPlan): string {
+  const up = plan.rows.filter((r) => r.result === 'updated');
+  const by = (b: string): number => up.filter((r) => r.booking === b).length;
+  const parts = [[by('confirmed'), 'now booked'], [by('waiting'), 'now on the waiting list'], [by('cancelled'), 'cancelled']].filter(([n]) => n).map(([n, t]) => `${n} ${t}`);
+  return `${up.length === 1 ? 'booking change' : 'booking changes'}${parts.length ? `: ${parts.join(', ')}` : ''}`;
+}
+
+/** The import sheet's cards: added, merged, skipped, and booking changes when there are any. */
 export function importTally(plan: NamesPlan): TallyLine[] {
   const merged = plan.counts.merged + plan.counts.known;
-  return [
+  const out: TallyLine[] = [
     { tone: 'good', figure: plan.counts.added, text: plan.counts.added === 1 ? 'person will be on the list' : 'people will be on the list' },
     { tone: 'info', figure: merged, text: merged === 1 ? 'duplicate merged by email address' : 'duplicates merged by email address' },
     { tone: 'warn', figure: plan.counts.skipped, text: plan.counts.skipped === 1 ? 'row skipped, reason below' : 'rows skipped, reasons below' },
   ];
+  if (plan.counts.updated) out.splice(1, 0, { tone: 'info', figure: plan.counts.updated, text: bookingChangeText(plan) });
+  return out;
 }
 
 /** Lines held for confirmation: one per name that would be on the register more than once. */
@@ -118,12 +159,22 @@ export function sameNameText(name: string): string {
   return `${name} appears more than once. Both are kept; a check-in for this name is held for you to confirm.`;
 }
 
-/** Rows the import table shows: the first two added, then every row that was not simply added, then "and N more rows added". */
-export function previewRows(plan: NamesPlan, firstAdded = 2, max = 60): { rows: RowResult[]; moreAdded: number } {
+/** Rows the import table shows: the first two added, then every booking change (never cut: each one is applied, so each one must
+ *  be visible before Add), then other rows that were not simply added while fewer than `max` rows are shown; then what was left
+ *  out: "and N more rows added", "and N more rows not listed". `moreChanges` stays 0. */
+export function previewRows(plan: NamesPlan, firstAdded = 2, max = 60): { rows: RowResult[]; moreAdded: number; moreChanges: number; moreOther: number } {
   const added = plan.rows.filter((r) => r.result === 'added');
-  const notable = plan.rows.filter((r) => r.result !== 'added');
-  const rows = [...added.slice(0, firstAdded), ...notable].slice(0, max);
-  return { rows, moreAdded: added.length - Math.min(firstAdded, added.length) };
+  const changes = plan.rows.filter((r) => r.result === 'updated');
+  const other = plan.rows.filter((r) => r.result !== 'added' && r.result !== 'updated');
+  const head = [...added.slice(0, firstAdded), ...changes];
+  const rows = [...head, ...other.slice(0, Math.max(0, max - head.length))];
+  const shown = (k: (r: RowResult) => boolean): number => rows.filter(k).length;
+  return {
+    rows,
+    moreAdded: added.length - shown((r) => r.result === 'added'),
+    moreChanges: changes.length - shown((r) => r.result === 'updated'),
+    moreOther: other.length - shown((r) => r.result !== 'added' && r.result !== 'updated'),
+  };
 }
 
 /** The recovery result line, in the Kiosk wording: before importing (preview) and after. */

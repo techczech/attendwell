@@ -6,7 +6,7 @@
 import { createHash } from 'node:crypto';
 import { open } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
-import { MAX_LIST_ROWS } from '../../server/names-list.ts';
+import { MAX_LIST_ROWS, PLAN_CHANGED } from '../../server/names-list.ts';
 import type { Result } from '../shared/ipc.ts';
 import type { NameRow, NamesMapping, NamesPlan, NamesSheetView, RecoveryReport, RecoverySheetView } from '../shared/names-model.ts';
 import type { RegisterLease } from '../shared/runtime-types.ts';
@@ -60,6 +60,8 @@ interface NamesState {
   mapping: NamesMapping | null;
   rows: NameRow[];
   plan: NamesPlan | null;
+  /** Also update the booking of people already in the register (off until the organiser ticks it; only sent when a row has a status). */
+  updateBookings: boolean;
   /** Names the exact rows `plan` was made from; Add must bring it back. Null until this state's own preview has answered. */
   token: string | null;
   written: boolean;
@@ -74,8 +76,13 @@ const trimRows = (rows: string[][]): string[][] => {
 /** Cells long enough to be refused for their length, short enough to keep the request small. */
 const bound = (r: NameRow): NameRow => ({ ...r, name: r.name.slice(0, 201), email: r.email.slice(0, 255), ...(r.status !== undefined ? { status: r.status.slice(0, 100) } : {}) });
 const hasName = (m: NamesMapping | null): boolean => !m || m.name !== null || m.first !== null || m.last !== null;
-/** The token of a preview: a hash of everything Add would send. */
-const tokenOf = (s: NamesState): string => createHash('sha256').update(JSON.stringify([s.workshopId, s.source, s.filename, s.sha256, s.rows.map(bound)])).digest('hex');
+/** The token of a preview: a hash of everything Add would send, and of the plan the register answered (its planKey), so an
+ *  approval names both the list and exactly what the preview said it would do. */
+const tokenOf = (s: NamesState): string => createHash('sha256').update(JSON.stringify([s.workshopId, s.source, s.filename, s.sha256, s.rows.map(bound), updating(s), s.plan?.planKey ?? null])).digest('hex');
+/** A list can update bookings only when it says what they are: some row has a booking status. */
+const hasStatus = (s: NamesState): boolean => s.rows.some((r) => !!r.status?.trim());
+const updating = (s: NamesState): boolean => s.updateBookings && hasStatus(s);
+const request = (s: NamesState, planKey?: string) => ({ source: { kind: s.source, filename: s.filename, sha256: s.sha256 }, rows: s.rows.map(bound), ...(updating(s) ? { updateBookings: true } : {}), ...(planKey ? { planKey } : {}) });
 const CHANGED = 'The list changed after the preview. Check the new preview, then add.';
 
 export class NamesService {
@@ -134,10 +141,10 @@ export class NamesService {
 
   // ---- name lists -----------------------------------------------------------------------------------------------------------------
 
-  private view(s: NamesState, error: string | null = null): NamesSheetView {
+  private view(s: NamesState, error: string | null = null, notice: string | null = null): NamesSheetView {
     return {
       source: s.source, filename: s.filename, columns: s.table && s.mapping ? columnLabels(s.table, s.mapping) : null, mapping: s.mapping,
-      plan: s.plan, token: s.token, written: s.written, error,
+      plan: s.plan, token: s.token, written: s.written, updateBookings: s.updateBookings, canUpdateBookings: hasStatus(s), error, notice,
     };
   }
 
@@ -150,7 +157,7 @@ export class NamesService {
     if (s.rows.length > MAX_LIST_ROWS) { s.plan = null; return { ok: true, value: this.view(s, `This list has more than ${MAX_LIST_ROWS} rows. A register holds up to 500 people.`) }; }
     try {
       const c = await this.client(s.workshopId);
-      const r = await c.addNames({ source: { kind: s.source, filename: s.filename, sha256: s.sha256 }, rows: s.rows.map(bound) }, true);
+      const r = await c.addNames(request(s), true);
       s.plan = r.plan;
       s.token = tokenOf(s);
       return { ok: true, value: this.view(s) };
@@ -160,7 +167,7 @@ export class NamesService {
   /** The paste sheet's live preview. Empty text previews nothing. */
   async pastePreview(workshopId: string, text: string): Promise<Result<NamesSheetView>> {
     const p = parsePaste(text);
-    return this.preview({ kind: 'names', workshopId, source: 'paste', filename: null, sha256: null, table: p.table, date1904: false, mapping: p.mapping, rows: p.rows, plan: null, token: null, written: false });
+    return this.preview({ kind: 'names', workshopId, source: 'paste', filename: null, sha256: null, table: p.table, date1904: false, mapping: p.mapping, rows: p.rows, plan: null, updateBookings: false, token: null, written: false });
   }
 
   /** Import a file: CSV, TSV, text or XLSX, read here. Columns are guessed; `remap` changes them. */
@@ -182,7 +189,7 @@ export class NamesService {
       }
       table = trimRows(table);
       const mapping = detectMapping(table);
-      return this.preview({ kind: 'names', workshopId, source: 'file', filename: basename(path).slice(0, 250), sha256, table, date1904, mapping, rows: rowsFromTable(table, mapping, { date1904 }), plan: null, token: null, written: false });
+      return this.preview({ kind: 'names', workshopId, source: 'file', filename: basename(path).slice(0, 250), sha256, table, date1904, mapping, rows: rowsFromTable(table, mapping, { date1904 }), plan: null, updateBookings: false, token: null, written: false });
     } catch (e) { return fail(e, 'That file could not be read.'); }
   }
 
@@ -197,6 +204,13 @@ export class NamesService {
     return this.preview({ ...s, mapping: m, rows: rowsFromTable(s.table, m, { date1904: s.date1904 }), plan: null });
   }
 
+  /** The organiser turned "Update booking status" on or off: preview again. */
+  async setUpdateBookings(on: boolean): Promise<Result<NamesSheetView>> {
+    const s = this.state;
+    if (s?.kind !== 'names') return { ok: false, error: 'There is no list to change.' };
+    return this.preview({ ...s, updateBookings: on, plan: null });
+  }
+
   /**
    * Add the people the preview showed: only when `token` is the token of the latest preview, and that preview has answered, so
    * what is written is exactly what the window showed. The register plans again inside its write.
@@ -207,7 +221,13 @@ export class NamesService {
     if (!s.plan || !s.token || s.token !== token || tokenOf(s) !== token) return { ok: false, error: CHANGED };
     try {
       const c = await this.client(s.workshopId);
-      const r = await c.addNames({ source: { kind: s.source, filename: s.filename, sha256: s.sha256 }, rows: s.rows.map(bound) }, false);
+      let r;
+      try { r = await c.addNames(request(s, s.plan.planKey), false); } catch (e) {
+        if (!(e instanceof OrganiserError && e.message === PLAN_CHANGED)) throw e;
+        // The register changed since the preview: nothing was written. Show the new preview; Add needs its new token.
+        const again = await this.preview(s);
+        return again.ok ? { ok: true, value: this.view(s, null, PLAN_CHANGED) } : again;
+      }
       s.plan = r.plan; s.written = r.written;
       if (r.written) {
         try {
