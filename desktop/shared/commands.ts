@@ -156,6 +156,7 @@ export const COMMAND_ROWS: readonly Row[] = [
   { id: 'app.about', menu: 'App', cheat: 'App', label: 'About AttendWell', key: '', icon: 'info', avail: 'always', placed: true, noMenu: 'Placed in the AttendWell menu (Help on Windows)' },
   { id: 'app.check-for-updates', menu: 'App', cheat: 'App', label: 'Check for Updates…', key: '', icon: 'refresh-cw', avail: 'idle', placed: true, noMenu: 'Placed in the AttendWell menu (Help on Windows)' },
   { id: 'app.whats-new', menu: 'Help', cheat: 'App', label: "What's new in AttendWell", key: '', icon: 'sparkles', avail: 'whats-new' },
+  { id: 'nearby.test', menu: 'Help', cheat: 'App', label: 'Nearby link test…', key: '', icon: 'plug-zap', avail: 'always' },
   { id: 'app.get-started', menu: 'Help', cheat: 'App', label: 'Get started', key: '', icon: 'play', avail: 'setup' },
   { id: 'app.how-it-works', menu: 'Help', cheat: 'App', label: 'How AttendWell works', key: '', icon: 'book-open', avail: 'setup' },
   { id: 'app.remove-example', menu: 'Help', cheat: 'App', label: 'Remove example', key: '', icon: 'x', avail: 'example' },

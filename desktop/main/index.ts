@@ -2,6 +2,7 @@
 // Test mode (ATTENDWELL_TEST=1): windows are created hidden, the Dock icon is hidden, the Keychain is mocked, and nothing
 // opens Finder, a browser or a dialog, so a headless run never shows anything on the screen. The runtime (register, gateway, quick
 // tunnel; desktop/runtime) runs here in the main process; test mode uses the fake unless ATTENDWELL_RUNTIME=real.
+import { appendFileSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { homedir, hostname } from 'node:os';
 import { join } from 'node:path';
@@ -28,6 +29,7 @@ import { openSettings } from './settings.ts';
 import { guardedExternal, isRealDirectory, revealFolder } from './safe-paths.ts';
 import { effectiveEnv, readTestBuildMarker } from './test-mode.ts';
 import { UPDATE_IDENTITY, createUpdateService } from './updates.ts';
+import { startNearbyLink } from './nearby-link.ts';
 
 // Test switches are read through this environment only (main/test-mode.ts): a release build sees none of them.
 const ENV = effectiveEnv({ isPackaged: app.isPackaged, testBuild: readTestBuildMarker(app.getAppPath()) });
@@ -128,6 +130,8 @@ async function start(): Promise<void> {
   // The diagnostic log (main/app-log.ts): the register's and cloudflared's output, the check-in's states and failed actions.
   const appLog = openAppLog(userData);
   appLog.write(`AttendWell ${version} started (${app.isPackaged ? 'packaged' : 'development'}, ${process.platform} ${process.arch}); registers folder ${folder}; programs in ${resourcesRoot}.`);
+  // The nearby link test (main/nearby-link.ts): starts with the app when the helper is bundled; off in test mode unless asked.
+  const nearby = startNearbyLink({ env: ENV, userData, resourcesRoot, appLog: (line) => appLog.write(line) });
   const bundle = createRuntimeBundle({ dataRoot: expandForPort(folder), resourcesRoot, env: ENV, log: (line) => appLog.write(line) });
   const port = bundle.port;
   port.status.onChange(runtimeChangeLogger((line) => appLog.write(line)));
@@ -304,6 +308,8 @@ async function start(): Promise<void> {
     const r = await settings.store.rebind(c, str(chord, 12));
     return r.ok ? { ok: true } : { ok: false, error: r.error };
   });
+  handle(CH.nearbyView, () => nearby.view());
+  handle(CH.nearbyShowLog, async () => { if (TEST) return; try { appendFileSync(nearby.logFile, '', { mode: 0o600 }); } catch { /* opened below if it exists */ } await shell.openPath(nearby.logFile); });
   handle(CH.noteRan, (_e, id) => { const c = str(id, 80); if (registry.byId(c)) ctl.noteRan(c); });
 
   // The session screen: what it shows, and what the organiser does there.
@@ -438,6 +444,7 @@ async function start(): Promise<void> {
       return;
     }
     updates.checker.stop();
+    nearby.stop();
     shuttingDown = true;
     sess.dispose();
     e.preventDefault();

@@ -1,0 +1,460 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		118A1E80A9697C980B08DBC4 /* NearbyLink in Frameworks */ = {isa = PBXBuildFile; productRef = 8A9092FCF233548D0D9F14B3 /* NearbyLink */; };
+		21DE8F587958D5A2D96F413F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF896FAFAD654712A513B28 /* ContentView.swift */; };
+		3350FC10AEED99D1751819CC /* SpikeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76040EE50F73973AB376FCD /* SpikeModel.swift */; };
+		75170C9B3073E6CE1FDB91DF /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7291D28BDF34F9F1C9805F /* QRScannerView.swift */; };
+		903A759B1B9D4960E18D141C /* NearbyLink in Frameworks */ = {isa = PBXBuildFile; productRef = E0CE452BCF2C2188CDCABABC /* NearbyLink */; };
+		CCD07902396CADCA8B6761BF /* NearbySpikeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52EBB27582DE7DBE81316392 /* NearbySpikeApp.swift */; };
+		E76D13F568803B15BDD0ADDA /* SimulatorRoundTripTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F3487E57FBF19E4D9DDE5B /* SimulatorRoundTripTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		21F3487E57FBF19E4D9DDE5B /* SimulatorRoundTripTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorRoundTripTests.swift; sourceTree = "<group>"; };
+		2D8D196E467D0D908B1B0E8E /* nearby */ = {isa = PBXFileReference; lastKnownFileType = folder; name = nearby; path = ../../desktop/nearby; sourceTree = SOURCE_ROOT; };
+		3515009F87D7ADA3DDE8BFB4 /* NearbySpike.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NearbySpike.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4AF896FAFAD654712A513B28 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		52EBB27582DE7DBE81316392 /* NearbySpikeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbySpikeApp.swift; sourceTree = "<group>"; };
+		5C7291D28BDF34F9F1C9805F /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		875348075B5A87601885E9BF /* NearbySpikeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NearbySpikeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F76040EE50F73973AB376FCD /* SpikeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpikeModel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7D1042F22894618D1F709F16 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				903A759B1B9D4960E18D141C /* NearbyLink in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D5131D89B7B14907CA13D35A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				118A1E80A9697C980B08DBC4 /* NearbyLink in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0B4CD637AB85FEEEDB2DB377 = {
+			isa = PBXGroup;
+			children = (
+				C28FF3F319886EC51AFFFBC5 /* NearbySpikeTests */,
+				11E7BCAE91D57F01AB997BD8 /* Packages */,
+				4FF08E020EB2B975A88636DA /* Sources */,
+				2FF7739E19886B6F9F609FB0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		11E7BCAE91D57F01AB997BD8 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				2D8D196E467D0D908B1B0E8E /* nearby */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		2FF7739E19886B6F9F609FB0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3515009F87D7ADA3DDE8BFB4 /* NearbySpike.app */,
+				875348075B5A87601885E9BF /* NearbySpikeTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4FF08E020EB2B975A88636DA /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				4AF896FAFAD654712A513B28 /* ContentView.swift */,
+				52EBB27582DE7DBE81316392 /* NearbySpikeApp.swift */,
+				5C7291D28BDF34F9F1C9805F /* QRScannerView.swift */,
+				F76040EE50F73973AB376FCD /* SpikeModel.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		C28FF3F319886EC51AFFFBC5 /* NearbySpikeTests */ = {
+			isa = PBXGroup;
+			children = (
+				21F3487E57FBF19E4D9DDE5B /* SimulatorRoundTripTests.swift */,
+			);
+			name = NearbySpikeTests;
+			path = Tests/NearbySpikeTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5230D4FED673FFE40445E833 /* NearbySpikeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1642C277A2CA1F93CE89FBA /* Build configuration list for PBXNativeTarget "NearbySpikeTests" */;
+			buildPhases = (
+				E1808BDBBE8FB8FC16388FED /* Sources */,
+				7D1042F22894618D1F709F16 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NearbySpikeTests;
+			packageProductDependencies = (
+				E0CE452BCF2C2188CDCABABC /* NearbyLink */,
+			);
+			productName = NearbySpikeTests;
+			productReference = 875348075B5A87601885E9BF /* NearbySpikeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		A01CA2220D185BEA67F2E8B4 /* NearbySpike */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B5C7AED5298FE8333C22990E /* Build configuration list for PBXNativeTarget "NearbySpike" */;
+			buildPhases = (
+				D311385BBE59031950A82A25 /* Sources */,
+				D5131D89B7B14907CA13D35A /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NearbySpike;
+			packageProductDependencies = (
+				8A9092FCF233548D0D9F14B3 /* NearbyLink */,
+			);
+			productName = NearbySpike;
+			productReference = 3515009F87D7ADA3DDE8BFB4 /* NearbySpike.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		646484A06F9581C8B3B282A0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					5230D4FED673FFE40445E833 = {
+						DevelopmentTeam = M7H45AGG8A;
+						ProvisioningStyle = Automatic;
+					};
+					A01CA2220D185BEA67F2E8B4 = {
+						DevelopmentTeam = M7H45AGG8A;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 346B65B7DA6AD2614DC7C8EB /* Build configuration list for PBXProject "NearbySpike" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 0B4CD637AB85FEEEDB2DB377;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				026EF853A2420CEB3D08E731 /* XCLocalSwiftPackageReference "../../desktop/nearby" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2FF7739E19886B6F9F609FB0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A01CA2220D185BEA67F2E8B4 /* NearbySpike */,
+				5230D4FED673FFE40445E833 /* NearbySpikeTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D311385BBE59031950A82A25 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				21DE8F587958D5A2D96F413F /* ContentView.swift in Sources */,
+				CCD07902396CADCA8B6761BF /* NearbySpikeApp.swift in Sources */,
+				75170C9B3073E6CE1FDB91DF /* QRScannerView.swift in Sources */,
+				3350FC10AEED99D1751819CC /* SpikeModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1808BDBBE8FB8FC16388FED /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E76D13F568803B15BDD0ADDA /* SimulatorRoundTripTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		03D7825BFD33CCB220D5B145 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = M7H45AGG8A;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.dominiklukes.attendwell.nearbyspike;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+		72F430E96E0393B5D0A46933 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		73AAB16A28085D6B89DE6615 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M7H45AGG8A;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.dominiklukes.attendwell.nearbyspike.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B3B19BA72223C0BD035C8172 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = M7H45AGG8A;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.dominiklukes.attendwell.nearbyspike.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D1736BBAE81C5FEA886716AA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = M7H45AGG8A;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.dominiklukes.attendwell.nearbyspike;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Release;
+		};
+		F179FB4CCCF7A885A43170F8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		346B65B7DA6AD2614DC7C8EB /* Build configuration list for PBXProject "NearbySpike" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F179FB4CCCF7A885A43170F8 /* Debug */,
+				72F430E96E0393B5D0A46933 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A1642C277A2CA1F93CE89FBA /* Build configuration list for PBXNativeTarget "NearbySpikeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B3B19BA72223C0BD035C8172 /* Debug */,
+				73AAB16A28085D6B89DE6615 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B5C7AED5298FE8333C22990E /* Build configuration list for PBXNativeTarget "NearbySpike" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				03D7825BFD33CCB220D5B145 /* Debug */,
+				D1736BBAE81C5FEA886716AA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		026EF853A2420CEB3D08E731 /* XCLocalSwiftPackageReference "../../desktop/nearby" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../desktop/nearby;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8A9092FCF233548D0D9F14B3 /* NearbyLink */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NearbyLink;
+		};
+		E0CE452BCF2C2188CDCABABC /* NearbyLink */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NearbyLink;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 646484A06F9581C8B3B282A0 /* Project object */;
+}

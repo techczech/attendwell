@@ -38,6 +38,9 @@ export const CH = {
   sessionChanged: 'attendwell:session-changed',
   sessionAction: 'attendwell:session-action',
   quitRequested: 'attendwell:quit-requested',
+  // the nearby link test sheet
+  nearbyView: 'attendwell:nearby-view',
+  nearbyShowLog: 'attendwell:nearby-show-log',
 } as const;
 
 /** Everything the session screen asks the main process to do. Arguments are checked by `parseSessionAction` before anything runs. */
@@ -174,6 +177,17 @@ export interface AppSnapshot {
 
 export type Result<T = void> = ({ ok: true } & (T extends void ? unknown : { value: T })) | { ok: false; error: string };
 
+export interface NearbyView {
+  /** False when the helper is not in this build or could not be started. */
+  available: boolean;
+  state: 'waiting' | 'connected';
+  peerName: string | null;
+  checkins: number;
+  /** The QR payload and the key text for pasting; null when the link is not available. */
+  payload: string | null;
+  key: string | null;
+}
+
 export interface AttendWellApi {
   state(): Promise<AppSnapshot>;
   onChanged(cb: (s: AppSnapshot) => void): () => void;
@@ -204,6 +218,9 @@ export interface AttendWellApi {
   /** The path of a file dropped on the window (Electron webUtils), for the recovery sheet's drop zone. */
   pathForFile(file: File): string;
   onQuitRequested(cb: () => void): () => void;
+  /** The nearby link test sheet: the link's state, and opening its log file. */
+  nearbyView(): Promise<NearbyView>;
+  nearbyShowLog(): Promise<void>;
 }
 
 /** What the Settings window's About card needs for update notices (it has no other access to the app). */

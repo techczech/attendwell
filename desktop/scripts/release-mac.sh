@@ -25,6 +25,7 @@ fi
 
 export APPLE_KEYCHAIN_PROFILE="$PROFILE"
 cd "$ROOT"
+sh desktop/nearby/build.sh
 bun desktop/scripts/build-sidecar.ts darwin-arm64
 bun desktop/scripts/fetch-cloudflared.ts darwin-arm64
 (cd desktop && bun run dist:mac:release)
