@@ -16,7 +16,7 @@ import { CommandPalette, WorkshopSwitcher } from './CommandPalette.tsx';
 import { FirstRun } from './FirstRun.tsx';
 import { GetStarted } from './GetStarted.tsx';
 import { Library } from './Library.tsx';
-import { NewWorkshopSheet, NotesSheet } from './Sheets.tsx';
+import { NearbySheet, NewWorkshopSheet, NotesSheet } from './Sheets.tsx';
 import { SessionScreen, sessionStatusText } from './SessionScreen.tsx';
 import { PairSheet } from './PairSheet.tsx';
 import { AddPersonSheet, EndConfirmSheet, QuitConfirmSheet, RenameSheet, ReviewSheet, RevokeSheet } from './SessionSheets.tsx';
@@ -26,7 +26,7 @@ import { StatusBar } from './StatusBar.tsx';
 import { updateActionsFor } from './updateActions.ts';
 
 type Overlay = null | { kind: 'palette'; scope: 'all' | 'selection' } | { kind: 'switcher' } | { kind: 'cheat' } | { kind: 'new' } | { kind: 'add-person' } | { kind: 'pair' } | { kind: 'end' } | { kind: 'quit' } | { kind: 'revoke'; id: string } | { kind: 'rename'; id: string } | { kind: 'review' } | { kind: 'notes'; version: string; items: Array<{ title: string | null; text: string }> }
-  | { kind: 'names-paste' } | { kind: 'names-import'; view: NamesSheetView } | { kind: 'recovery' };
+  | { kind: 'names-paste' } | { kind: 'names-import'; view: NamesSheetView } | { kind: 'recovery' } | { kind: 'nearby' };
 
 /** Who the quit sheet names: the one paired iPad by its name, otherwise "the iPad". */
 function quitDeviceLabel(sv: SessionView | null): string {
@@ -197,6 +197,7 @@ export function App(): JSX.Element | null {
       case 'app.whats-new':
         void api.loadNotes(snap.update.running).then((items) => { if (items) setOverlay({ kind: 'notes', version: snap.update.running, items }); });
         return;
+      case 'nearby.test': setOverlay({ kind: 'nearby' }); return;
       case 'register.find': setOverlay(null); setRegSearchTick((t) => t + 1); return;
       case 'register.show-all': setUi({ filter: 'all' }); return;
       case 'register.show-here': setUi({ filter: 'here' }); return;
@@ -344,6 +345,7 @@ export function App(): JSX.Element | null {
         <RecoverySheet onChoose={() => api.sheetAct({ kind: 'recovery-choose-file' })} onDropPath={(path) => api.sheetAct({ kind: 'recovery-file', path })}
           onImport={() => api.sheetAct({ kind: 'recovery-import' })} onClose={() => closeSheet('recovery-close')} pathForFile={(f) => api.pathForFile(f)} />
       ) : null}
+      {overlay?.kind === 'nearby' ? <NearbySheet onClose={() => setOverlay(null)} /> : null}
       {overlay?.kind === 'notes' ? <NotesSheet version={overlay.version} items={overlay.items} onClose={() => { setOverlay(null); void api.update({ kind: 'dismiss-whats-new' }); }} /> : null}
     </div>
   );
