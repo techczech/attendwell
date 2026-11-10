@@ -8,6 +8,9 @@ options:
 packages:
   WorkshopCheckInCore:
     path: ../WorkshopCheckInCore
+  # Nearby link test (spike, branch spike/multipeer-nearby-link): the Multipeer transport shared with the Mac helper.
+  NearbyLink:
+    path: ../../desktop/nearby
 targets:
   AttendWell:
     type: application
@@ -21,9 +24,14 @@ targets:
       # WorkshopCheckInUI is compiled into the app module, as build-simulator.sh does
       # (its symbols are internal, so it cannot be a separate package module).
       - ../WorkshopCheckInCore/Sources/WorkshopCheckInUI
+      # Nearby link test screen (spike): the NearbySpike views and model, without its own App entry point.
+      - path: ../NearbySpike/Sources
+        excludes: [NearbySpikeApp.swift]
     dependencies:
       - package: WorkshopCheckInCore
         product: WorkshopCheckInCore
+      - package: NearbyLink
+        product: NearbyLink
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: net.dominiklukes.attendwell.ipad
@@ -33,8 +41,8 @@ targets:
         INFOPLIST_FILE: Info.plist
         TARGETED_DEVICE_FAMILY: "2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        MARKETING_VERSION: 1.0.0
-        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 1.0.1
+        CURRENT_PROJECT_VERSION: 2
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: NO
         OTHER_LDFLAGS: ["-lsqlite3"]

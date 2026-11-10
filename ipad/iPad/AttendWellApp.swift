@@ -19,6 +19,8 @@ struct AttendWellApp: App {
     #endif
     private let model: KioskModel?
     @State private var demo: DemoSession?
+    /// Nearby link test (spike): a separate screen with made-up names; it never touches the check-in store.
+    @State private var nearbyTest = false
 
     init() {
         #if DEBUG
@@ -61,7 +63,8 @@ struct AttendWellApp: App {
             KioskView(model: demo.model, onLeaveDemo: { demo.end(); self.demo = nil }).id(ObjectIdentifier(demo))
         } else if let model {
             VStack(spacing: 0) {
-                KioskView(model: model, onTryDemo: { demo = try? DemoSession() })
+                KioskView(model: model, onTryDemo: { demo = try? DemoSession() }, onNearbyTest: { nearbyTest = true })
+                    .fullScreenCover(isPresented: $nearbyTest) { NearbyTestScreen { nearbyTest = false } }
                 #if DEBUG
                 if let fixtureTransport { FixtureControls(model: model, transport: fixtureTransport) }
                 #endif
@@ -158,3 +161,19 @@ private struct FixtureControls: View {
     }
 }
 #endif
+
+/// The nearby link test (spike, branch spike/multipeer-nearby-link): the NearbySpike screen inside AttendWell, with Close.
+/// Its own model, files (Application Support/NearbySpike) and made-up names; nothing here reads or writes the check-ins.
+private struct NearbyTestScreen: View {
+    let close: () -> Void
+    @StateObject private var model = SpikeModel()
+    @Environment(\.scenePhase) private var phase
+    var body: some View {
+        ContentView(model: model)
+            .safeAreaInset(edge: .bottom) {
+                Button("Close nearby link test", action: close).buttonStyle(.borderedProminent).padding(8)
+            }
+            .onChange(of: phase) { if $0 == .active { model.appDidBecomeActive() } }
+    }
+}
+

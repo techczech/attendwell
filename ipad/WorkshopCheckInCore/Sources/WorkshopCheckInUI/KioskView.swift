@@ -36,11 +36,14 @@ public struct KioskView: View {
     @AccessibilityFocusState private var headingFocused: Bool
     private let onTryDemo: (() -> Void)?
     private let onLeaveDemo: (() -> Void)?
+    private let onNearbyTest: (() -> Void)?
     /// `onTryDemo` adds the secondary "Try a demo" button to the set-up screen;
-    /// `onLeaveDemo` is called by the banner of a demo model.
-    public init(model: KioskModel, onTryDemo: (() -> Void)? = nil, onLeaveDemo: (() -> Void)? = nil) {
+    /// `onLeaveDemo` is called by the banner of a demo model; `onNearbyTest` adds
+    /// "Nearby link test" to the set-up and Organiser screens (spike only).
+    public init(model: KioskModel, onTryDemo: (() -> Void)? = nil, onLeaveDemo: (() -> Void)? = nil,
+                onNearbyTest: (() -> Void)? = nil) {
         self.model = model
-        self.onTryDemo = onTryDemo; self.onLeaveDemo = onLeaveDemo
+        self.onTryDemo = onTryDemo; self.onLeaveDemo = onLeaveDemo; self.onNearbyTest = onNearbyTest
         _address = State(initialValue: model.address); _code = State(initialValue: model.code)
     }
 
@@ -101,6 +104,11 @@ public struct KioskView: View {
                     Button("Try a demo", action: onTryDemo).buttonStyle(.plain).font(.body)
                         .foregroundStyle(.secondary).underline().padding(.top, 12).disabled(model.busy)
                         .accessibilityHint("Opens a practice check-in with made-up names. Nothing is sent or saved.")
+                }
+                if let onNearbyTest {
+                    Button("Nearby link test", action: onNearbyTest).buttonStyle(.plain).font(.body)
+                        .foregroundStyle(.secondary).underline().padding(.top, 4).disabled(model.busy)
+                        .accessibilityHint("Tests the direct connection to the organiser's Mac with made-up names. Your check-ins are not touched.")
                 }
             }
         case .scan:
@@ -336,6 +344,7 @@ public struct KioskView: View {
                 action("Pair again", icon: "qrcode") { model.rePair() }
                 action("Hand over this iPad", icon: "hand.raised") { model.beginHandover() }
                 action("Change PIN", icon: "lock") { model.changePIN() }
+                if let onNearbyTest { action("Nearby link test", icon: "dot.radiowaves.left.and.right") { onNearbyTest() } }
                 Text("About · \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Development build") · Protocol 1")
                 Text("Check-ins send while this app is open. Sending while the iPad is locked or the app is closed isn't guaranteed.")
                 Text("Deleting this app removes check-ins saved on this iPad. Save a recovery file first.")

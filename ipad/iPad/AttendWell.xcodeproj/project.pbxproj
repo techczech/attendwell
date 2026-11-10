@@ -11,10 +11,14 @@
 		12B0C13AD5C82A56E2D189A2 /* AttendWellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C839B8FE8EB0EA33623E38 /* AttendWellApp.swift */; };
 		2BC721FE5F40838D68E63991 /* DemoSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86635A4F84B471EE8AF77E65 /* DemoSession.swift */; };
 		2D424E64368FE4AAE159ED7B /* PairingCheckInUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11FD9791B164B00CF9A6CB1 /* PairingCheckInUITests.swift */; };
+		45EC6BCC1839A0A47B2AF1BB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCC7D19A43CB5182D6396030 /* ContentView.swift */; };
 		701C5700D421E23AD2B6428F /* PairingScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF9A7738C8BEA7D1ABEBD95 /* PairingScanner.swift */; };
+		849C708E1A0A799AEFFA571F /* SpikeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2E6814D5535BF56E564776D /* SpikeModel.swift */; };
 		864F83B50483FC9ED95EEDD9 /* DemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6585499058DC0FA24CEF8097 /* DemoUITests.swift */; };
+		9115A3CE08B49C2FADC62EFC /* NearbyLink in Frameworks */ = {isa = PBXBuildFile; productRef = 70BC4EFD9F6BB9F219141D7D /* NearbyLink */; };
 		930A2ECBBB257740B1C44A30 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A60AC0774E6843A6592EAEAF /* Assets.xcassets */; };
 		B4DED86C53ACDAE018A45FC6 /* KioskModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0738DE4E526FCC48C71D5428 /* KioskModel.swift */; };
+		C18C55E982AE6DE73AC9A422 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A264521626E06CB18F8B700 /* QRScannerView.swift */; };
 		DB6224F2FF8AFEF701DA96AE /* KioskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 713ACDA8C1A0D33DABBCEF7A /* KioskView.swift */; };
 		EDB4C768EDD673DB7F50F0D7 /* WorkshopCheckInCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4140C918AB953553F853AB56 /* WorkshopCheckInCore */; };
 		EECA3359C647B6747CBDFA45 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B47EF69CB997C3A7710B6E0E /* PrivacyInfo.xcprivacy */; };
@@ -32,6 +36,8 @@
 
 /* Begin PBXFileReference section */
 		0738DE4E526FCC48C71D5428 /* KioskModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KioskModel.swift; sourceTree = "<group>"; };
+		1A264521626E06CB18F8B700 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		62215D8A8065E4F4D5D66739 /* nearby */ = {isa = PBXFileReference; lastKnownFileType = folder; name = nearby; path = ../../desktop/nearby; sourceTree = SOURCE_ROOT; };
 		639249F0D83DE8E5B7E5EE3A /* AttendWellUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AttendWellUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		64DF876AFCDD1C22D69EF491 /* AttendWell.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AttendWell.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6585499058DC0FA24CEF8097 /* DemoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoUITests.swift; sourceTree = "<group>"; };
@@ -41,9 +47,11 @@
 		86635A4F84B471EE8AF77E65 /* DemoSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoSession.swift; sourceTree = "<group>"; };
 		91C839B8FE8EB0EA33623E38 /* AttendWellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttendWellApp.swift; sourceTree = "<group>"; };
 		A11FD9791B164B00CF9A6CB1 /* PairingCheckInUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingCheckInUITests.swift; sourceTree = "<group>"; };
+		A2E6814D5535BF56E564776D /* SpikeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpikeModel.swift; sourceTree = "<group>"; };
 		A60AC0774E6843A6592EAEAF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B47EF69CB997C3A7710B6E0E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C8F2ED3090D0508C70D5AD2C /* WorkshopCheckInCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WorkshopCheckInCore; path = ../WorkshopCheckInCore; sourceTree = SOURCE_ROOT; };
+		FCC7D19A43CB5182D6396030 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +60,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EDB4C768EDD673DB7F50F0D7 /* WorkshopCheckInCore in Frameworks */,
+				9115A3CE08B49C2FADC62EFC /* NearbyLink in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,6 +79,7 @@
 		4C7864F89DF7BB0F72857EAD /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				62215D8A8065E4F4D5D66739 /* nearby */,
 				C8F2ED3090D0508C70D5AD2C /* WorkshopCheckInCore */,
 			);
 			name = Packages;
@@ -84,6 +94,7 @@
 				B47EF69CB997C3A7710B6E0E /* PrivacyInfo.xcprivacy */,
 				0DC4DC61384C2DAB83DC9691 /* AttendWellUITests */,
 				4C7864F89DF7BB0F72857EAD /* Packages */,
+				FA08A9840DA9C0D728E877F6 /* Sources */,
 				74865BF2D669515CD14089F0 /* WorkshopCheckInUI */,
 				C30C34D80D21D7A080117BC4 /* Products */,
 			);
@@ -108,6 +119,17 @@
 				639249F0D83DE8E5B7E5EE3A /* AttendWellUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		FA08A9840DA9C0D728E877F6 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				FCC7D19A43CB5182D6396030 /* ContentView.swift */,
+				1A264521626E06CB18F8B700 /* QRScannerView.swift */,
+				A2E6814D5535BF56E564776D /* SpikeModel.swift */,
+			);
+			name = Sources;
+			path = ../NearbySpike/Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -146,6 +168,7 @@
 			name = AttendWell;
 			packageProductDependencies = (
 				4140C918AB953553F853AB56 /* WorkshopCheckInCore */,
+				70BC4EFD9F6BB9F219141D7D /* NearbyLink */,
 			);
 			productName = AttendWell;
 			productReference = 64DF876AFCDD1C22D69EF491 /* AttendWell.app */;
@@ -181,6 +204,7 @@
 			mainGroup = 6CC09C08C92BDB29CCBAC7CB;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				970EEC46741FC9E686C6E134 /* XCLocalSwiftPackageReference "../../desktop/nearby" */,
 				2C03F839452715C12CBB6FB2 /* XCLocalSwiftPackageReference "../WorkshopCheckInCore" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -221,11 +245,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				12B0C13AD5C82A56E2D189A2 /* AttendWellApp.swift in Sources */,
+				45EC6BCC1839A0A47B2AF1BB /* ContentView.swift in Sources */,
 				2BC721FE5F40838D68E63991 /* DemoSession.swift in Sources */,
 				B4DED86C53ACDAE018A45FC6 /* KioskModel.swift in Sources */,
 				DB6224F2FF8AFEF701DA96AE /* KioskView.swift in Sources */,
 				701C5700D421E23AD2B6428F /* PairingScanner.swift in Sources */,
 				04068ADC0A63E21F20881623 /* PlatformProbe.swift in Sources */,
+				C18C55E982AE6DE73AC9A422 /* QRScannerView.swift in Sources */,
+				849C708E1A0A799AEFFA571F /* SpikeModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,7 +274,7 @@
 				CODE_SIGN_ENTITLEMENTS = AttendWell.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = M7H45AGG8A;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
@@ -256,7 +283,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_LDFLAGS = (
 					"-lsqlite3",
 				);
@@ -297,7 +324,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = M7H45AGG8A;
 				"ENTITLEMENTS_ALLOWED[sdk=iphonesimulator*]" = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -307,7 +334,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_LDFLAGS = (
 					"-lsqlite3",
 				);
@@ -495,12 +522,20 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../WorkshopCheckInCore;
 		};
+		970EEC46741FC9E686C6E134 /* XCLocalSwiftPackageReference "../../desktop/nearby" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../desktop/nearby;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		4140C918AB953553F853AB56 /* WorkshopCheckInCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WorkshopCheckInCore;
+		};
+		70BC4EFD9F6BB9F219141D7D /* NearbyLink */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NearbyLink;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
