@@ -123,10 +123,12 @@ describe('name lists and recovery files', () => {
     const preview = await client.addNames(input, true);
     expect(preview).toMatchObject({ written: false, plan: { counts: { added: 1, known: 1 } } });
     expect(s.store.list().participants.some((p) => p.name === 'Imogen Pryce')).toBe(false);
-    const done = await client.addNames(input, false);
+    // A write brings back the preview's planKey; without it the register refuses.
+    await expect(client.addNames(input, false)).rejects.toThrow('Preview the list');
+    const done = await client.addNames({ ...input, planKey: preview.plan.planKey }, false);
     expect(done.written).toBe(true);
     expect(done.roster.participants.find((p) => p.name === 'Imogen Pryce')).toMatchObject({ email: 'imogen.pryce@example.ac.uk', present: false, version: 0 });
-    await expect(client.addNames(input, false)).rejects.toThrow('already added');
+    await expect(client.addNames({ ...input, planKey: preview.plan.planKey }, false)).rejects.toThrow('already added');
     for (const c of calls.filter((x) => x.path === '/api/names')) expect(c).toMatchObject({ method: 'POST', origin: organiserOrigin, marker: '1' });
   });
   test('a recovery file is previewed and imported through the device path', async () => {
@@ -181,5 +183,20 @@ describe('the organiser key', () => {
     // Without the key the same service refuses the client that does not send one.
     await expect(createHttpOrganiser(organiserOrigin, via).roster()).rejects.toMatchObject({ status: 401 });
     store.close();
+  });
+});
+
+describe('the participant window', () => {
+  test('reads it with the roster, opens it for a number of minutes, and closes it early, as the register says', async () => {
+    // The register's own routes run on the wall clock (the rig's fake clock is for devices), so this test starts from a fresh window.
+    const { s, client } = rig();
+    expect((await client.roster()).window).toMatchObject({ open: expect.any(Boolean), closedEarly: false });
+    const opened = await client.setCheckInWindow('open', 90);
+    expect(opened.open).toBe(true);
+    expect(opened.closesAt! - opened.openedAt!).toBe(90 * 60_000);
+    expect(await client.checkInWindow()).toMatchObject({ open: true });
+    expect(await client.setCheckInWindow('close')).toMatchObject({ open: false, closedEarly: true });
+    await expect(client.setCheckInWindow('open', 0)).rejects.toThrow('between 1 and 1440');
+    expect(s.store.participantWindow().open).toBe(false);
   });
 });

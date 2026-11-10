@@ -13,7 +13,7 @@ type Answer = Promise<Result<SheetAnswer>>;
 const asNames = (r: Result<SheetAnswer>): NamesSheetView | null => (r.ok && r.value && 'source' in r.value ? r.value : null);
 const asRecovery = (r: Result<SheetAnswer>): RecoverySheetView | null => (r.ok && r.value && 'report' in r.value ? r.value : null);
 
-const EMPTY_PASTE: NamesSheetView = { source: 'paste', filename: null, columns: null, mapping: null, plan: null, token: null, written: false, error: null };
+const EMPTY_PASTE: NamesSheetView = { source: 'paste', filename: null, columns: null, mapping: null, plan: null, token: null, written: false, updateBookings: false, canUpdateBookings: false, error: null };
 const TALLY_ICON: Record<TallyLine['tone'], string> = { good: 'user-check', info: 'users', warn: 'circle-alert', neutral: 'x' };
 
 function Tally({ lines, variant }: { lines: TallyLine[]; variant: 'stack' | 'cards' }): JSX.Element {
@@ -30,7 +30,14 @@ function Notes({ view }: { view: NamesSheetView | null }): JSX.Element | null {
   const plan = view?.plan;
   const items: string[] = [];
   if (view?.error) items.push(view.error);
-  if (plan?.alreadyAdded) items.push(`This list was already added${plan.alreadyAdded.filename ? ` from ${plan.alreadyAdded.filename}` : ''}. Adding it again changes nothing.`);
+  if (view?.notice) items.push(view.notice);
+  if (plan?.alreadyAdded) {
+    const from = plan.alreadyAdded.filename ? ` from ${plan.alreadyAdded.filename}` : '';
+    // Applying it again adds nobody; it can still change bookings, and then the replay is not "nothing".
+    if (plan.counts.updated) items.push(`This list was already added${from}. Applying it again adds nobody; it only makes the booking changes shown.`);
+    else if (view?.canUpdateBookings && !view.updateBookings) items.push(`This list was already added${from}. Adding it again adds nobody. Tick "Update booking status" to see whether it changes any bookings.`);
+    else items.push(`This list was already added${from}. Adding it again changes nothing.`);
+  }
   if (plan?.full) items.push(`The register holds up to 500 people; with this list it would hold ${plan.total}.`);
   return (
     <>
@@ -77,7 +84,10 @@ export function PasteNamesSheet({ onPreview, onAdd, onClose }: { onPreview(text:
     setBusy(true);
     const r = await onAdd(view.token);
     setBusy(false);
-    if (!r.ok) setError(r.error);
+    if (!r.ok) { setError(r.error); return; }
+    // Not written (the register changed after the preview): main sent the new preview, with a note saying so.
+    const v = asNames(r);
+    if (v && !v.written) { setError(null); setView(v); }
   };
   const plan = view?.plan ?? null;
   const shown: NamesSheetView | null = view && !fresh ? { ...view, token: null } : view;
@@ -113,7 +123,7 @@ function ColumnSelect({ id, label, columns, value, none, onChange }: { id: strin
 }
 
 /** Import names from a file: column matching, the three figures, the rows that matter, nothing written until Add. */
-export function ImportNamesSheet({ initial, onMap, onAdd, onClose }: { initial: NamesSheetView; onMap(m: NamesMapping): Answer; onAdd(token: string): Answer; onClose(): void }): JSX.Element {
+export function ImportNamesSheet({ initial, onMap, onUpdateBookings, onAdd, onClose }: { initial: NamesSheetView; onMap(m: NamesMapping): Answer; onUpdateBookings(on: boolean): Answer; onAdd(token: string): Answer; onClose(): void }): JSX.Element {
   const [view, setView] = useState<NamesSheetView>(initial);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -130,12 +140,23 @@ export function ImportNamesSheet({ initial, onMap, onAdd, onClose }: { initial: 
     const v = asNames(r);
     if (v) setView(v);
   };
+  const toggleUpdates = async (on: boolean): Promise<void> => {
+    setBusy(true);
+    const r = await onUpdateBookings(on);
+    setBusy(false);
+    if (!r.ok) { setError(r.error); setView((v) => ({ ...v, token: null })); return; }
+    setError(null);
+    const v = asNames(r);
+    if (v) setView(v);
+  };
   const add = async (): Promise<void> => {
     if (!view.token) return;
     setBusy(true);
     const r = await onAdd(view.token);
     setBusy(false);
-    if (!r.ok) setError(r.error);
+    if (!r.ok) { setError(r.error); return; }
+    const v = asNames(r);
+    if (v && !v.written) { setError(null); setView(v); }
   };
   const plan = view.plan;
   const shown = plan ? previewRows(plan) : null;
@@ -163,6 +184,12 @@ export function ImportNamesSheet({ initial, onMap, onAdd, onClose }: { initial: 
           <label className="check"><input type="checkbox" checked={m.header} onChange={(e) => void remap({ header: e.target.checked })} />First row is a header</label>
         </div>
       ) : null}
+      {view.canUpdateBookings ? (
+        <label className="check update-bookings">
+          <input type="checkbox" checked={view.updateBookings} disabled={busy || view.written} onChange={(e) => void toggleUpdates(e.target.checked)} />
+          Update booking status for people already in the register (matched by email, cancellations included). Check-ins are never changed.
+        </label>
+      ) : null}
       {plan ? <Tally variant="cards" lines={importTally(plan)} /> : null}
       <Notes view={withError} />
       {shown ? (
@@ -171,10 +198,12 @@ export function ImportNamesSheet({ initial, onMap, onAdd, onClose }: { initial: 
           {shown.rows.map((r) => (
             <div key={r.row} role="row" className={`pt-row ${r.result}`}>
               <span>{r.row}</span><span className={r.name ? '' : 'none'}>{r.name || '(empty)'}</span><span className="mono">{r.email}</span>
-              <span><span className={`res ${r.result}`}><Icon name={r.result === 'added' ? 'check' : r.result === 'skipped' ? 'x' : 'users'} size={13} />{resultText(r)}</span></span>
+              <span><span className={`res ${r.result}`}><Icon name={r.result === 'added' ? 'check' : r.result === 'skipped' ? 'x' : r.result === 'updated' ? 'refresh-cw' : 'users'} size={13} />{resultText(r)}</span></span>
             </div>
           ))}
           {shown.moreAdded > 0 ? <div className="pt-row more" role="row"><span /><span>and {shown.moreAdded} more {shown.moreAdded === 1 ? 'row' : 'rows'} added</span></div> : null}
+          {shown.moreChanges > 0 ? <div className="pt-row more" role="row"><span /><span>and {shown.moreChanges} more booking {shown.moreChanges === 1 ? 'change' : 'changes'}</span></div> : null}
+          {shown.moreOther > 0 ? <div className="pt-row more" role="row"><span /><span>and {shown.moreOther} more {shown.moreOther === 1 ? 'row' : 'rows'} not listed</span></div> : null}
         </div>
       ) : null}
     </Sheet>

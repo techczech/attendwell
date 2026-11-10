@@ -2,9 +2,9 @@
 // check-ins, devices, one open pairing that pauses after wrong codes), in memory, on a clock the test controls. It opens no port.
 import type { DeviceList, DeviceRecord, PairingInfo } from '../shared/devices-model.ts';
 import type { PairingOffer } from '../shared/pairing-model.ts';
-import type { Roster, RosterConflict, RosterPerson } from '../shared/register-model.ts';
+import type { CheckInWindow, Roster, RosterConflict, RosterPerson } from '../shared/register-model.ts';
 import { OrganiserError, type OrganiserClient } from './organiser-client.ts';
-import { planNames, type NameListRecord } from '../../server/names-list.ts';
+import { PLAN_CHANGED, planNames, type NameListRecord } from '../../server/names-list.ts';
 import type { AddNamesRequest, AddNamesResult, RecoveryReport } from '../shared/names-model.ts';
 
 /** The example workshop's booking labels (server/workshop-config.ts exampleWorkshop.sourceStatuses). */
@@ -47,13 +47,29 @@ export class FakeRegister implements OrganiserClient {
     if (roster) { this.people = roster.participants.map((p) => ({ ...p })); this.conflicts = roster.conflicts.map((c) => ({ ...c })); }
   }
 
+  /** The stored participant window, as the register keeps it (null: never opened, which reads as closed). Tests may set it. */
+  win: { openedAt: number; closesAt: number; closedEarly: boolean } | null = null;
+  private windowNow(): CheckInWindow {
+    const w = this.win;
+    return w ? { open: this.now() < w.closesAt, openedAt: w.openedAt, closesAt: w.closesAt, closedEarly: w.closedEarly } : { open: false, openedAt: null, closesAt: null, closedEarly: false };
+  }
+  async checkInWindow(): Promise<CheckInWindow> { this.check('window'); return this.windowNow(); }
+  async setCheckInWindow(action: 'open' | 'close', minutes?: number): Promise<CheckInWindow> {
+    this.check(`window ${action}${action === 'open' ? ` ${minutes}` : ''}`);
+    if (action === 'open') {
+      if (!Number.isInteger(minutes) || minutes! < 1 || minutes! > 1440) throw new OrganiserError('Choose a check-in duration between 1 and 1440 whole minutes.', 400);
+      this.win = { openedAt: this.now(), closesAt: this.now() + minutes! * 60_000, closedEarly: false };
+    } else if (this.windowNow().open) this.win = { ...this.win!, closesAt: this.now(), closedEarly: true };
+    return this.windowNow();
+  }
+
   snapshot(): Roster { return { participants: this.people.map((p) => ({ ...p })), conflicts: this.conflicts.map((c) => ({ ...c })) }; }
   private check(what: string): void {
     this.log.push(what);
     if (this.failNext) { const e = this.failNext; this.failNext = null; throw e; }
   }
 
-  async roster(): Promise<Roster> { this.check('roster'); return this.snapshot(); }
+  async roster(): Promise<Roster> { this.check('roster'); return { ...this.snapshot(), window: this.windowNow() }; }
 
   async setAttendance(id: string, present: boolean, version: number): Promise<Roster> {
     this.check(`attendance ${id} ${present}`);
@@ -95,17 +111,24 @@ export class FakeRegister implements OrganiserClient {
   /** The same plan as the register (server/names-list.ts), on the fake's people. */
   async addNames(input: AddNamesRequest, dryRun: boolean): Promise<AddNamesResult> {
     this.check(`names ${dryRun ? 'preview' : 'add'} ${input.rows.length}`);
-    const plan = planNames({ existing: this.people, addedLists: Object.fromEntries(this.nameLists.map((l) => [l.listKey, { addedAt: l.addedAt, filename: l.filename }])), rows: input.rows, workshopDate: this.o.eventDate ?? '', statuses: { ...STATUSES } });
+    const existing = this.people.map((p) => ({ id: p.id, name: p.name, email: p.email, booking: p.booking, present: p.present, manual: p.id.startsWith('manual-') }));
+    const plan = planNames({ existing, addedLists: Object.fromEntries(this.nameLists.map((l) => [l.listKey, { addedAt: l.addedAt, filename: l.filename }])), rows: input.rows, workshopDate: this.o.eventDate ?? '', statuses: { ...STATUSES }, updateBookings: input.updateBookings === true });
     if (dryRun) return { plan, written: false, roster: this.snapshot() };
-    if (plan.alreadyAdded) throw new OrganiserError('This list was already added. Nothing was changed.', 409);
+    if (plan.alreadyAdded && !plan.counts.updated) throw new OrganiserError('This list was already added. Nothing was changed.', 409);
     if (plan.full) throw new OrganiserError(`The register holds up to 500 people; with this list it would hold ${plan.total}.`, 409);
-    if (!plan.counts.added) return { plan, written: false, roster: this.snapshot() };
+    if (!plan.counts.added && !plan.counts.updated) return { plan, written: false, roster: this.snapshot() };
+    if (input.planKey !== plan.planKey) throw new OrganiserError(input.planKey ? PLAN_CHANGED : 'Preview the list before applying it.', 409);
+    for (const r of plan.rows) {
+      if (r.result !== 'updated') continue;
+      const p = this.people.find((x) => x.id === r.id && !x.id.startsWith('manual-'));
+      if (p) { p.booking = r.booking!; p.admitted = false; p.version += 1; }
+    }
     for (const r of plan.rows) {
       if (r.result !== 'added') continue;
       this.seq += 1;
       this.people.push({ id: `list-fake-${this.seq}`, name: r.name, email: r.email, booking: r.booking ?? 'confirmed', present: false, admitted: false, version: 0, updatedAt: null });
     }
-    this.nameLists.push({ kind: input.source.kind, filename: input.source.filename ?? null, sha256: input.source.sha256 ?? null, listKey: plan.listKey, addedAt: new Date(this.now()).toISOString(), rows: plan.rows.length, added: plan.counts.added, merged: plan.counts.merged, known: plan.counts.known, skipped: plan.counts.skipped });
+    this.nameLists.push({ kind: input.source.kind, filename: input.source.filename ?? null, sha256: input.source.sha256 ?? null, listKey: plan.listKey, addedAt: new Date(this.now()).toISOString(), rows: plan.rows.length, added: plan.counts.added, merged: plan.counts.merged, known: plan.counts.known, skipped: plan.counts.skipped, ...(plan.counts.updated ? { updated: plan.counts.updated } : {}) });
     return { plan, written: true, roster: this.snapshot() };
   }
 

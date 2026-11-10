@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test';
 import { planNames } from '../../server/names-list.ts';
 import { exampleWorkshop } from '../../server/workshop-config.ts';
 import { IDLE_CTX, registry, type CommandCtx, type SessionCtx } from '../shared/commands.ts';
-import { addBlocked, addLabel, importTally, previewRows, recoveryLine, recoveryReason, resultText, shortDay, type RecoveryReport } from '../shared/names-model.ts';
+import { addBlocked, addedText, addLabel, importTally, previewRows, recoveryLine, recoveryReason, resultText, shortDay, type RecoveryReport } from '../shared/names-model.ts';
 
 const plan = (rows: Array<[string, string?, string?, string?]>, existing: Array<{ name: string; email: string }> = []) => planNames({
   existing, addedLists: {}, workshopDate: '2026-10-30', statuses: exampleWorkshop.sourceStatuses,
@@ -26,6 +26,20 @@ describe('names wording', () => {
     expect(addBlocked(null)).toBe('Paste or choose a list first.');
     expect(addBlocked({ ...p, alreadyAdded: { addedAt: '2026-10-21T09:00:00Z', filename: null } })).toContain('already added');
     expect(addBlocked(plan([['', 'x@example.ac.uk']]))).toBe('There is nobody new on this list.');
+  });
+  test('every booking change is listed in the preview, even past the row cap, and the completion line names updates', () => {
+    const existing = Array.from({ length: 100 }, (_, i) => ({ id: `p${i}`, name: `Person ${i}`, email: `p${i}@example.ac.uk`, booking: 'confirmed' }));
+    const p = planNames({
+      existing, addedLists: {}, workshopDate: '2026-10-30', statuses: exampleWorkshop.sourceStatuses, updateBookings: true,
+      rows: [...existing.map((e, i) => ({ row: i + 2, name: e.name, email: e.email, status: 'Cancelled' })), { row: 200, name: 'New One', email: '' }, { row: 201, name: 'New Two', email: '' }],
+    });
+    const shown = previewRows(p);
+    expect(shown.rows.filter((r) => r.result === 'updated')).toHaveLength(100);
+    expect(shown).toMatchObject({ moreAdded: 0, moreChanges: 0, moreOther: 0 });
+    expect(addLabel(p)).toBe('Add 2 people, update 100 bookings');
+    expect(addedText(p)).toBe('Added 2 people to the register and updated 100 bookings');
+    expect(addedText({ ...p, counts: { ...p.counts, added: 0, updated: 3 } })).toBe('Updated 3 bookings');
+    expect(addedText({ ...p, counts: { ...p.counts, added: 1, updated: 0 } })).toBe('Added 1 person to the register');
   });
   test('the recovery line before and after importing', () => {
     const r: RecoveryReport = { eventCode: 'H4KD', deviceId: 'dev_1', deviceLabel: 'Door iPad', exportedAt: null, rows: [], counts: { recorded: 3, already: 1, review: 0, refused: 0 }, written: true };

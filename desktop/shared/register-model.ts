@@ -24,9 +24,20 @@ export interface RosterConflict {
   count: number;
 }
 
+/** The participant check-in window the iPad obeys (server/store-attendance.ts participantWindow): times in epoch milliseconds. */
+export interface CheckInWindow {
+  open: boolean;
+  openedAt: number | null;
+  closesAt: number | null;
+  /** The organiser closed it before its time ran out. */
+  closedEarly: boolean;
+}
+
 export interface Roster {
   participants: RosterPerson[];
   conflicts: RosterConflict[];
+  /** Read from a running register only; absent when the register was read from disk. */
+  window?: CheckInWindow | null;
 }
 
 export type RegisterFilter = 'all' | 'here' | 'not-yet' | 'held';

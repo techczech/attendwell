@@ -2,7 +2,7 @@
 import { describe, expect, test } from 'bun:test';
 import { registry, type CommandCtx, IDLE_CTX } from '../shared/commands.ts';
 import type { RuntimeSnapshot } from '../shared/runtime-types.ts';
-import { NO_SELECTION, connectionModel, pairAvailability, pastBanner, phaseOf, sessionCtxOf, statusChip, toolbarModel, type SessionView } from '../shared/session-model.ts';
+import { NO_SELECTION, connectionModel, defaultWindowMinutes, extendMinutes, pairAvailability, pastBanner, phaseOf, sessionCtxOf, statusChip, toolbarModel, windowModel, type SessionView } from '../shared/session-model.ts';
 import { IDLE } from '../shared/pairing-model.ts';
 
 const idle: RuntimeSnapshot = { workshopId: null, session: 'idle', service: { state: 'off' }, tunnel: { state: 'off' } };
@@ -107,7 +107,7 @@ describe('toolbar and banners', () => {
 const view = (over: Partial<SessionView> = {}): SessionView => ({
   workshopId: 'w1', phase: 'online', runtime: running({ state: 'online', url: 'u' }), hostName: 'Mac', roster: { participants: [{ id: 'p', name: 'P', email: '', booking: 'confirmed', present: false, admitted: false, version: 0, updatedAt: null }], conflicts: [] },
   rosterError: null, devices: null, pairing: IDLE, pairLabel: null, addressSince: null, addressChangedAt: null, lastOnlineAt: null, failedAt: null, closedAt: null, lastAddress: null, canUndo: false,
-  registerOpen: true, busy: false, otherLive: false, ...over,
+  registerOpen: true, busy: false, otherLive: false, window: null, openMinutes: 60, windowError: null, ...over,
 });
 const ctx = (v: SessionView, sel = NO_SELECTION): CommandCtx => ({ ...IDLE_CTX, view: 'session', liveSession: true, session: sessionCtxOf(v, sel) });
 const why = (id: string, c: CommandCtx) => registry.byId(id)!.available!(c);
@@ -158,5 +158,28 @@ describe('commands on the session screen', () => {
     const v = view({ addressSince: new Date(2026, 9, 30, 14, 4).toISOString(), devices: { eventId: 'e', eventCode: 'H4KD', eventName: 'W', eventDate: '', serverTime: '', pairing: null, devices: [d], unmatchedCheckIns: [], adjustedText: [] } });
     expect(sessionCtxOf(v, NO_SELECTION).repairName).toBe('Door iPad');
     expect(sessionCtxOf({ ...v, devices: { ...v.devices!, devices: [d, { ...d, id: 'd2', label: 'iPad 2' }] } }, NO_SELECTION).repairName).toBeNull();
+  });
+});
+
+describe('the participant window', () => {
+  const at = (h: number, m = 0): number => new Date(2026, 10, 9, h, m).getTime();
+  const w = { date: '2026-11-09', endTime: '16:00' };
+  test('Start opens until the end time plus half an hour; never under an hour, never over a day', () => {
+    expect(defaultWindowMinutes(w, at(8, 30))).toBe(480);
+    expect(defaultWindowMinutes(w, at(15, 45))).toBe(60);
+    expect(defaultWindowMinutes({ date: '2026-11-08', endTime: '16:00' }, at(9))).toBe(60);
+    expect(defaultWindowMinutes({ date: '2026-11-09', endTime: '' }, at(9))).toBe(60);
+    expect(defaultWindowMinutes({ date: '2026-11-12', endTime: '16:00' }, at(9))).toBe(1440);
+    expect(defaultWindowMinutes(null, at(9))).toBe(60);
+  });
+  test('Extend adds half an hour to what is left, or to now once closed', () => {
+    expect(extendMinutes({ open: true, openedAt: at(9), closesAt: at(10), closedEarly: false }, at(9, 50))).toBe(40);
+    expect(extendMinutes({ open: false, openedAt: at(9), closesAt: at(10), closedEarly: false }, at(11))).toBe(31);
+  });
+  test('the panel says whether the iPad accepts check-ins, and why not', () => {
+    expect(windowModel({ open: true, openedAt: at(9), closesAt: at(16, 30), closedEarly: false }, at(16))).toMatchObject({ chip: 'Open', headline: 'Open until 16:30', canClose: true, canExtend: true, canOpen: false });
+    expect(windowModel({ open: false, openedAt: at(12, 47), closesAt: at(13, 17), closedEarly: false }, at(14)).detail).toBe('Time ran out at 13:17. The iPad says check-in is not open.');
+    expect(windowModel({ open: false, openedAt: at(9), closesAt: at(11), closedEarly: true }, at(14)).detail).toContain('Closed at 11:00 by an organiser');
+    expect(windowModel({ open: false, openedAt: null, closesAt: null, closedEarly: false }, at(14))).toMatchObject({ canOpen: true, canClose: false });
   });
 });

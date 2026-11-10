@@ -2,7 +2,7 @@
 // available, and what the toolbar offers. Pure. The phases are the status bar's: connecting, online, trouble, ended (closed or past),
 // plus "ready" (chosen but not started) and "ending" (the address is closing).
 import type { RuntimeSnapshot, TunnelFailureReason, WorkshopSummary } from './runtime-types.ts';
-import { clockOf, type Roster } from './register-model.ts';
+import { clockOf, type CheckInWindow, type Roster } from './register-model.ts';
 import { repairTargets, type DeviceList } from './devices-model.ts';
 import type { SessionCtx } from './commands.ts';
 import type { PairingState } from './pairing-model.ts';
@@ -140,14 +140,15 @@ export interface ToolbarModel {
   reopen: boolean;
 }
 
-export function toolbarModel(phase: SessionPhase): ToolbarModel {
+export function toolbarModel(phase: SessionPhase, windowFailed = false): ToolbarModel {
   return {
     addPerson: phase === 'online' || phase === 'trouble' || phase === 'connecting' ? 'enabled' : 'disabled',
     end: phase === 'online' || phase === 'trouble' || phase === 'connecting',
     closedMarker: phase === 'closed',
     readOnlyMarker: phase === 'past',
     start: phase === 'ready',
-    reopen: phase === 'closed' || phase === 'past',
+    // Also while check-in is open but its window on the iPad could not be opened: Reopen tries that again.
+    reopen: phase === 'closed' || phase === 'past' || (windowFailed && (phase === 'online' || phase === 'trouble' || phase === 'connecting')),
   };
 }
 
@@ -156,6 +157,54 @@ export function pastBanner(w: Pick<WorkshopSummary, 'date' | 'endTime' | 'startT
   const when = longDate(w.date);
   const at = w.endTime || w.startTime;
   return `This session finished on ${when}${at ? ` at ${at}` : ''}. The register is shown as it was saved. Reopen check-in to accept late arrivals.`;
+}
+
+// ---- Participant check-in window ---------------------------------------------------------------------------------------------
+
+/** How long after the workshop's end time check-in stays open when it is started, and how much Extend adds. */
+export const WINDOW_MARGIN_MIN = 30;
+export const WINDOW_EXTEND_MIN = 30;
+/** Start or Open check-in never opens for less than this, even for a workshop that has already ended. */
+export const WINDOW_MIN_MIN = 60;
+const DAY_MIN = 1440;
+
+/**
+ * Minutes from `now` until the workshop's end time plus the margin, in local time; at least an hour and at most a day (the
+ * register's limit). A workshop without an end time, or one already over, gets the minimum.
+ */
+export function defaultWindowMinutes(w: Pick<WorkshopSummary, 'date' | 'endTime'> | null, now: number): number {
+  const end = w?.endTime && /^\d{2}:\d{2}$/.test(w.endTime) ? new Date(`${w.date}T${w.endTime}:00`).getTime() : NaN;
+  const until = Number.isNaN(end) ? 0 : Math.ceil((end + WINDOW_MARGIN_MIN * 60_000 - now) / 60_000);
+  return Math.min(DAY_MIN, Math.max(WINDOW_MIN_MIN, until));
+}
+
+/** Extend: the window runs WINDOW_EXTEND_MIN longer than it does now (from now, when it has closed). */
+export function extendMinutes(w: CheckInWindow | null, now: number): number {
+  const left = w?.open && w.closesAt ? Math.ceil((w.closesAt - now) / 60_000) : 0;
+  return Math.min(DAY_MIN, Math.max(1, left) + WINDOW_EXTEND_MIN);
+}
+
+export interface WindowModel {
+  tone: 'good' | 'off';
+  chip: string;
+  headline: string;
+  detail: string;
+  canOpen: boolean;
+  canExtend: boolean;
+  canClose: boolean;
+}
+
+const at = (ms: number | null): string | null => (ms === null ? null : clockOf(new Date(ms).toISOString()));
+
+/** The rail's "Check-in on the iPad" panel: whether participants can check themselves in now, and until when. */
+export function windowModel(w: CheckInWindow | null, now: number): WindowModel {
+  if (w?.open) {
+    const left = w.closesAt ? Math.max(0, Math.ceil((w.closesAt - now) / 60_000)) : null;
+    return { tone: 'good', chip: 'Open', headline: `Open until ${at(w.closesAt) ?? '—'}`, detail: left !== null ? `${left >= 90 ? `${Math.floor(left / 60)} h ${left % 60} min` : `${left} min`} left. People can check themselves in on the iPad.` : 'People can check themselves in on the iPad.', canOpen: false, canExtend: true, canClose: true };
+  }
+  const closed = at(w?.closesAt ?? null);
+  const detail = !closed ? 'The iPad says check-in is not open.' : w?.closedEarly ? `Closed at ${closed} by an organiser. The iPad says check-in is not open.` : `Time ran out at ${closed}. The iPad says check-in is not open.`;
+  return { tone: 'off', chip: 'Closed', headline: 'Check-in on the iPad is closed', detail, canOpen: true, canExtend: false, canClose: false };
 }
 
 export interface SummaryModel { closedAt: string | null; arrived: number; total: number; walkIns: number; held: number }
@@ -188,6 +237,12 @@ export interface SessionView {
   busy: boolean;
   /** Other workshop's check-in is open: this one cannot be started. */
   otherLive: boolean;
+  /** The participant check-in window, while the register is answering; null otherwise. */
+  window: CheckInWindow | null;
+  /** Minutes Open check-in would open the window for now (until the end time plus the margin). */
+  openMinutes: number;
+  /** Start or Reopen check-in could not open the window on the iPad: the reason, until Reopen (or Open check-in) succeeds. */
+  windowError: string | null;
 }
 
 export interface SessionSelection {

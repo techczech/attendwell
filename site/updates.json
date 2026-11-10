@@ -1,11 +1,12 @@
 {
   "schema": 1,
   "latest": {
-    "version": "1.0.0",
-    "released": "2026-10-28",
+    "version": "1.0.2",
+    "released": "2026-11-09",
     "summary": [
-      "First public release of AttendWell for Mac.",
-      "Workshop check-in on an iPad, with arrivals shown on your Mac."
+      "Start and Reopen check-in now open check-in on the iPad, even after an earlier window ran out.",
+      "A newer booking export can update cancellations and bookings of people already in the register.",
+      "The window always opens on start, and Settings has a connection test."
     ],
     "notes": "https://techczech.github.io/attendwell/",
     "download": {
