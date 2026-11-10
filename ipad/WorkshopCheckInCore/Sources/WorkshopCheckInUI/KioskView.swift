@@ -105,7 +105,8 @@ public struct KioskView: View {
                         .foregroundStyle(.secondary).underline().padding(.top, 12).disabled(model.busy)
                         .accessibilityHint("Opens a practice check-in with made-up names. Nothing is sent or saved.")
                 }
-                if let onNearbyTest {
+                // Only on an unpaired iPad: a paired iPad reaches it from the PIN-gated Organiser screen.
+                if let onNearbyTest, model.active == nil {
                     Button("Nearby link test", action: onNearbyTest).buttonStyle(.plain).font(.body)
                         .foregroundStyle(.secondary).underline().padding(.top, 4).disabled(model.busy)
                         .accessibilityHint("Tests the direct connection to the organiser's Mac with made-up names. Your check-ins are not touched.")
