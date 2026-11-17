@@ -24,8 +24,10 @@ for (const file of files) {
   if (text.includes('{{')) problems.push(`${rel}: unresolved {{ placeholder`);
   if (ext !== '.html') continue;
   for (const m of text.matchAll(/<img\b[^>]*>/g)) if (!/\salt="/.test(m[0])) problems.push(`${rel}: <img> without alt: ${m[0].slice(0, 80)}`);
-  if (/<script\b/i.test(text)) problems.push(`${rel}: contains a script`);
-  for (const m of text.matchAll(/<link\b[^>]*>/g)) if (/href="https?:/.test(m[0])) problems.push(`${rel}: external <link>: ${m[0]}`);
+  for (const script of text.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) ?? []) {
+    if (script !== '<script src="citation-copy.js" defer></script>') problems.push(`${rel}: script other than the local citation enhancement`);
+  }
+  for (const m of text.matchAll(/<link\b[^>]*>/g)) if (/href="https?:/.test(m[0]) && !/rel="canonical"/.test(m[0])) problems.push(`${rel}: external <link>: ${m[0]}`);
   for (const [, attr, raw] of text.matchAll(/\s(href|src)="([^"]*)"/g)) {
     if (!raw || /^(https?:|mailto:)/.test(raw)) continue;
     checked++;

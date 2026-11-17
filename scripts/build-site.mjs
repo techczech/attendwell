@@ -1,5 +1,6 @@
 // Builds site/index.html, privacy.html and support.html from the approved copy in site-copy/*.md and the one config file site/release.json.
 // No dependencies. Run: node scripts/build-site.mjs   (the Pages workflow runs it before deploying site/).
+import { citationHead, citeBlockHtml } from './kit/citation.mjs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -84,6 +85,7 @@ function parseCopy(file) {
 const nav = [['index.html', 'Home'], ['support.html', 'Support'], ['privacy.html', 'Privacy']];
 
 export function page({ file, meta, content, r }) {
+  const citation = { title: meta.title, site: 'AttendWell', url: 'https://techczech.github.io/attendwell/' + (file === 'index.html' ? '' : file), authors: ['Dominik Lukeš'] };
   const links = nav.map(([href, label]) => `<a href="${href}"${href === file ? ' aria-current="page"' : ''}>${label}</a>`).join('\n      ')
     + `\n      <a href="${esc(r.sourceUrl)}">Source on GitHub</a>`;
   const hero = file === 'index.html'
@@ -95,6 +97,8 @@ export function page({ file, meta, content, r }) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(meta.title)}</title>
   <meta name="description" content="${esc(meta.description)}">
+  <link rel="canonical" href="${citation.url}">
+  ${citationHead(citation)}
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -112,13 +116,16 @@ ${content}
   <footer class="site-footer">
     <p>AttendWell is free and open source under the MIT licence. <a href="${esc(r.sourceUrl)}">Source on GitHub</a>.</p>
     <p>Made by Dominik Lukeš.</p>
+    ${citeBlockHtml(citation)}
   </footer>
+<script src="citation-copy.js" defer></script>
 </body>
 </html>
 `;
 }
 
 export function build(r = release) {
+  writeFileSync(join(root, 'site/citation-copy.js'), readFileSync(join(root, 'scripts/citation-copy.js')));
   const pages = [];
   for (const [file, copy] of [['index.html', 'index.md'], ['privacy.html', 'privacy.md'], ['support.html', 'support.md']]) {
     const { meta, body } = parseCopy(copy);
