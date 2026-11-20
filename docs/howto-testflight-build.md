@@ -36,7 +36,7 @@ For an iPad signed in to someone else's Apple ID, either sign its App Store into
 
 1. App Store Connect → Apps → AttendWell → TestFlight.
 2. Sidebar, **External Testing** → **+** → name the group "Other iPads" → **Create**.
-3. **Testers** tab → **+** → **Add New Testers** → an address you read, e.g. `dominiklukes+ipad@gmail.com` → **Add**.
+3. **Testers** tab → **+** → **Add New Testers** → an address you read, e.g. your own address with "+ipad" added before the @ → **Add**.
 4. **Builds** tab → **+** → pick the build → **Next** → write one line in "What to Test" → **Submit for Review**. The first time, Apple also asks for a short app description, a feedback email and contact details. Say no sign-in is needed (the app has "Try a demo").
 5. When Apple approves the build, the invitation goes to that address. The redeem code is in the email.
 6. On the iPad: TestFlight → **Redeem** → type the code → **Install**.
