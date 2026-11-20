@@ -7,7 +7,7 @@ FOR DOMINIK. Agents: paste the numbered steps below into your message every time
 1. An agent builds the iPad app on the Mac and uploads it to Apple. The upload log says "Upload succeeded".
 2. Apple processes the build. This takes 5 to 30 minutes. While it does, the build shows as **Processing**, and Apple emails you if anything is wrong with it.
 3. The finished build sits in App Store Connect under its version number, for example **1.0.1 (2)**: version 1.0.1, build 2.
-4. **It reaches no one until it is in a tester group.** A group only picks up new builds by itself if its "Automatic distribution" setting is on. Otherwise someone has to add each build by hand. This is the step that usually gets missed.
+4. **It reaches no one until it is in a tester group.** Builds uploaded from Xcode are never added to a group automatically, so each one has to be added by hand. This is the step that usually gets missed.
 5. Once the build is in your group, the TestFlight app on the iPad offers it within a few minutes.
 
 ## Steps: make the build appear on the iPad
@@ -23,7 +23,7 @@ FOR DOMINIK. Agents: paste the numbered steps below into your message every time
    - **Invalid**, or the build is not in the list at all: tell the agent; it needs uploading again.
 5. In the left sidebar, under **Internal Testing**, click your tester group.
 6. Click the **Builds** tab, then **+**, tick the new build, and click **Add**.
-7. Optional, to avoid this next time: on the same group page, turn on **Automatic distribution**. New builds then go to the group without step 6.
+7. There is no way round step 6 for builds uploaded from this Mac: the group's Settings tab says "Build Distribution: Manual for Xcode Builds" and cannot be changed. Only an App Store Connect API key lets an agent add the build for you.
 8. On the iPad, open the **TestFlight** app, tap **AttendWell**, and tap **Update** (or **Install**).
 
 How to tell it worked: Apple emails "AttendWell 1.0.1 (2) for iOS is now available to test". In App Store Connect the build may still say **Ready to Submit**. That only matters for external groups, which Apple reviews. Your internal group gets the build anyway.
