@@ -64,6 +64,7 @@ export type SessionAction =
   | { kind: 'revoke'; id: string }
   | { kind: 'dismiss-hold'; id: number }
   | { kind: 'copy'; what: 'address' | 'pair-code' | 'pair-address' | 'review-bcc' }
+  | { kind: 'copy-checked-in' }
   | { kind: 'export-csv' }
   | { kind: 'quit'; endFirst: boolean }
   // Name lists and iPad recovery files, for the workshop on screen (main/names-service.ts). Files are chosen in main, or dropped.
@@ -102,7 +103,7 @@ export function parseSessionAction(v: unknown): SessionAction {
   const o = (v ?? {}) as Record<string, unknown>;
   switch (o.kind) {
     case 'show': return { kind: 'show', workshopId: id(o.workshopId) };
-    case 'leave': case 'start': case 'retry': case 'end': case 'undo': case 'pair-new': case 'pair-close': case 'export-csv': return { kind: o.kind };
+    case 'leave': case 'start': case 'retry': case 'end': case 'undo': case 'pair-new': case 'pair-close': case 'copy-checked-in': case 'export-csv': return { kind: o.kind };
     case 'window': if (o.action !== 'open' && o.action !== 'extend' && o.action !== 'close') throw new Error('Bad argument'); return { kind: 'window', action: o.action };
     case 'mark': if (typeof o.present !== 'boolean') throw new Error('Bad argument'); return { kind: 'mark', id: id(o.id), present: o.present };
     case 'resolve': if (o.action !== 'check-in' && o.action !== 'dismiss') throw new Error('Bad argument'); return { kind: 'resolve', id: id(o.id), action: o.action };
@@ -213,7 +214,7 @@ export interface AttendWellApi {
   /** The session screen: its current state, a push when it changes, what the organiser does, and the quit confirmation request. */
   sessionView(): Promise<SessionView>;
   onSession(cb: (v: SessionView) => void): () => void;
-  sessionAct(a: SessionAction): Promise<Result<{ leftovers?: string[]; path?: string | null }>>;
+  sessionAct(a: SessionAction): Promise<Result<{ leftovers?: string[]; path?: string | null; count?: number }>>;
   /** The names and recovery sheets' actions (the same channel as sessionAct). */
   sheetAct(a: SessionAction): Promise<Result<SheetAnswer>>;
   /** The path of a file dropped on the window (Electron webUtils), for the recovery sheet's drop zone. */

@@ -33,6 +33,7 @@ export interface RegisterPanelProps {
   canReview: boolean;
   onAdd(): void;
   onUndo(): void;
+  onCopyCheckedIn(): void;
   onPasteNames(): void;
   onImportNames(): void;
 }
@@ -79,6 +80,7 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
         <button type="button" className="btn primary" onClick={p.onAdd}><Icon name="user-plus" />Add person</button>
         <button type="button" className="btn" onClick={p.onPasteNames}><Icon name="clipboard-paste" />Paste names…</button>
         <button type="button" className="btn" onClick={p.onImportNames}><Icon name="file-up" />Import a file…</button>
+        {p.platform === 'mac' ? <button type="button" className="btn" onClick={p.onCopyCheckedIn}><Icon name="copy" />Copy checked-in list</button> : null}
         {p.canUndo ? <button type="button" className="btn" onClick={p.onUndo} disabled={p.busy}><Icon name="undo-2" />Undo last change</button> : null}
         {p.canExport ? <button type="button" className="btn" onClick={p.onExport}><Icon name="file-down" />Export CSV</button> : null}
         {p.canReview ? <button type="button" className="btn" onClick={p.onReview}><Icon name="mail" />Email review</button> : null}

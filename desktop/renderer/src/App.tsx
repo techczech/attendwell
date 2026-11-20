@@ -98,7 +98,7 @@ export function App(): JSX.Element | null {
   const selectionKey = JSON.stringify(selection);
 
   const ctx: CommandCtx = useMemo(() => !snap || !view ? IDLE_CTX : ({
-    view, workshopCount: countWorkshops(snap.listing), selectedWorkshop: view === 'library' && selectedId !== null,
+    view, platform: snap.platform, workshopCount: countWorkshops(snap.listing), selectedWorkshop: view === 'library' && selectedId !== null,
     liveSession: snap.runtime.session !== 'idle', exampleOffered: snap.exampleId !== null && !snap.exampleRemoved,
     whatsNewAvailable: snap.update.whatsNew !== null,
     session: view === 'session' && sv ? sessionCtxOf(sv, selection) : null,
@@ -223,6 +223,14 @@ export function App(): JSX.Element | null {
       case 'connection.retry': setOverlay(null); void act({ kind: 'retry' }); return;
       case 'checkin.end': setOverlay({ kind: 'end' }); return;
       case 'checkin.reopen': setOverlay(null); void act({ kind: 'start' }); return;
+      case 'register.copy-checked-in':
+        setOverlay(null);
+        void api.sessionAct({ kind: 'copy-checked-in' }).then((r) => {
+          if (!r.ok) { flash(r.error); return; }
+          const count = r.value.count ?? 0;
+          flash(`Copied ${count} ${count === 1 ? 'name' : 'names'}`);
+        });
+        return;
       case 'export.csv': setOverlay(null); void exportCsv(); return;
       case 'review.email': setOverlay({ kind: 'review' }); return;
       case 'names.paste': setOverlay(null); void withWorkshop(() => setOverlay({ kind: 'names-paste' })); return;
@@ -289,7 +297,7 @@ export function App(): JSX.Element | null {
             actions={{
               onUi: setUi, onShowAll: showAll, onStart: () => void act({ kind: 'start' }), onEnd: () => setOverlay({ kind: 'end' }), onReopen: () => void act({ kind: 'start' }),
               onAdd: () => run('person.add'), onUndo: () => run('register.undo'), onConnectIPad: () => run('nearby.test'),
-              onCommands: () => run('app.palette'), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
+              onCommands: () => run('app.palette'), onCopyCheckedIn: () => run('register.copy-checked-in'), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
               onRetry: () => void act({ kind: 'retry' }),
               onWindow: (action) => void act({ kind: 'window', action }, action === 'close' ? 'Check-in on the iPad is closed.' : 'Check-in on the iPad is open.'), onMark: (id, present) => void act({ kind: 'mark', id, present }),
               onResolve: (id, action) => void act({ kind: 'resolve', id, action }), onExport: () => void exportCsv(), onReview: () => setOverlay({ kind: 'review' }),

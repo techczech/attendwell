@@ -63,7 +63,15 @@ try {
       check(await button.isVisible() && await button.isEnabled(), `${label} is available ${phase}`);
     }
   }
+  const copyCheckedIn = page.getByRole('button', { name: 'Copy checked-in list', exact: true });
+  async function checkCopy(count) {
+    if (process.platform !== 'darwin') return;
+    await copyCheckedIn.click();
+    await page.getByText(`Copied ${count} ${count === 1 ? 'name' : 'names'}`, { exact: true }).waitFor();
+    check(true, `Copy checked-in list confirms ${count}`);
+  }
   await checkRegisterActions('before check-in starts');
+  await checkCopy(0);
 
   // Before check-in starts: paste three names, see the preview, add them, and see them in the register.
   await page.click('button:has-text("Paste names…")');
@@ -99,6 +107,7 @@ try {
   await page.click('[role=dialog] button:has-text("Add person")');
   await page.waitForSelector('[role=option]:has-text("Test Walkin"):has-text("Walk-in")', { timeout: 10_000 });
   check(true, 'a walk-in is added on the laptop and shown as here');
+  await checkCopy(1);
 
   await page.click('button:has-text("End check-in")');
   await page.click('[role=dialog] button:has-text("End check-in")');
@@ -106,6 +115,7 @@ try {
   await page.waitForSelector('button:has-text("Reopen check-in")');
   check(true, 'End check-in closes the address; the register stays and can be reopened');
   await checkRegisterActions('after check-in ends');
+  await checkCopy(1);
 
   const state = await app.evaluate(({ BrowserWindow }) => ({
     dialogs: globalThis.__dialogCalls,

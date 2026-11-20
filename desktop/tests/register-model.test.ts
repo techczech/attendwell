@@ -1,7 +1,7 @@
 // The register view model: status, search, filters, sort, counts, the closed summary, CSV and the email review list.
 import { describe, expect, test } from 'bun:test';
 import {
-  buildRegister, clockOf, initialsOf, registerCsv, reviewRecipients, stepSelection, summaryOf, type Roster, type RosterPerson,
+  buildRegister, checkedInList, clockOf, initialsOf, registerCsv, reviewRecipients, stepSelection, summaryOf, type Roster, type RosterPerson,
 } from '../shared/register-model.ts';
 
 const at = (hh: number, mm: number): string => new Date(2026, 9, 30, hh, mm).toISOString();
@@ -117,5 +117,33 @@ describe('closed summary, CSV and email review', () => {
     expect(out.recipients.map((x) => x.email)).toEqual(['bea@example.ac.uk', 'shared@example.ac.uk']);
     expect(out.skipped).toBe(2);
     expect(out.bcc).toBe('bea@example.ac.uk; shared@example.ac.uk');
+  });
+});
+
+describe('copy checked-in list', () => {
+  const workshop = { title: 'Fictional workshop', date: '2026-10-30' };
+  test('lists eligible arrivals in check-in order, including late and no-email arrivals', () => {
+    const r: Roster = {
+      participants: [
+        person('last', 'Amy Late', { present: true, updatedAt: at(14, 30), late: true }),
+        person('cancelled', 'Hidden Cancelled', { booking: 'cancelled', present: true, updatedAt: at(12, 0) }),
+        person('nomail', 'Tomasz Walk-in', { email: '', present: true, updatedAt: at(14, 5) }),
+        person('first', 'Zed Early', { present: true, updatedAt: at(13, 45) }),
+        person('waiting', 'Hidden Waiting', { booking: 'waiting', present: true, updatedAt: at(13, 10) }),
+        person('removed', 'Removed Booking', { active: false, present: true, updatedAt: at(13, 20) }),
+        person('admitted', 'Admitted Booking', { booking: 'waiting', admitted: true }),
+      ],
+      conflicts: [{ participantId: 'gone', name: 'Removed Held Booking', reason: 'not-in-roster', queuedAt: null, receivedAt: null, count: 1 }],
+    };
+    expect(checkedInList(workshop, r)).toEqual({
+      count: 3,
+      text: 'Checked in: 3 of 4 — Fictional workshop, Fri 30 Oct 2026\nZed Early <zed.early@example.ac.uk>\nTomasz Walk-in\nAmy Late <amy.late@example.ac.uk>',
+    });
+  });
+
+  test('copies a header even before anybody checks in', () => {
+    expect(checkedInList(workshop, { participants: [], conflicts: [] })).toEqual({
+      count: 0, text: 'Checked in: 0 of 0 — Fictional workshop, Fri 30 Oct 2026',
+    });
   });
 });

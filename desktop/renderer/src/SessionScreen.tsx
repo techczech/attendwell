@@ -21,6 +21,7 @@ export interface SessionActions {
   onUndo(): void;
   onConnectIPad(): void;
   onCommands(): void;
+  onCopyCheckedIn(): void;
   onPair(targetId?: string): void;
   onCopyAddress(): void;
   onRetry(): void;
@@ -96,7 +97,7 @@ export function SessionScreen(p: SessionScreenProps): JSX.Element {
           repair={banner} repairChord={pairChord} platform={p.platform} rosterError={sv.rosterError} busy={sv.busy}
           canUndo={editable && sv.canUndo} canExport={sum.total > 0} canReview={sum.here > 0}
           onUi={a.onUi} onMark={a.onMark} onResolve={a.onResolve} onRepair={() => a.onPair(banner?.targetId ?? undefined)} onExport={a.onExport} onReview={a.onReview}
-          onAdd={a.onAdd} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} onUndo={a.onUndo} />
+          onAdd={a.onAdd} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} onUndo={a.onUndo} onCopyCheckedIn={a.onCopyCheckedIn} />
         <aside className="rail" aria-label="Connection and iPads">
           <button type="button" className="btn primary big" onClick={a.onConnectIPad}><Icon name="plug-zap" />Connect iPad</button>
           {sv.windowError ? <div className="warn-card" role="alert"><Icon name="circle-alert" size={16} /><span>{sv.windowError}</span></div> : null}

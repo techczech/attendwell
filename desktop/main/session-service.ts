@@ -3,7 +3,7 @@
 // state machine, and follows the runtime's states. The window renders `view()`; every action is a method that returns a Result.
 import { reduce, IDLE, type PairingState } from '../shared/pairing-model.ts';
 import type { DeviceList } from '../shared/devices-model.ts';
-import type { CheckInWindow, Roster } from '../shared/register-model.ts';
+import { checkedInList, type CheckInWindow, type Roster } from '../shared/register-model.ts';
 import type { Result } from '../shared/ipc.ts';
 import type { RuntimeSnapshot, WorkshopSummary } from '../shared/runtime-types.ts';
 import { defaultWindowMinutes, extendMinutes, phaseOf, type SessionPhase, type SessionView } from '../shared/session-model.ts';
@@ -419,6 +419,17 @@ export class SessionService {
       return OK;
     } catch (e) { return fail(e); }
     finally { this.d.changed(); }
+  }
+
+  /** Read the current register for Copy checked-in list, including writes since the last screen refresh. */
+  async checkedInList(): Promise<Result<{ text: string; count: number }>> {
+    const workshop = this.workshop;
+    if (!workshop || workshop.id !== this.viewing) return { ok: false, error: 'Open a workshop first.' };
+    try {
+      const roster = await this.d.port.readRegister(workshop.id);
+      if (workshop.id !== this.viewing) return { ok: false, error: 'The workshop changed. Try again.' };
+      return { ok: true, value: checkedInList(workshop, roster ?? EMPTY) };
+    } catch { return { ok: false, error: 'The register could not be read. Try again.' }; }
   }
 
   /** Names were added or an iPad's recovery file imported (main/names-service.ts): read the register again, live or from disk. */

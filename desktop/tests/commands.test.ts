@@ -32,6 +32,7 @@ const LOCK: Array<[string, string, string, string]> = [
   ['person.add', 'Add person', '⌘⌥N', 'Session'], ['ipad.pair', 'Pair an iPad', '⌘⇧N', 'Session'], ['ipad.pair-again', 'Pair again', '', 'Session'], ['ipad.rename', 'Rename iPad…', '', ''],
   ['ipad.revoke', 'Revoke iPad…', '', ''], ['ipad.import-recovery', 'Import iPad recovery file…', '', 'Session'], ['connection.copy-address', 'Copy check-in address', '⌘⌥C', 'Session'],
   ['connection.retry', 'Retry connection', '⌘⇧R', 'Session'], ['connection.test', 'Test connection', '', ''], ['review.email', 'Email review…', '⌘E', 'Session'], ['export.csv', 'Export CSV…', '⌘⇧E', 'Session'],
+  ['register.copy-checked-in', 'Copy checked-in list', '', 'Session'],
   ['checkin.end', 'End check-in', '', 'Session'], ['checkin.reopen', 'Reopen check-in', '', 'Session'],
 ];
 

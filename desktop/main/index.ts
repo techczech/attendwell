@@ -234,7 +234,7 @@ async function start(): Promise<void> {
   function menuCtx(): CommandCtx {
     const s = state.get();
     return {
-      view: view.view, workshopCount: lastCount, selectedWorkshop: view.selectedWorkshop, liveSession: busy(),
+      view: view.view, platform, workshopCount: lastCount, selectedWorkshop: view.selectedWorkshop, liveSession: busy(),
       exampleOffered: s.exampleId !== null && !s.exampleRemoved, whatsNewAvailable: updates.checker.snapshot().whatsNew !== null,
       session: view.view === 'session' ? sessionCtxOf(sess.view(), selection) : null,
     };
@@ -353,6 +353,13 @@ async function start(): Promise<void> {
         const text = a.what === 'address' ? (t.state === 'online' ? t.url : null) : a.what === 'pair-code' ? open?.shortCode ?? null
           : a.what === 'pair-address' ? open?.baseUrl ?? null : v.roster ? reviewRecipients(v.roster).bcc || null : null;
         return copy(text).ok ? { ok: true } : { ok: false, error: 'There is nothing to copy yet.' };
+      }
+      case 'copy-checked-in': {
+        if (platform !== 'mac') return { ok: false, error: 'Copy checked-in list is available on Mac.' };
+        const result = await sess.checkedInList();
+        if (!result.ok) return result;
+        copy(result.value.text);
+        return { ok: true, value: { count: result.value.count } };
       }
       case 'export-csv': {
         const v = sess.view();

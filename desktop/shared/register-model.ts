@@ -1,6 +1,9 @@
 // The register as the window shows it: who is here, who is not yet, who is held for review; search, sort, counts and the closed summary.
 // Pure (no Electron, no React). The input is the organiser API's roster (docs/reference-device-api.md and server/store-attendance.ts `list()`).
 
+import { isEligible } from '../../server/eligibility-attendance.ts';
+import { longDate } from './workshops.ts';
+
 export interface RosterPerson {
   id: string;
   name: string;
@@ -8,6 +11,7 @@ export interface RosterPerson {
   /** confirmed, waiting or cancelled (cancelled people are not in the active roster). */
   booking: string;
   present: boolean;
+  active?: boolean;
   late?: boolean;
   admitted: boolean;
   /** The version a change must quote (the register refuses a stale one). */
@@ -200,14 +204,32 @@ export function summaryOf(roster: Roster): RegisterCounts {
 
 // ---- Export and email review (the closed summary's two buttons) --------------------------------------------------------------
 
-const csvCell = (v: string): string => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
+const spreadsheetSafe = (v: string): string => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
 const quote = (v: string): string => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
 
 /** CSV of the register: Name, Email, Status, Arrived. Cells that would run as a formula in a spreadsheet are defused. */
 export function registerCsv(roster: Roster): string {
   const lines = ['Name,Email,Status,Arrived'];
-  for (const r of sortRows(rowsOf(roster), 'name', false)) lines.push([r.name, r.email ?? '', STATUS_LABELS[r.status], r.arrived ?? ''].map((c) => quote(csvCell(c))).join(','));
+  for (const r of sortRows(rowsOf(roster), 'name', false)) lines.push([r.name, r.email ?? '', STATUS_LABELS[r.status], r.arrived ?? ''].map((c) => quote(spreadsheetSafe(c))).join(','));
   return lines.join('\r\n') + '\r\n';
+}
+
+/** One clipboard line per person in register arrival order. The total is the eligible register, including people yet to arrive. */
+export function checkedInList(workshop: { title: string; date: string }, roster: Roster): { text: string; count: number } {
+  const visible = roster.participants.filter((person) => person.active !== false && isEligible(person));
+  const arrival = (person: RosterPerson): number => {
+    const timestamp = Date.parse(person.updatedAt ?? '');
+    return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
+  };
+  const checkedIn = visible.filter((person) => person.present).sort((a, b) => arrival(a) - arrival(b));
+  const oneLine = (text: string): string => text.replace(/[\t\r\n]+/g, ' ').trim();
+  const lines = [`Checked in: ${checkedIn.length} of ${visible.length} — ${oneLine(workshop.title)}, ${longDate(workshop.date)}`];
+  for (const person of checkedIn) {
+    const name = oneLine(person.name);
+    const email = oneLine(person.email);
+    lines.push(spreadsheetSafe(email ? `${name} <${email}>` : name));
+  }
+  return { text: lines.join('\n'), count: checkedIn.length };
 }
 
 const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
