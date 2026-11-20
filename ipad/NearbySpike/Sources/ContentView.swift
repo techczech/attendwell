@@ -38,6 +38,8 @@ struct ContentView: View {
                             Label(model.status, systemImage: "checkmark.circle.fill")
                                 .font(.body.weight(.semibold))
                                 .accessibilityIdentifier("nearby-connected")
+                        } else if !version.isEmpty {
+                            Text(version).font(.callout)
                         }
                         Spacer()
                         Button { connectionsOpen = true } label: {
@@ -114,7 +116,7 @@ struct ContentView: View {
                 Text("Connections").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
                 Text(model.status).font(.title2.bold()).accessibilityIdentifier("nearby-connection")
                 if model.hasPairing && model.connectedMac == nil { reconnectPanel }
-                Text("Unsent check-ins: \(model.pending)").font(.title3)
+                else { Text("Unsent check-ins: \(model.pending)").font(.title3) }
                 Text(version).font(.title3)
                 if let error = model.error { Text(error).font(.title3.bold()) }
                 KioskTile("Connect Mac locally", icon: "qrcode.viewfinder", prominent: true) { openScanner() }
@@ -150,6 +152,7 @@ struct ContentView: View {
                     .font(.body)
                     .accessibilityIdentifier("nearby-discovery-guidance")
             }
+            Text("Unsent check-ins: \(model.pending)").font(.body.weight(.semibold))
             KioskTile("Reconnect", icon: "arrow.clockwise", prominent: true) { model.reconnect() }
                 .accessibilityIdentifier("nearby-reconnect")
         }
