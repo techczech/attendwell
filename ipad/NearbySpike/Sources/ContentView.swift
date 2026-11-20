@@ -12,6 +12,10 @@ struct ContentView: View {
     @State private var cameraReady = false
     @State private var cameraMessage = "Opening the camera…"
 
+    private var namesFirst: Bool {
+        model.connectedMac != nil && model.snapshot?.open == true
+    }
+
     private var shown: [NameEntry] {
         (model.snapshot?.names ?? []).filter {
             !$0.hidden && (search.isEmpty || $0.displayName.localizedCaseInsensitiveContains(search))
@@ -24,6 +28,7 @@ struct ContentView: View {
                 header
                 if model.hasPairing {
                     if let snapshot = model.snapshot { workshop(snapshot) }
+                    if namesFirst { namesList }
                     KioskTile("Connect to a different Mac", icon: "qrcode.viewfinder", action: openScanner)
                 } else {
                     KioskTile("Connect Mac locally", icon: "qrcode.viewfinder", prominent: true, action: openScanner)
@@ -32,7 +37,7 @@ struct ContentView: View {
                     KioskTile("Connect computer over internet", icon: "globe") { onInternet(nil) }
                 }
                 if let onDemo, !model.hasPairing { KioskTile("Try a demo", icon: "play.circle", action: onDemo) }
-                if model.snapshot?.open == true { namesList }
+                if !namesFirst && model.snapshot?.open == true { namesList }
             }
             .frame(maxWidth: 880, alignment: .leading)
             .padding(32)
