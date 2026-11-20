@@ -183,6 +183,7 @@ export interface NearbyView {
   state: 'waiting' | 'connected';
   peerName: string | null;
   checkins: number;
+  workshopTitle: string;
   /** The QR payload and the key text for pasting; null when the link is not available. */
   payload: string | null;
   key: string | null;
@@ -218,7 +219,7 @@ export interface AttendWellApi {
   /** The path of a file dropped on the window (Electron webUtils), for the recovery sheet's drop zone. */
   pathForFile(file: File): string;
   onQuitRequested(cb: () => void): () => void;
-  /** The nearby link test sheet: the link's state, and opening its log file. */
+  /** The Connect iPad sheet: the link's state, and opening its log file. */
   nearbyView(): Promise<NearbyView>;
   nearbyShowLog(): Promise<void>;
 }

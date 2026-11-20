@@ -130,8 +130,6 @@ async function start(): Promise<void> {
   // The diagnostic log (main/app-log.ts): the register's and cloudflared's output, the check-in's states and failed actions.
   const appLog = openAppLog(userData);
   appLog.write(`AttendWell ${version} started (${app.isPackaged ? 'packaged' : 'development'}, ${process.platform} ${process.arch}); registers folder ${folder}; programs in ${resourcesRoot}.`);
-  // The nearby link test (main/nearby-link.ts): starts with the app when the helper is bundled; off in test mode unless asked.
-  const nearby = startNearbyLink({ env: ENV, userData, resourcesRoot, appLog: (line) => appLog.write(line) });
   const bundle = createRuntimeBundle({ dataRoot: expandForPort(folder), resourcesRoot, env: ENV, log: (line) => appLog.write(line) });
   const port = bundle.port;
   port.status.onChange(runtimeChangeLogger((line) => appLog.write(line)));
@@ -158,13 +156,22 @@ async function start(): Promise<void> {
 
   const sess = new SessionService({
     port, organiser: bundle.organiser, hostName: hostname().replace(/\.local$/, ''), log: (line) => appLog.write(line),
-    changed: () => { send(CH.sessionChanged, sess.view()); pushState(); rebuildMenu(); },
+    extendPairingQR: (payload) => nearby.extendPairingQR(payload),
+    changed: () => { nearby.updateWorkshop(sess.nearbyWorkshop()); send(CH.sessionChanged, sess.view()); pushState(); rebuildMenu(); },
   });
 
   // Name lists and iPad recovery files for the workshop on screen. Files are read here; the window only ever sees the preview.
   const names = new NamesService({
     port, organiser: bundle.organiser,
     written: async (id) => { await sess.reloadRegister(id); pushState(); rebuildMenu(); },
+  });
+  const nearby = startNearbyLink({
+    env: ENV, userData, resourcesRoot, appLog: (line) => appLog.write(line),
+    recordCheckIn: async (id, checkIn) => {
+      const receipt = await names.recordNearbyCheckIn(id, checkIn);
+      if (receipt.recorded) void sess.reloadRegister(id).catch(() => { /* The next poll refreshes the view. */ });
+      return receipt;
+    },
   });
   /** The file chooser for a names or recovery sheet. Test mode shows no dialog: it answers the file named in ATTENDWELL_TEST_NAMES_FILE or ATTENDWELL_TEST_RECOVERY_FILE, or nothing. */
   async function chooseFile(title: string, filters: Array<{ name: string; extensions: string[] }>, testFile?: string): Promise<string | null> {

@@ -1,14 +1,13 @@
-// The nearby link test (phase 1 of docs/plan-reliable-sync.md): starts the bundled attendwell-nearby helper (macOS, when the helper
-// is in the app's resources), gives it the per-install key and a 500-name synthetic snapshot, acknowledges every check-in, and keeps
-// the count, the connected iPad's name and the connection state in memory for the "Nearby link test…" sheet. A missing helper or a
-// helper that stops never breaks the app: it is written to the diagnostic log and the app carries on (one restart after an
-// unexpected exit). The key is made once per install in <userData>/nearby-key.json (0600); it goes to the helper over stdin, never
-// on argv, and never into a log. Helper output goes to <userData>/nearby.log. Under ATTENDWELL_TEST=1 it stays off unless
-// ATTENDWELL_NEARBY=1 asks for it.
+// Starts the bundled Multipeer helper and bridges its stdio to the register. The
+// per-install key reaches the helper over stdin and is never logged.
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { deviceText, HIDDEN_NAME } from '../../server/device-text.ts';
+import { isNearbyCheckIn, nearbyNameId, type NearbyCheckIn, type NearbyReceipt } from '../../server/nearby-protocol.ts';
+import { isEligible } from '../../server/eligibility-attendance.ts';
+import type { Roster } from '../shared/register-model.ts';
 import type { NearbyView } from '../shared/ipc.ts';
 
 export const NEARBY_WORKSHOP_ID = 'nearby-test';
@@ -28,8 +27,17 @@ export function loadOrCreateKey(dir: string): NearbyKey {
   return made;
 }
 
+export interface NearbyWorkshop {
+  id: string;
+  title: string;
+  roster: Roster | null;
+  open: boolean;
+}
+
 export interface NearbyLink {
   view(): NearbyView;
+  extendPairingQR(payload: string): string;
+  updateWorkshop(workshop: NearbyWorkshop | null): void;
   readonly logFile: string;
   stop(): void;
 }
@@ -40,6 +48,7 @@ export interface NearbyOptions {
   resourcesRoot: string;
   /** The app's diagnostic log (main/app-log.ts). */
   appLog: (line: string) => void;
+  recordCheckIn(workshopId: string, checkIn: NearbyCheckIn): Promise<NearbyReceipt>;
   platform?: NodeJS.Platform;
   spawnFn?: (program: string, args: string[]) => ChildProcess;
   /** Delay before the one restart after an unexpected exit. */
@@ -49,7 +58,13 @@ export interface NearbyOptions {
 export function startNearbyLink(o: NearbyOptions): NearbyLink {
   const logFile = join(o.userData, 'nearby.log');
   const state = { available: false, connected: false, peerName: null as string | null, checkins: 0 };
-  const seen = new Set<string>();
+  const inFlight = new Map<string, Promise<NearbyReceipt>>();
+  let writes: Promise<unknown> = Promise.resolve();
+  const peers = new Map<string, string>();
+  const emptyTitle = 'No workshop open on the Mac';
+  let workshop: NearbyWorkshop | null = null;
+  let snapshot = { workshopId: '', title: emptyTitle, open: false, names: [] as Array<{ id: string; displayName: string; hidden: boolean; checkedIn: boolean }> };
+  let version = 1;
   let key: NearbyKey | null = null;
   let stopping = false;
   let restarts = 0;
@@ -59,9 +74,29 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
     logFile,
     view: () => ({
       available: state.available, state: state.connected ? 'connected' : 'waiting', peerName: state.peerName, checkins: state.checkins,
+      workshopTitle: workshop?.title ?? emptyTitle,
       payload: state.available && key ? JSON.stringify({ v: 1, workshopId: key.workshopId, key: key.key }) : null,
       key: state.available && key ? key.key : null,
     }),
+    // Build 2 reads the fragment as query items. An escaped inner fragment
+    // carries the key while leaving the two legacy items intact.
+    extendPairingQR: (payload) => state.available && key ? `${payload}%23nearby=${key.key}` : payload,
+    updateWorkshop: (w) => {
+      workshop = w;
+      if (!state.available) return;
+      const next = {
+        workshopId: w?.id ?? '',
+        title: w ? deviceText(w.title, 'Workshop') : emptyTitle,
+        open: w?.open ?? false,
+        names: (w?.roster?.participants ?? []).map((p) => ({
+          id: nearbyNameId(p.id), displayName: deviceText(p.name, HIDDEN_NAME), hidden: !isEligible(p), checkedIn: p.present,
+        })),
+      };
+      if (JSON.stringify(next) === JSON.stringify(snapshot)) return;
+      snapshot = next;
+      version += 1;
+      if (child) sendSnapshot(child);
+    },
     stop: () => { stopping = true; try { child?.stdin?.end(); } catch { /* already gone */ } },
   };
 
@@ -69,10 +104,37 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
   if (platform !== 'darwin') return link;
   if (o.env.ATTENDWELL_TEST === '1' && o.env.ATTENDWELL_NEARBY !== '1') return link;
   const program = join(o.resourcesRoot, 'nearby', 'darwin-arm64', 'attendwell-nearby');
-  if (!existsSync(program)) { o.appLog('Nearby link: the helper is not in this build; the link test is off.'); return link; }
+  if (!existsSync(program)) { o.appLog('Nearby link: the helper is not in this build; the nearby link is off.'); return link; }
 
   const log = (line: string): void => { try { appendFileSync(logFile, `${new Date().toISOString()} ${line}\n`, { mode: 0o600 }); } catch { /* the link must never break the app */ } };
   try { key = loadOrCreateKey(o.userData); } catch (e) { o.appLog(`Nearby link: could not make the key: ${(e as Error).message}`); return link; }
+
+  const send = (c: ChildProcess, message: unknown): void => {
+    try { c.stdin?.write(JSON.stringify(message) + '\n'); }
+    catch (e) { log(`could not write to the helper: ${(e as Error).message}`); }
+  };
+  const sendSnapshot = (c: ChildProcess): void => send(c, { type: 'snapshot', version, acceptsWorkshopCheckIns: true, ...snapshot });
+  const accept = (c: ChildProcess, op: NearbyCheckIn & { workshopId?: unknown }): void => {
+    // New iPads include the workshop they saw, so a replay cannot follow the
+    // organiser to a different register. Old spike operations have no scope.
+    const id = typeof op.workshopId === 'string' ? op.workshopId : workshop?.id;
+    if (!id || id === NEARBY_WORKSHOP_ID || stopping) return;
+    const opKey = JSON.stringify([id, op.opId, op.nameId]);
+    let receipt = inFlight.get(opKey);
+    if (!receipt) {
+      const checkIn = { opId: op.opId, nameId: op.nameId, at: op.at };
+      const write = writes.then(() => o.recordCheckIn(id, checkIn));
+      receipt = write.then((result) => {
+        if (result.recorded) state.checkins += 1;
+        return result;
+      }).finally(() => { inFlight.delete(opKey); });
+      inFlight.set(opKey, receipt);
+      writes = receipt.catch(() => { log('Check-in not acknowledged: the register did not record it.'); });
+    }
+    void receipt.then(() => {
+      if (child === c && !stopping) send(c, { type: 'ack', opIds: [op.opId] });
+    }, () => { /* A replay will try the write again. */ });
+  };
 
   const launch = (): void => {
     let c: ChildProcess;
@@ -86,13 +148,14 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
     const gone = (why: string): void => {
       if (ended) return;
       ended = true;
+      peers.clear();
       state.connected = false; state.peerName = null;
       if (child === c) child = null;
       log(`helper stopped: ${why}`);
       if (stopping) return;
       o.appLog(`Nearby link: the helper stopped unexpectedly (${why}).`);
       if (restarts < 1) { restarts += 1; setTimeout(() => { if (!stopping) launch(); }, o.restartDelayMs ?? 1000).unref?.(); }
-      else { state.available = false; o.appLog('Nearby link: not restarted again; the link test is off until AttendWell restarts.'); }
+      else { state.available = false; o.appLog('Nearby link: not restarted again; the nearby link is off until AttendWell restarts.'); }
     };
     c.on('error', (e) => gone(`error ${e.message}`));
     c.on('exit', (code, sig) => gone(`code=${code} signal=${sig}`));
@@ -103,25 +166,23 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
       let i: number;
       while ((i = buffer.indexOf('\n')) >= 0) {
         const line = buffer.slice(0, i); buffer = buffer.slice(i + 1);
-        log(line);
-        let e: { type?: string; state?: string; peer?: string; opId?: string };
+        let e: { type?: string; state?: string; peer?: string; workshopId?: unknown };
         try { e = JSON.parse(line); } catch { continue; }
-        if (e.type === 'peer') {
-          if (e.state === 'connected') { state.connected = true; state.peerName = typeof e.peer === 'string' ? e.peer.slice(0, 80) : null; }
-          else if (e.state === 'notConnected') { state.connected = false; }
-        } else if (e.type === 'checkin' && typeof e.opId === 'string') {
-          if (!seen.has(e.opId)) { seen.add(e.opId); state.checkins = seen.size; }
-          c.stdin?.write(JSON.stringify({ type: 'ack', opIds: [e.opId] }) + '\n');
+        if (!e || typeof e !== 'object') continue;
+        if (e.type !== 'checkin') log(line);
+        if (e.type === 'peer' && typeof e.peer === 'string') {
+          if (e.state === 'connected') peers.set(e.peer, e.peer.slice(0, 80));
+          else if (e.state === 'notConnected') peers.delete(e.peer);
+          state.connected = peers.size > 0;
+          state.peerName = [...peers.values()].at(-1) ?? null;
+        } else if (e.type === 'checkin' && isNearbyCheckIn(e)) {
+          accept(c, e);
         }
       }
     });
     c.stdin?.on('error', () => undefined);
-    try {
-      // The key goes over stdin, never argv (visible in ps).
-      c.stdin?.write(JSON.stringify({ type: 'key', key: key!.key, workshopId: key!.workshopId }) + '\n');
-      const names = Array.from({ length: 500 }, (_, n) => ({ id: `n${n}`, displayName: `Synthetic Person ${n}`, hidden: false }));
-      c.stdin?.write(JSON.stringify({ type: 'snapshot', version: 1, workshopId: key!.workshopId, title: 'Nearby link test', open: true, names }) + '\n');
-    } catch (e) { log(`could not write to the helper: ${(e as Error).message}`); }
+    send(c, { type: 'key', ...key });
+    sendSnapshot(c);
   };
   launch();
   return link;

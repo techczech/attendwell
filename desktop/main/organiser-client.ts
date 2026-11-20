@@ -6,12 +6,15 @@ import type { PairingOffer } from '../shared/pairing-model.ts';
 import type { CheckInWindow, Roster, RosterConflict, RosterPerson } from '../shared/register-model.ts';
 import type { AddNamesRequest, AddNamesResult, RecoveryReport } from '../shared/names-model.ts';
 
+import type { NearbyCheckIn, NearbyReceipt } from '../../server/nearby-protocol.ts';
+
 export class OrganiserError extends Error {
   constructor(message: string, readonly status: number) { super(message); }
 }
 
 export interface OrganiserClient {
   roster(): Promise<Roster>;
+  recordNearbyCheckIn(checkIn: NearbyCheckIn, closed: boolean): Promise<NearbyReceipt>;
   setAttendance(id: string, present: boolean, version: number): Promise<Roster>;
   resolveConflict(id: string, action: 'check-in' | 'dismiss'): Promise<Roster>;
   addParticipant(name: string, email: string): Promise<Roster>;
@@ -59,7 +62,7 @@ const asRoster = (v: unknown): Roster => {
     const r = p as Record<string, unknown>;
     return {
       id: String(r.id), name: String(r.name ?? ''), email: String(r.email ?? ''), booking: String(r.booking ?? 'confirmed'), present: r.present === true,
-      admitted: r.admitted === true, version: Number(r.version ?? 0), updatedAt: typeof r.updatedAt === 'string' ? r.updatedAt : null,
+      admitted: r.admitted === true, version: Number(r.version ?? 0),  ...(r.late === true ? { late: true } : {}), updatedAt: typeof r.updatedAt === 'string' ? r.updatedAt : null,
     };
   });
   const conflicts: RosterConflict[] = (Array.isArray(o?.conflicts) ? o.conflicts : []).map((c) => {
@@ -98,6 +101,11 @@ export function createHttpOrganiser(organiserUrl: string, fetchImpl: typeof fetc
   }
   return {
     roster: async () => asRoster(await call('GET', '/api/roster')),
+    async recordNearbyCheckIn(checkIn, closed) {
+      const receipt = await call<NearbyReceipt>('POST', '/api/organiser/nearby-check-in', { checkIn, closed });
+      if (typeof receipt?.recorded !== 'boolean') throw new OrganiserError('The register did not confirm the check-in.', 0);
+      return receipt;
+    },
     setAttendance: async (id, present, version) => asRoster(await call('POST', '/api/attendance', { id, present, version, opId: `op-${crypto.randomUUID()}` })),
     resolveConflict: async (id, action) => asRoster(await call('POST', '/api/resolve-conflict', { id, action })),
     addParticipant: async (name, email) => asRoster(await call('POST', '/api/add-participant', { name, ...(email ? { email } : {}) })),

@@ -108,6 +108,10 @@ export function createHandler(store:AttendanceStore,config:Config,assets:string)
      if(p?.action==='close')return json(store.closeParticipantWindow(actor));
      return json({error:'Choose whether to open or close check-in.'},400);
     }
+    if(url.pathname==='/api/organiser/nearby-check-in'&&req.method==='POST'&&bearerDigest&&user!.role==='owner'){
+     const p=await read();
+     return json(store.recordNearbyCheckIn(p?.checkIn,p?.closed!==false));
+    }
     if(url.pathname==='/api/attendance'&&req.method==='POST'){const p=await read();return json(store.setAttendance(p.id,p.present,p.version,actor,p.opId));}
     if(url.pathname==='/api/resolve-conflict'&&req.method==='POST'){const p=await read();return json(store.resolveConflict(p.id,p.action,actor));}
     if(url.pathname==='/api/admit'&&req.method==='POST'){

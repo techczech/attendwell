@@ -9,6 +9,7 @@ import type { RuntimeSnapshot, WorkshopSummary } from '../shared/runtime-types.t
 import { defaultWindowMinutes, extendMinutes, phaseOf, type SessionPhase, type SessionView } from '../shared/session-model.ts';
 import { OrganiserError, type OrganiserClient, type OrganiserFactory } from './organiser-client.ts';
 import type { RuntimePort } from './runtime-port.ts';
+import type { NearbyWorkshop } from './nearby-link.ts';
 
 export interface SessionServiceDeps {
   port: RuntimePort;
@@ -16,6 +17,7 @@ export interface SessionServiceDeps {
   hostName: string;
   /** Tells the window that the view changed. */
   changed(): void;
+  extendPairingQR?: (payload: string) => string;
   now?: () => number;
   /** Milliseconds between register refreshes while check-in is open (default 3000; 0 = never, for tests that call `refresh()`). */
   pollMs?: number;
@@ -102,6 +104,15 @@ export class SessionService {
       windowError: this.client !== null ? this.windowError : null,
       openMinutes: defaultWindowMinutes(w, this.now()),
     };
+  }
+
+  nearbyWorkshop(): NearbyWorkshop | null {
+    const workshop = this.workshop;
+    if (!workshop || workshop.id !== this.viewing) return null;
+    const runtime = this.d.port.status.get();
+    const open = runtime.workshopId === workshop.id && runtime.session === 'running'
+      && this.window?.open === true && (this.window.closesAt ?? 0) > this.now();
+    return { id: workshop.id, title: workshop.title, roster: this.roster, open };
   }
 
   /** The label typed on the pairing sheet (applied when the iPad pairs). */
@@ -442,7 +453,8 @@ export class SessionService {
         try { await c.cancelPairing(offer.sessionId); } catch { /* it expires in five minutes anyway */ }
         return OK;
       }
-      this.pairing = reduce(this.pairing, { type: 'issued', offer, now: this.now() });
+      const qrPayload = this.d.extendPairingQR?.(offer.qrPayload) ?? offer.qrPayload;
+      this.pairing = reduce(this.pairing, { type: 'issued', offer: { ...offer, qrPayload }, now: this.now() });
       this.log(`Pair an iPad: a code is shown${offer.targetDeviceId ? ' to pair an iPad again' : ''}, valid until ${offer.expiresAt}.`);
       this.startTimer();
       this.d.changed();

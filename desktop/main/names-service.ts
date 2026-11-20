@@ -6,6 +6,7 @@
 import { createHash } from 'node:crypto';
 import { open } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
+import type { NearbyCheckIn, NearbyReceipt } from '../../server/nearby-protocol.ts';
 import { MAX_LIST_ROWS, PLAN_CHANGED } from '../../server/names-list.ts';
 import type { Result } from '../shared/ipc.ts';
 import type { NameRow, NamesMapping, NamesPlan, NamesSheetView, RecoveryReport, RecoverySheetView } from '../shared/names-model.ts';
@@ -137,6 +138,26 @@ export class NamesService {
     const l = this.lease;
     this.lease = null;
     if (l) { try { await l.lease.release(); } catch { /* the runtime stops it at quit */ } }
+  }
+
+  async recordNearbyCheckIn(id: string, checkIn: NearbyCheckIn): Promise<NearbyReceipt> {
+    const s = this.d.port.status.get();
+    if (s.workshopId === id && s.session === 'running' && s.service.state === 'running') {
+      return this.d.organiser(s.service.organiserUrl).recordNearbyCheckIn(checkIn, false);
+    }
+    // Reuse a names sheet's register for the same workshop. A different sheet
+    // owns the only offline lease; the iPad will retry when it is free.
+    if (this.state?.workshopId === id) return (await this.client(id)).recordNearbyCheckIn(checkIn, true);
+    if (this.state || this.opening || this.lease) throw new Error('The names sheet is using the offline register.');
+    const lease = await this.d.port.openRegister(id);
+    try {
+      const current = this.d.port.status.get();
+      const live = current.workshopId === id && current.session === 'running' && current.service.state === 'running'
+        && current.service.organiserUrl === lease.organiserUrl;
+      return await this.d.organiser(lease.organiserUrl).recordNearbyCheckIn(checkIn, !live);
+    } finally {
+      await lease.release().catch(() => { /* The runtime owns shutdown of the service. */ });
+    }
   }
 
   // ---- name lists -----------------------------------------------------------------------------------------------------------------

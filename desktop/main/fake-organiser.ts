@@ -4,6 +4,7 @@ import type { DeviceList, DeviceRecord, PairingInfo } from '../shared/devices-mo
 import type { PairingOffer } from '../shared/pairing-model.ts';
 import type { CheckInWindow, Roster, RosterConflict, RosterPerson } from '../shared/register-model.ts';
 import { OrganiserError, type OrganiserClient } from './organiser-client.ts';
+import { nearbyNameId, type NearbyCheckIn, type NearbyReceipt } from '../../server/nearby-protocol.ts';
 import { PLAN_CHANGED, planNames, type NameListRecord } from '../../server/names-list.ts';
 import type { AddNamesRequest, AddNamesResult, RecoveryReport } from '../shared/names-model.ts';
 
@@ -23,6 +24,7 @@ export interface FakeRegisterOptions {
   eventCode?: string;
   eventName?: string;
   eventDate?: string;
+  persist?: () => void;
 }
 
 interface OpenPairing { sessionId: string; label: string; targetDeviceId: string | null; code: string; expiresAt: number; wrong: number; pausedUntil: number | null; pauses: number }
@@ -34,6 +36,7 @@ export class FakeRegister implements OrganiserClient {
   holds: DeviceList['unmatchedCheckIns'] = [];
   private pairing: OpenPairing | null = null;
   private seq = 0;
+  readonly nearbyOperations: Record<string, string>;
   /** Everything the organiser asked for, in order, for tests to read. */
   readonly log: string[] = [];
   /** The next call fails with this (then clears). */
@@ -41,7 +44,8 @@ export class FakeRegister implements OrganiserClient {
   private readonly now: () => number;
   private readonly origin: () => string;
 
-  constructor(private readonly o: FakeRegisterOptions = {}, roster?: Roster) {
+  constructor(private readonly o: FakeRegisterOptions = {}, roster?: Roster & { nearbyOperations?: Record<string, string> }) {
+    this.nearbyOperations = Object.assign(Object.create(null), roster?.nearbyOperations);
     this.now = o.now ?? (() => Date.now());
     this.origin = o.participantOrigin ?? (() => 'https://quiet-river-1234.trycloudflare.com');
     if (roster) { this.people = roster.participants.map((p) => ({ ...p })); this.conflicts = roster.conflicts.map((c) => ({ ...c })); }
@@ -70,6 +74,34 @@ export class FakeRegister implements OrganiserClient {
   }
 
   async roster(): Promise<Roster> { this.check('roster'); return { ...this.snapshot(), window: this.windowNow() }; }
+
+  async recordNearbyCheckIn(checkIn: NearbyCheckIn, closed: boolean): Promise<NearbyReceipt> {
+    this.check('nearby check-in');
+    const { opId, nameId, at } = checkIn;
+    const prior = this.nearbyOperations[opId];
+    if (prior !== undefined) {
+      if (prior !== nameId) throw new OrganiserError('This check-in request was already used for another record.', 409);
+      return { recorded: false };
+    }
+    const late = closed || !this.windowNow().open;
+    const person = this.people.find((p) => nearbyNameId(p.id) === nameId);
+    const receivedAt = new Date(this.now()).toISOString();
+    if (person && !person.present) {
+      person.present = true;
+      person.version += 1;
+      person.updatedAt = receivedAt;
+    }
+    if (person && late) person.late = true;
+    if (!person) {
+      const reason = late ? 'unknown-nearby-name-late' : 'unknown-nearby-name';
+      const conflict = this.conflicts.find((c) => c.participantId === nameId);
+      if (conflict) { conflict.count += 1; conflict.receivedAt = receivedAt; }
+      else this.conflicts.push({ participantId: nameId, name: 'Unknown iPad name', reason, queuedAt: at, receivedAt, count: 1 });
+    }
+    this.nearbyOperations[opId] = nameId;
+    this.o.persist?.();
+    return { recorded: true };
+  }
 
   async setAttendance(id: string, present: boolean, version: number): Promise<Roster> {
     this.check(`attendance ${id} ${present}`);

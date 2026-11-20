@@ -3,6 +3,8 @@
 // Pure decisions over SQLite; HTTP framing, headers and rate limits live in server/http-device-attendance.ts.
 import {createHash,createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
 import {AttendanceStore,InputError} from './store-attendance';
+import {deviceText,HIDDEN_NAME} from './device-text';
+export {deviceText,EMAIL_LIKE,HIDDEN_NAME} from './device-text';
 
 export const PAIRING_TTL_MS=5*60000;          // a pairing code works for five minutes
 export const PAIRING_REPLAY_MS=15*60000;      // same code + same hash returns the same answer after a lost reply
@@ -14,19 +16,6 @@ const sha256=(s:string)=>createHash('sha256').update(s).digest('hex');
 const same=(a:string,b:string)=>a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const iso=(ms:number|null)=>ms===null?null:new Date(ms).toISOString();
 const plain=(x:unknown,max:number):x is string=>typeof x==='string'&&!!x.trim()&&x.length<=max&&!/[\x00-\x1f\x7f<>@]/.test(x);
-// The iPad refuses a whole answer that holds an email-like value (DeviceProtocol.privacyViolations, /[^\s@]+@[^\s@]+\.[^\s@]+/).
-// Here only ASCII spaces separate words, so this matches everything the iPad's pattern matches (its \s is wider) and a little more.
-export const EMAIL_LIKE=/[^@ \t\n\r\f\v]+@[^@ \t\n\r\f\v]+\.[^@ \t\n\r\f\v]+/;
-// Device-visible text: an email-like value drops every word holding an @, then empty brackets and stray separators left behind.
-// The remaining words hold no @, so the result can never look like an address. Text without an address is returned unchanged.
-export function deviceText(x:string,fallback:string){
- if(!EMAIL_LIKE.test(x))return x;
- // Odd parts are separators (spaces, brackets, quotes, commas) and never hold an @; even parts holding one are dropped.
- const out=x.split(/([ \t\n\r\f\v<>()[\]{}"',;]+)/).map((w,i)=>i%2||!w.includes('@')?w:'').join('')
-  .replace(/<\s*>|\(\s*\)|\[\s*\]|\{\s*\}|"\s*"|'\s*'/g,' ').replace(/\s+/g,' ').replace(/ ([,;)\]}>])/g,'$1').replace(/([(\[{<]) /g,'$1').replace(/^[\s,;:|\-\u2013\u2014]+|[\s,;:|\-\u2013\u2014]+$/g,'');
- return out||fallback;
-}
-export const HIDDEN_NAME='Name hidden';
 function randomCode(length:number){let out='';while(out.length<length){for(const b of randomBytes(length*2)){if(b<240&&out.length<length)out+=ALPHABET[b%30];}}return out}
 // Same normalisation as the iPad: upper case, separators removed.
 export const normaliseCode=(x:unknown)=>typeof x==='string'&&x.length<=64?x.trim().toUpperCase().replace(/[-\s]/g,''):'';

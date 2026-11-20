@@ -119,7 +119,7 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
             data-person={r.id} onClick={() => p.onUi({ selectedId: r.id })} onDoubleClick={() => { if (p.editable && r.canCheckIn) p.onMark(r.id, true); }}>
             <div className="rname"><span className="avatar" aria-hidden="true">{r.initials}</span><b>{r.name}</b></div>
             <div className={`remail ${r.email ? '' : 'none'}`}>{r.email ?? (r.walkIn ? 'No email' : '')}</div>
-            <div className="rtime">{r.arrived ?? '—'}</div>
+            <div className="rtime">{r.arrived ?? '—'}{r.late ? ' · Late' : ''}</div>
             <div className="rstatus">
               <StatusChip row={r} />
               {p.editable && ui.selectedId === r.id && r.status !== 'held' && r.present ? (

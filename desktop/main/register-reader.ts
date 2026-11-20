@@ -27,7 +27,7 @@ const kind = (p: string): 'file' | 'missing' | 'other' => {
 
 const PEOPLE_BASE = 'id,name,email,booking,present,version,updatedAt';
 // The same open held check-ins the service lists (server/store-attendance.ts conflicts()).
-const CONFLICTS = "SELECT o.participantId,p.name,o.reason,MIN(o.queuedAt) AS queuedAt,MAX(o.receivedAt) AS receivedAt,COUNT(*) AS count FROM operations o JOIN people p ON p.id=o.participantId WHERE o.outcome='conflict' AND o.resolvedAt IS NULL AND (p.active=1 OR o.reason='not-in-roster') GROUP BY o.participantId ORDER BY receivedAt";
+const CONFLICTS = "SELECT o.participantId,COALESCE(p.name,'Unknown iPad name') AS name,o.reason,MIN(o.queuedAt) AS queuedAt,MAX(o.receivedAt) AS receivedAt,COUNT(*) AS count FROM operations o LEFT JOIN people p ON p.id=o.participantId AND o.reason NOT LIKE 'unknown-nearby-name%' WHERE o.outcome='conflict' AND o.resolvedAt IS NULL AND (p.active=1 OR o.reason IN ('not-in-roster','not-in-roster-late','unknown-nearby-name','unknown-nearby-name-late')) GROUP BY o.participantId ORDER BY receivedAt";
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : v === null || v === undefined ? '' : String(v));
 const strOrNull = (v: unknown): string | null => (typeof v === 'string' ? v : null);
@@ -48,9 +48,11 @@ export function readRegisterFile(file: string, open: ReadOnlyOpener = nodeSqlite
     if (!tables.has('people')) return { participants: [], conflicts: [] };
     const hasAdmitted = db.all('PRAGMA table_info(people)').some((c) => c.name === 'admitted');
     const rows = db.all(`SELECT ${PEOPLE_BASE}${hasAdmitted ? ',admitted' : ''} FROM people WHERE active=1 ORDER BY name COLLATE NOCASE,id`);
+    const late = new Set(tables.has('operations')
+      ? db.all("SELECT DISTINCT participantId FROM operations WHERE kind='nearby-check-in' AND reason='late'").map((r) => str(r.participantId)) : []);
     const participants: RosterPerson[] = rows.map((r) => ({
       id: str(r.id), name: str(r.name), email: str(r.email), booking: str(r.booking) || 'confirmed', present: Number(r.present) === 1,
-      admitted: Number(r.admitted ?? 0) === 1, version: Number(r.version ?? 0), updatedAt: strOrNull(r.updatedAt),
+      admitted: Number(r.admitted ?? 0) === 1, version: Number(r.version ?? 0), updatedAt: strOrNull(r.updatedAt), ...(Number(r.present) === 1 && late.has(str(r.id)) ? { late: true } : {}),
     }));
     const conflicts: RosterConflict[] = tables.has('operations') ? db.all(CONFLICTS).map((r) => ({
       participantId: str(r.participantId), name: str(r.name), reason: str(r.reason), queuedAt: strOrNull(r.queuedAt), receivedAt: strOrNull(r.receivedAt), count: Number(r.count ?? 1),

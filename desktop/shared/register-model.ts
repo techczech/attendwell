@@ -8,6 +8,7 @@ export interface RosterPerson {
   /** confirmed, waiting or cancelled (cancelled people are not in the active roster). */
   booking: string;
   present: boolean;
+  late?: boolean;
   admitted: boolean;
   /** The version a change must quote (the register refuses a stale one). */
   version: number;
@@ -55,8 +56,13 @@ const HELD_TEXT: Record<string, string> = {
   'duplicate-name': 'There is more than one booking with this name.',
   'not-eligible': 'This booking needs an organiser check.',
   'not-in-roster': 'This booking is no longer in the name list.',
+  'unknown-nearby-name': 'The iPad checked in a name this register does not recognise.',
 };
-export const heldText = (reason: string): string => HELD_TEXT[reason] ?? 'This check-in needs an organiser check.';
+export const heldText = (reason: string): string => {
+  const late = reason.endsWith('-late');
+  const text = HELD_TEXT[late ? reason.slice(0, -5) : reason] ?? 'This check-in needs an organiser check.';
+  return late ? `${text} Received after check-in closed.` : text;
+};
 
 export interface RegisterRow {
   id: string;
@@ -70,6 +76,7 @@ export interface RegisterRow {
   /** Local HH:MM of the check-in, or null. */
   arrived: string | null;
   arrivedAt: string | null;
+  late?: boolean;
   heldReason: string | null;
   version: number;
   /** Check in is offered for this row (not for a waiting-list person who has not been admitted, nor a booking missing from the list). */
@@ -121,7 +128,7 @@ export function rowsOf(roster: Roster): RegisterRow[] {
     const status: RowStatus = c ? 'held' : p.present ? (walkIn ? 'walk-in' : 'here') : waiting ? 'waiting' : 'not-yet';
     return {
       id: p.id, name: p.name, initials: initialsOf(p.name), email: p.email || null, walkIn, status, present: p.present,
-      arrived: p.present ? clockOf(p.updatedAt) : null, arrivedAt: p.present ? p.updatedAt : null,
+      arrived: p.present ? clockOf(p.updatedAt) : null, arrivedAt: p.present ? p.updatedAt : null, ...(p.present && p.late ? { late: true } : {}),
       heldReason: c ? heldText(c.reason) : null, version: p.version, canCheckIn: !p.present && !waiting, inRoster: true,
     };
   });
