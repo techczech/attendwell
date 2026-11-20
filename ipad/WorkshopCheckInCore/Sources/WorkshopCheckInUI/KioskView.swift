@@ -24,9 +24,6 @@ private struct RecoveryDocument: FileDocument {
 public struct KioskView: View {
     @ObservedObject private var model: KioskModel
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.dynamicTypeSize) private var typeSize
-    /// Names go in two columns when the iPad is held landscape (as in 1.0.0).
-    @State private var isLandscape = false
     @State private var address = "https://checkin.example.org/s/k3v9"
     @State private var code = "K7QM-4TZP"
     @State private var pin = ""
@@ -320,6 +317,9 @@ extension KioskModel: KioskParticipantModel {
 }
 
 struct KioskParticipantView<Model: KioskParticipantModel>: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// Names go in two columns when the iPad is held landscape (as in 1.0.0).
+    @State private var isLandscape = false
     @ObservedObject var model: Model
     let showFooter: Bool
     let onOrganiser: (() -> Void)?
