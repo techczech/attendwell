@@ -288,7 +288,8 @@ export function App(): JSX.Element | null {
           <SessionScreen sv={sv} workshop={sessionWorkshop} register={register} ui={ui} selectedDeviceId={deviceId} searchTick={regSearchTick} bindings={snap.bindings} platform={snap.platform} now={now}
             actions={{
               onUi: setUi, onShowAll: showAll, onStart: () => void act({ kind: 'start' }), onEnd: () => setOverlay({ kind: 'end' }), onReopen: () => void act({ kind: 'start' }),
-              onAdd: () => setOverlay({ kind: 'add-person' }), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
+              onAdd: () => run('person.add'), onUndo: () => run('register.undo'), onConnectIPad: () => run('nearby.test'),
+              onCommands: () => run('app.palette'), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
               onRetry: () => void act({ kind: 'retry' }),
               onWindow: (action) => void act({ kind: 'window', action }, action === 'close' ? 'Check-in on the iPad is closed.' : 'Check-in on the iPad is open.'), onMark: (id, present) => void act({ kind: 'mark', id, present }),
               onResolve: (id, action) => void act({ kind: 'resolve', id, action }), onExport: () => void exportCsv(), onReview: () => setOverlay({ kind: 'review' }),

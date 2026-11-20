@@ -18,6 +18,9 @@ export interface SessionActions {
   onEnd(): void;
   onReopen(): void;
   onAdd(): void;
+  onUndo(): void;
+  onConnectIPad(): void;
+  onCommands(): void;
   onPair(targetId?: string): void;
   onCopyAddress(): void;
   onRetry(): void;
@@ -81,21 +84,21 @@ export function SessionScreen(p: SessionScreenProps): JSX.Element {
             onKeyDown={(e) => { if (e.key === 'Escape') { a.onUi({ query: '' }); (e.target as HTMLInputElement).blur(); } }} />
           <Keys chord={p.bindings['register.find'] ?? ''} platform={p.platform} />
         </label>
-        <button type="button" className="btn" disabled={tb.addPerson === 'disabled' || !sv.registerOpen} onClick={a.onAdd}><Icon name="user-plus" />Add person</button>
+        <button type="button" className="btn icon" onClick={a.onCommands} aria-label="Command palette" title="Command palette"><Icon name="command" size={18} /></button>
         {tb.end ? <button type="button" className="btn danger" onClick={a.onEnd} disabled={sv.busy}><Icon name="power" />End check-in</button> : null}
         {tb.closedMarker ? <span className="btn marker" aria-label="Check-in closed"><Icon name="circle-check" />Check-in closed</span> : null}
-        {tb.readOnlyMarker ? <span className="btn marker" aria-label="Read only"><Icon name="lock" />Read only</span> : null}
-        {tb.readOnlyMarker && roster.participants.length > 0 ? <button type="button" className="btn" onClick={a.onExport}><Icon name="file-down" />Export CSV</button> : null}
         {tb.start ? <button type="button" className="btn primary" onClick={a.onStart} disabled={sv.busy || sv.otherLive} title={sv.otherLive ? "Another workshop's check-in is open. End it first." : undefined}><Icon name="play" />Start check-in</button> : null}
         {tb.reopen ? <button type="button" className="btn" onClick={a.onReopen} disabled={sv.busy || sv.otherLive} title={sv.otherLive ? "Another workshop's check-in is open. End it first." : undefined}><Icon name="rotate-ccw" />Reopen check-in</button> : null}
       </div>
       <div className="main">
-        <RegisterPanel view={p.register} ui={p.ui} phase={sv.phase} editable={editable} readOnlyBanner={readOnlyBanner}
+        <RegisterPanel view={p.register} ui={p.ui} editable={editable} readOnlyBanner={readOnlyBanner}
           summary={showSummary ? { closedAt: clockOf(sv.closedAt), arrived: sum.here, total: sum.total, walkIns: sum.walkIns, held: sum.held } : null}
           repair={banner} repairChord={pairChord} platform={p.platform} rosterError={sv.rosterError} busy={sv.busy}
+          canUndo={editable && sv.canUndo} canExport={sum.total > 0} canReview={sum.here > 0}
           onUi={a.onUi} onMark={a.onMark} onResolve={a.onResolve} onRepair={() => a.onPair(banner?.targetId ?? undefined)} onExport={a.onExport} onReview={a.onReview}
-          canAddNames={sv.phase !== 'ending'} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} />
+          onAdd={a.onAdd} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} onUndo={a.onUndo} />
         <aside className="rail" aria-label="Connection and iPads">
+          <button type="button" className="btn primary big" onClick={a.onConnectIPad}><Icon name="plug-zap" />Connect iPad</button>
           {sv.windowError ? <div className="warn-card" role="alert"><Icon name="circle-alert" size={16} /><span>{sv.windowError}</span></div> : null}
           <ConnectionPanel model={conn} host={sv.hostName} compact={devices.length >= 4} onCopy={a.onCopyAddress} onRetry={a.onRetry} onChooseFolder={a.onChooseFolder} />
           {editable && sv.window ? (

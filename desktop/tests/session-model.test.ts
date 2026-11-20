@@ -91,13 +91,13 @@ describe('Pair an iPad availability, in the lock notes wording', () => {
 
 describe('toolbar and banners', () => {
   test('what each phase offers', () => {
-    expect(toolbarModel('online')).toMatchObject({ end: true, addPerson: 'enabled', reopen: false, start: false });
-    expect(toolbarModel('closed')).toMatchObject({ end: false, addPerson: 'disabled', closedMarker: true, reopen: true });
-    expect(toolbarModel('past')).toMatchObject({ readOnlyMarker: true, reopen: true });
+    expect(toolbarModel('online')).toMatchObject({ end: true, reopen: false, start: false });
+    expect(toolbarModel('closed')).toMatchObject({ end: false, closedMarker: true, reopen: true });
+    expect(toolbarModel('past')).toMatchObject({ reopen: true });
     expect(toolbarModel('ready')).toMatchObject({ start: true, reopen: false });
   });
   test('the past banner', () => {
-    expect(pastBanner({ date: '2026-10-21', startTime: '09:00', endTime: '10:30' })).toBe('This session finished on Wed 21 Oct 2026 at 10:30. The register is shown as it was saved. Reopen check-in to accept late arrivals.');
+    expect(pastBanner({ date: '2026-10-21', startTime: '09:00', endTime: '10:30' })).toBe('This session finished on Wed 21 Oct 2026 at 10:30. Reopen check-in to accept late arrivals.');
   });
   test('the status bar chip: connecting, online, trouble, ended', () => {
     expect(['connecting', 'online', 'trouble', 'closed'].map((p) => statusChip(p as never).text)).toEqual(['Connecting…', 'Online', 'Connection trouble', 'Check-in closed']);
@@ -141,9 +141,15 @@ describe('commands on the session screen', () => {
     expect(why('checkin.reopen', c)).toBeNull();
     expect(why('export.csv', c)).toBeNull();
     expect(why('checkin.end', c)).toBe('Check-in is not open.');
-    expect(why('person.add', c)).toBe('Check-in is closed. Reopen check-in first.');
+    expect(why('person.add', c)).toBeNull();
     expect(why('ipad.pair', c)).toBe('Reopen check-in to pair an iPad.');
     expect(why('checkin.reopen', ctx(view({ phase: 'closed', runtime: idle, registerOpen: false, otherLive: true })))).toBe("Another workshop's check-in is open. End it first.");
+  });
+  test('register edits stay available in every phase without a live client', () => {
+    for (const phase of ['ready', 'connecting', 'online', 'trouble', 'ending', 'closed', 'past'] as const) {
+      const c = ctx(view({ phase, registerOpen: false }));
+      for (const id of ['person.add', 'names.paste', 'names.import']) expect(why(id, c), `${phase}: ${id}`).toBeNull();
+    }
   });
   test('Email review needs someone who is here', () => {
     expect(why('review.email', ctx(view({ phase: 'closed', runtime: idle })))).toBe('Nobody is checked in yet.');

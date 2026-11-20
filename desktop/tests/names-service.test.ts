@@ -27,9 +27,9 @@ const PASTE = [
   'Sofia Marchetti, Sofia.Marchetti@example.ac.uk', 'Mateusz Nowak', '', 'Imogen Pryce', 'Lars Eriksson', 'Sam Patel', 'Sam Patel',
 ].join('\n');
 
-async function fakeRig() {
+async function fakeRig(startDelayMs?: number) {
   const dir = temp();
-  const rt = createFakeRuntime({ dataRoot: dir, now: () => new Date(2026, 9, 21, 9, 0) });
+  const rt = createFakeRuntime({ dataRoot: dir, startDelayMs, now: () => new Date(2026, 9, 21, 9, 0) });
   const w = await rt.workshops.create({ title: 'Generative AI for Researchers', date: '2026-10-30', startTime: '14:00', endTime: '16:30' });
   const sess = new SessionService({ port: rt, organiser: rt.fake.organiserFactory, hostName: 'Mac', changed: () => undefined, pollMs: 0 });
   const written: string[] = [];
@@ -48,7 +48,7 @@ describe('pasting names (fake runtime, check-in not started)', () => {
     expect(addLabel(plan)).toBe('Add 13 people');
     expect(pasteTally(plan).map((t) => `${t.figure} ${t.text}`)).toEqual(['13 people', '1 duplicate merged: Sofia Marchetti (same email)', '1 blank line skipped']);
     expect(plan.sameName.map(sameNameText)).toEqual(['Sam Patel appears more than once. Both are kept; a check-in for this name is held for you to confirm.']);
-    expect(r.rt.fake.leases()).toEqual([r.w.id]);
+    expect(r.rt.fake.leases()).toEqual([]);
     expect(r.sess.view().roster!.participants).toHaveLength(0);
     const added = await r.names.add(p.value.token!);
     if (!added.ok) throw new Error(added.error);
@@ -61,7 +61,7 @@ describe('pasting names (fake runtime, check-in not started)', () => {
     expect(r.rt.fake.leases()).toEqual([]);
     expect(JSON.parse(readFileSync(join(r.rt.workshopFolder(r.w.id), 'roster-provenance.json'), 'utf8'))).toMatchObject({ kind: 'paste', count: 13 });
   });
-  test('the same paste again is recognised and Add changes nothing; closing the sheet stops the register it opened', async () => {
+  test('the same paste again is recognised and Add changes nothing', async () => {
     const r = await fakeRig();
     await r.names.add(tok(await r.names.pastePreview(r.w.id, PASTE)));
     const again = await r.names.pastePreview(r.w.id, PASTE);
@@ -88,6 +88,35 @@ describe('pasting names (fake runtime, check-in not started)', () => {
     expect(r.sess.view().roster!.participants.map((x) => x.name)).toEqual(['Aisha Rahman']);
     expect(r.sess.view().registerOpen).toBe(true);
   });
+});
+
+test('paste and import publish the updated nearby roster in each connection state', async () => {
+  const r = await fakeRig(100);
+  const addLists = async (label: string) => {
+    const pasted = `Pasted ${label}`;
+    expect((await r.names.add(tok(await r.names.pastePreview(r.w.id, pasted)))).ok).toBe(true);
+    const imported = `Imported ${label}`;
+    const file = join(r.dir, 'names.csv');
+    writeFileSync(file, `Name,Email\n${imported},fixture-${label}@example.org\n`);
+    expect((await r.names.add(tok(await r.names.openFile(r.w.id, file)))).ok).toBe(true);
+    expect(r.sess.nearbyWorkshop()?.roster?.participants.map((p) => p.name)).toEqual(expect.arrayContaining([pasted, imported]));
+    expect(r.rt.fake.leases()).toEqual([]);
+  };
+  await addLists('ready');
+  const starting = r.sess.start();
+  while (r.rt.status.get().session === 'idle') await new Promise((resolve) => setTimeout(resolve, 0));
+  await addLists('starting');
+  expect(r.rt.status.get().session).toBe('starting');
+  await starting;
+  await addLists('online');
+  await r.sess.setWindow('close');
+  await addLists('window-closed');
+  await r.sess.end();
+  await addLists('ended');
+  r.rt.fake.failNextTunnel('blocked-by-network', 'blocked');
+  await r.sess.start();
+  expect(r.rt.status.get().tunnel.state).toBe('failed');
+  await addLists('tunnel-failed');
 });
 
 describe('importing a file', () => {
@@ -317,15 +346,16 @@ describe('the register opened for a sheet is always stopped', () => {
     expect(r.counts).toEqual({ opened: 1, released: 1 });
     expect(r.rt.fake.leases()).toEqual([]);
   });
-  test('two previews in flight share one register, and closing releases it once', async () => {
+  test('a newer preview supersedes a waiting one and both requests release the register', async () => {
     const r = await slowRig();
     const a = r.names.pastePreview(r.w.id, 'Aisha Rahman');
     const b = r.names.pastePreview(r.w.id, 'Aisha Rahman\nHenrik Olsen');
     await r.answer();
-    expect((await a).ok && (await b).ok).toBe(true);
-    expect(r.pending).toHaveLength(0);
+    await r.answer();
+    expect((await a).ok).toBe(false);
+    expect((await b).ok).toBe(true);
     await r.names.close();
-    expect(r.counts).toEqual({ opened: 1, released: 1 });
+    expect(r.counts).toEqual({ opened: 2, released: 2 });
     expect(r.rt.fake.leases()).toEqual([]);
   });
 });

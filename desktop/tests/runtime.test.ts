@@ -65,6 +65,35 @@ function setup(o:SetupOpts={}){
 }
 const workshop=(rt:ReturnType<typeof setup>['rt'])=>{const w=rt.workshops.create({title:'Fictional Lab',date:'2031-03-04'});rt.openWorkshop(w.id);return w;};
 
+test('a local register request runs during tunnel startup and finishes before the public register takes over',async()=>{
+ const {rt,sidecars,tunnelsList}=setup({tunnel:()=>{}});
+ const w=workshop(rt);
+ const start=rt.startSession();
+ let finish!:()=>void;
+ const writePending=new Promise<void>(resolve=>{finish=resolve;});
+ try{
+  await until(()=>tunnelsList().length===1);
+  const edit=rt.withRegister(w.id,async(info)=>{
+   expect(info.live).toBe(false);
+   expect(rt.organiserAuth(info.organiserUrl)).toBeTruthy();
+   expect(rt.status.get().session).toBe('starting');
+   await writePending;
+  });
+  await until(()=>rt.childPids().lease!==null);
+  const local=sidecars()[0]!;
+  expect(local.req.env.ATTENDANCE_PARTICIPANT_ORIGIN).toBeUndefined();
+  ONLINE(URL_A)(tunnelsList()[0]!);
+  await until(()=>rt.status.get().tunnel.state==='online');
+  expect(sidecars()).toEqual([local]);
+  expect(local.done).toBe(false);
+  finish();
+  await edit;
+  expect((await start).session).toBe('running');
+  expect(local.done).toBe(true);
+  expect(sidecars()[1]?.req.env.ATTENDANCE_PARTICIPANT_ORIGIN).toBe(URL_A);
+ }finally{finish();await rt.shutdown();await start.catch(()=>{});}
+});
+
 test('start order: gateway, tunnel to the gateway only, then the register with the tunnel origin; end stops all and reports clean',async()=>{
  const {rt,host,res,sidecars,gatewayPort}=setup();
  const w=rt.workshops.create({title:'Fictional Lab',date:'2031-03-04'});

@@ -123,7 +123,7 @@ export class SessionService {
     this.workshop = [...all.today, ...all.upcoming, ...all.past, ...all.archived].find((x) => x.id === id) ?? null;
   }
 
-  /** The workshop whose register the window shows. Read-only until its check-in is open. */
+  /** The workshop whose register the window shows. */
   async show(id: string): Promise<Result> {
     try {
       if (this.viewing !== id) {
@@ -399,20 +399,26 @@ export class SessionService {
 
   /** Add person (walk-in): only ever on the laptop. With markHere the person is checked in at once. */
   async addPerson(input: { name: string; email: string; markHere: boolean }): Promise<Result> {
-    const c = this.need();
-    if (!c) return { ok: false, error: SessionService.OFFLINE };
-    return this.guarded(async () => {
-      try {
-        const known = new Set(this.roster?.participants.map((p) => p.id));
+    const workshopId = this.viewing;
+    if (!workshopId) return { ok: false, error: 'Open a workshop first.' };
+    try {
+      await this.d.port.withRegister(workshopId, async (url, live) => {
+        const c = this.d.organiser(url);
+        const known = input.markHere ? new Set((await c.roster()).participants.map((p) => p.id)) : null;
         let roster = await c.addParticipant(input.name, input.email.trim());
-        if (input.markHere) {
-          const added = roster.participants.find((p) => !known.has(p.id));
-          if (added) { roster = await c.setAttendance(added.id, true, added.version); this.undo.push({ id: added.id, wasPresent: false }); }
+        try {
+          const added = known ? roster.participants.find((p) => !known.has(p.id)) : null;
+          if (added) {
+            roster = await c.setAttendance(added.id, true, added.version);
+            if (live && this.viewing === workshopId) this.undo.push({ id: added.id, wasPresent: false });
+          }
+        } finally {
+          if (this.viewing === workshopId) { this.roster = roster; this.rosterError = null; }
         }
-        this.roster = roster; this.rosterError = null;
-        return OK;
-      } catch (e) { return fail(e); }
-    });
+      });
+      return OK;
+    } catch (e) { return fail(e); }
+    finally { this.d.changed(); }
   }
 
   /** Names were added or an iPad's recovery file imported (main/names-service.ts): read the register again, live or from disk. */

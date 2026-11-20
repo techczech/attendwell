@@ -5,7 +5,6 @@ import {
   type RegisterFilter, type RegisterRow, type RegisterSort, type RegisterView,
 } from '../../shared/register-model.ts';
 import type { RepairBanner } from '../../shared/devices-model.ts';
-import type { SessionPhase } from '../../shared/session-model.ts';
 import { Icon } from './icons.tsx';
 import { Keys } from './Keys.tsx';
 
@@ -14,7 +13,6 @@ export interface RegisterUi { filter: RegisterFilter; sort: RegisterSort; query:
 export interface RegisterPanelProps {
   view: RegisterView;
   ui: RegisterUi;
-  phase: SessionPhase;
   /** People can be marked and resolved (check-in open and the register answering). */
   editable: boolean;
   readOnlyBanner: string | null;
@@ -30,8 +28,11 @@ export interface RegisterPanelProps {
   onRepair(): void;
   onExport(): void;
   onReview(): void;
-  /** Name lists can be added now (any phase but closing). */
-  canAddNames: boolean;
+  canUndo: boolean;
+  canExport: boolean;
+  canReview: boolean;
+  onAdd(): void;
+  onUndo(): void;
   onPasteNames(): void;
   onImportNames(): void;
 }
@@ -74,6 +75,15 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
         </div>
       </div>
 
+      <div className="reg-actions" role="group" aria-label="Register actions">
+        <button type="button" className="btn primary" onClick={p.onAdd}><Icon name="user-plus" />Add person</button>
+        <button type="button" className="btn" onClick={p.onPasteNames}><Icon name="clipboard-paste" />Paste names…</button>
+        <button type="button" className="btn" onClick={p.onImportNames}><Icon name="file-up" />Import a file…</button>
+        {p.canUndo ? <button type="button" className="btn" onClick={p.onUndo} disabled={p.busy}><Icon name="undo-2" />Undo last change</button> : null}
+        {p.canExport ? <button type="button" className="btn" onClick={p.onExport}><Icon name="file-down" />Export CSV</button> : null}
+        {p.canReview ? <button type="button" className="btn" onClick={p.onReview}><Icon name="mail" />Email review</button> : null}
+      </div>
+
       {p.readOnlyBanner ? <div className="reg-banner info" role="note"><Icon name="info" size={18} /><span>{p.readOnlyBanner}</span></div> : null}
       {p.summary ? (
         <div className="reg-banner summary" role="status">
@@ -82,9 +92,7 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
           <span className="s-fig"><b>{p.summary.arrived}</b> of {p.summary.total} arrived</span>
           <span className="s-fig"><b>{p.summary.walkIns}</b> {p.summary.walkIns === 1 ? 'walk-in' : 'walk-ins'}</span>
           <span className="s-fig"><b>{p.summary.held}</b> held for review</span>
-          <span className="grow" />
-          <button type="button" className="btn primary" onClick={p.onExport}><Icon name="file-down" />Export CSV</button>
-          <button type="button" className="btn" onClick={p.onReview}><Icon name="mail" />Email review</button>
+
         </div>
       ) : null}
       {p.repair ? (
@@ -104,13 +112,7 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
             <Icon name="users" size={40} />
             <h2>Add the name list for this workshop</h2>
             <p>Paste a list of names, or import a CSV or Excel file from your booking system. Names and email addresses are kept only on this laptop.</p>
-            {p.canAddNames ? (
-              <div className="actions">
-                <button type="button" className="btn primary" onClick={p.onPasteNames}><Icon name="clipboard-paste" />Paste names…</button>
-                <button type="button" className="btn" onClick={p.onImportNames}><Icon name="file-up" />Import a file…</button>
-              </div>
-            ) : null}
-            {p.editable ? <p>Walk-ins can still be added with Add person.</p> : null}
+
           </div>
         ) : view.noMatch ? (
           <div className="empty"><h2>No one matches</h2><p>Change the search or the filter.</p></div>

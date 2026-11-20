@@ -209,6 +209,12 @@ export function createFakeRuntime(options: FakeRuntimeOptions): FakeRuntime {
       let released = false;
       return { organiserUrl: url, release: async () => { if (released) return; released = true; leaseUrls.delete(url); persist(id); } };
     },
+    async withRegister(id, use) {
+      const lease = await this.openRegister(id);
+      const live = snap.workshopId === id && snap.session === 'running' && snap.service.state === 'running'
+        && snap.service.organiserUrl === lease.organiserUrl;
+      try { return await use(lease.organiserUrl, live); } finally { await lease.release(); }
+    },
     async recordRosterProvenance(id, p) {
       const s = items.get(id);
       if (!s) throw new Error('No such workshop.');

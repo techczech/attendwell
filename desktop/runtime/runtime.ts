@@ -73,7 +73,8 @@ export function createRuntime(opts:RuntimeOptions){
  const sockets=host.platform!=='win32'&&transport==='auto';
  // A second supervisor for register leases: loopback organiser listener only, no participant listener, never connected to
  // the gateway. A lease and a session never run on the same workshop (startSession stops a lease on its workshop first,
- // and openRegister on the live workshop returns the session's own register); both run through the one queue below.
+ // and openRegister on the live workshop returns the session's own register). Register operations have their own queue so
+ // they can run while the public tunnel is starting.
  // Never two register processes on one register file: a lease, and the session's register, stay recorded until their
  // process has been seen to exit. A stop that fails leaves the record (lease.stuck, serviceWorkshop), and every start on
  // that workshop tries the stop again and refuses in plain words until it succeeds.
@@ -112,6 +113,8 @@ export function createRuntime(opts:RuntimeOptions){
  // address. Each runs only after the previous one has finished, so no two of them start or stop children at once.
  let queue:Promise<unknown>=Promise.resolve();
  const serial=<T>(fn:()=>Promise<T>):Promise<T>=>{const run=queue.then(fn,fn);queue=run.catch(()=>{});return run;};
+ let registerQueue:Promise<unknown>=Promise.resolve();
+ const registerSerial=<T>(fn:()=>Promise<T>):Promise<T>=>{const run=registerQueue.then(fn,fn);registerQueue=run.catch(()=>{});return run;};
  const alive=()=>{if(disposed)throw new Error(SHUTTING_DOWN);};
 
  // Before any session: resolve pidfiles left by a crashed or force-quit run, whatever the tunnel setting.
@@ -129,8 +132,8 @@ export function createRuntime(opts:RuntimeOptions){
   void serial(async()=>{
    if(disposed||!launch||session!=='running'||!active)return;
    launch={...launch,participantOrigin:current};
-   await service.stop();
-   try{await service.start(launch)}catch{}
+   const next=launch;
+   await registerSerial(async()=>{await service.stop();try{await service.start(next)}catch{}});
    status.emit('participant-origin-changed',{workshopId:active.id,previous,current} satisfies OriginChange);
   });
  });
@@ -163,8 +166,9 @@ export function createRuntime(opts:RuntimeOptions){
  async function end():Promise<StopReport>{
   const l=launch;const gatewayPort=gateway.port;
   if(session==='idle'&&!l){
-   const t=await tunnel.stop(),s=await service.stop();await gateway.close();
-   if(!service.holdsProcess)serviceWorkshop=null;
+   const t=await tunnel.stop();
+   const s=await registerSerial(async()=>{const stopped=await service.stop();if(!service.holdsProcess)serviceWorkshop=null;return stopped;});
+   await gateway.close();
    return verifyStopped(null,gatewayPort,s.stopped,t.stopped);
   }
   session='ending';changed();
@@ -174,8 +178,7 @@ export function createRuntime(opts:RuntimeOptions){
    const roster=await loopbackJson(l.organiserPort,'/api/roster',`127.0.0.1:${l.organiserPort}`,3000,service.organiserBearer??undefined) as {participants?:{present?:boolean}[]}|null;
    if(Array.isArray(roster?.participants))try{workshops.recordAttendedCount(active.id,roster.participants.filter(p=>p.present).length)}catch{}
   }
-  const s=await service.stop();
-  if(!service.holdsProcess)serviceWorkshop=null;
+  const s=await registerSerial(async()=>{const stopped=await service.stop();if(!service.holdsProcess)serviceWorkshop=null;return stopped;});
   await gateway.close();
   launch=null;session='idle';changed();
   return verifyStopped(l,gatewayPort,s.stopped,t.stopped);
@@ -200,6 +203,37 @@ export function createRuntime(opts:RuntimeOptions){
   serviceWorkshop=null;return true;
  }
 
+ // Open only under registerSerial. An organiser-only lease can serve edits during tunnel startup.
+ async function openRegister(id:string):Promise<RegisterLeaseInfo>{
+  alive();
+  if(serviceWorkshop===id){
+   if(service.state.state==='running')return {organiserUrl:service.state.organiserUrl,leaseId:null,live:true};
+   if(service.state.state==='restarting'||((session==='running'||session==='starting')&&service.holdsProcess))throw new Error('The register is restarting. Try again in a moment.');
+   if(!await sessionRegisterGone())throw new Error(SESSION_NOT_STOPPED);
+  }
+  if(lease&&!lease.stuck&&lease.id===id&&leaseService.state.state==='running'){lease={...lease,n:++leaseN};return {organiserUrl:leaseService.state.organiserUrl,leaseId:lease.n,live:false};}
+  if(lease){const r=await stopLease();if(!r.clean)throw new Error(lease?LEASE_NOT_STOPPED:'The register opened earlier did not stop. Try again.');}
+  alive();
+  const organiserPort=await freeLoopbackPort();
+  const paths=workshops.prepareService(id,organiserPort);
+  const launch:ServiceLaunch={paths,organiserPort,participantPort:0,participantOrigin:null,hostSecretPath:workshops.hostSecretPath()};
+  checkRunDir(runDirOptions,true);
+  try{await leaseService.start(launch)}
+  catch(e){
+   await leaseService.stop().catch(()=>{});
+   // A register that would not stop stays recorded, so nothing else opens this register beside it.
+   if(leaseService.holdsProcess)lease={id,n:++leaseN,launch,stuck:true};
+   throw e;
+  }
+  alive();
+  lease={id,n:++leaseN,launch,stuck:false};
+  return {organiserUrl:`http://127.0.0.1:${organiserPort}`,leaseId:lease.n,live:false};
+ }
+ async function releaseRegister(leaseId:number|null):Promise<StopReport>{
+  if(leaseId===null||!lease||lease.n!==leaseId)return {clean:true,leftovers:[]};
+  return stopLease();
+ }
+
  const api={
   workshops,
   status,
@@ -217,31 +251,35 @@ export function createRuntime(opts:RuntimeOptions){
     if(!active)throw new Error('Open a workshop first.');
     if(!settings)throw new Error(SETTINGS_REFUSED);
     if(session!=='idle')return snapshot();
-    if(!await sessionRegisterGone())throw new Error(SESSION_NOT_STOPPED);
+    if(!await registerSerial(sessionRegisterGone))throw new Error(SESSION_NOT_STOPPED);
     alive();
+    const workshopId=active.id;
     session='starting';changed();
     try{
-     const organiserPort=await freeLoopbackPort();
-     let participantPort=await freeLoopbackPort();
-     while(participantPort===organiserPort)participantPort=await freeLoopbackPort();
-     alive();
-     // Never two registers on one file: a register this workshop's name list opened is stopped first.
-     if(lease?.id===active.id){const r=await stopLease();if(!r.clean)throw new Error(lease?LEASE_NOT_STOPPED:'The register opened for the name list did not stop. Try again.');}
-     alive();
-     const paths=workshops.prepareService(active.id,organiserPort);
-     const hostSecretPath=workshops.hostSecretPath();
-     checkRunDir(runDirOptions,true);
      const origin=await startTunnel();
-     alive();
-     launch={paths,organiserPort,participantPort,participantOrigin:origin,hostSecretPath};
-     serviceWorkshop=active.id;
-     await service.start(launch);
-     alive();
-     session='running';changed();
+     await registerSerial(async()=>{
+      alive();
+      if(lease?.id===workshopId){const r=await stopLease();if(!r.clean)throw new Error(LEASE_NOT_STOPPED);}
+      const organiserPort=await freeLoopbackPort();
+      let participantPort=await freeLoopbackPort();
+      while(participantPort===organiserPort)participantPort=await freeLoopbackPort();
+      alive();
+      const paths=workshops.prepareService(workshopId,organiserPort);
+      const hostSecretPath=workshops.hostSecretPath();
+      checkRunDir(runDirOptions,true);
+      launch={paths,organiserPort,participantPort,participantOrigin:origin,hostSecretPath};
+      serviceWorkshop=workshopId;
+      try{await service.start(launch)}catch(e){
+       await service.stop().catch(()=>{});
+       if(!service.holdsProcess)serviceWorkshop=null;
+       throw e;
+      }
+      alive();
+      session='running';changed();
+     });
      return snapshot();
     }catch(e){
-     await tunnel.stop().catch(()=>{});await service.stop().catch(()=>{});await gateway.close().catch(()=>{});
-     if(!service.holdsProcess)serviceWorkshop=null;
+     await tunnel.stop().catch(()=>{});await gateway.close().catch(()=>{});
      const failedService=service.state;
      session='idle';launch=null;changed();
      throw Object.assign(new Error((e as Error).message),{service:failedService});
@@ -260,7 +298,8 @@ export function createRuntime(opts:RuntimeOptions){
     if(origin&&origin!==launch.participantOrigin){
      const previous=launch.participantOrigin;
      launch={...launch,participantOrigin:origin};
-     await service.stop();await service.start(launch);
+     const next=launch;
+     await registerSerial(async()=>{await service.stop();await service.start(next);});
      if(previous)status.emit('participant-origin-changed',{workshopId:active.id,previous,current:origin} satisfies OriginChange);
     }
     return snapshot();
@@ -282,42 +321,15 @@ export function createRuntime(opts:RuntimeOptions){
   // The register of one workshop on loopback only (no gateway, no tunnel, participant window untouched), so names can be added
   // before check-in and after it. While that workshop's check-in runs, the session's own register is returned (live: true).
   // One lease at a time: opening another workshop's register stops the previous lease.
-  openRegister(id:string):Promise<RegisterLeaseInfo>{
-   if(disposed)return Promise.reject(new Error(SHUTTING_DOWN));
-   return serial(async()=>{
-    alive();
-    if(session!=='idle'&&active?.id===id){
-     if(session==='running'&&service.state.state==='running')return {organiserUrl:service.state.organiserUrl,leaseId:null,live:true};
-     throw new Error('Check-in is starting or closing. Try again in a moment.');
-    }
-    // The session's register from a check-in whose stop failed still holds this workshop's register.
-    if(session==='idle'&&serviceWorkshop===id&&!await sessionRegisterGone())throw new Error(SESSION_NOT_STOPPED);
-    if(lease&&!lease.stuck&&lease.id===id&&leaseService.state.state==='running'){lease={...lease,n:++leaseN};return {organiserUrl:leaseService.state.organiserUrl,leaseId:lease.n,live:false};}
-    if(lease){const r=await stopLease();if(!r.clean)throw new Error(lease?LEASE_NOT_STOPPED:'The register opened earlier did not stop. Try again.');}
-    alive();
-    const organiserPort=await freeLoopbackPort();
-    const paths=workshops.prepareService(id,organiserPort);
-    const launch:ServiceLaunch={paths,organiserPort,participantPort:0,participantOrigin:null,hostSecretPath:workshops.hostSecretPath()};
-    checkRunDir(runDirOptions,true);
-    try{await leaseService.start(launch)}
-    catch(e){
-     await leaseService.stop().catch(()=>{});
-     // A register that would not stop stays recorded, so nothing else opens this register beside it.
-     if(leaseService.holdsProcess)lease={id,n:++leaseN,launch,stuck:true};
-     throw e;
-    }
-    alive();
-    lease={id,n:++leaseN,launch,stuck:false};
-    return {organiserUrl:`http://127.0.0.1:${organiserPort}`,leaseId:lease.n,live:false};
+  openRegister(id:string):Promise<RegisterLeaseInfo>{return registerSerial(()=>openRegister(id));},
+  // A write or preview holds the register until its request has finished, even if the tunnel changes meanwhile.
+  withRegister<T>(id:string,use:(info:RegisterLeaseInfo)=>Promise<T>):Promise<T>{
+   return registerSerial(async()=>{
+    const info=await openRegister(id);
+    try{return await use(info)}finally{await releaseRegister(info.leaseId).catch(()=>{});}
    });
   },
-  // Releases a lease from openRegister. A lease that has since been replaced, or the live register, is left alone.
-  releaseRegister(leaseId:number|null):Promise<StopReport>{
-   return serial(async()=>{
-    if(leaseId===null||!lease||lease.n!==leaseId)return {clean:true,leftovers:[]};
-    return stopLease();
-   });
-  },
+  releaseRegister(leaseId:number|null):Promise<StopReport>{return registerSerial(()=>releaseRegister(leaseId));},
   // The organiser key of the register listening at `organiserUrl` (the session's or a lease's), while it runs; else null.
   // For the app's organiser client only: never in a snapshot, never logged, never sent to a window.
   organiserAuth(organiserUrl:string):string|null{
@@ -338,7 +350,7 @@ export function createRuntime(opts:RuntimeOptions){
    if(session==='starting'){void tunnel.stop().catch(()=>{});void service.stop().catch(()=>{});}
    else if(tunnel.state.state==='starting')void tunnel.stop().catch(()=>{});
    if(leaseService.state.state==='starting')void leaseService.stop().catch(()=>{});
-   const report=await serial(async()=>{const a=await end(),b=await stopLease();return {clean:a.clean&&b.clean,leftovers:[...a.leftovers,...b.leftovers]};});
+   const report=await serial(async()=>{const a=await end(),b=await registerSerial(stopLease);return {clean:a.clean&&b.clean,leftovers:[...a.leftovers,...b.leftovers]};});
    if(socketDir?.owned)try{rmdirSync(socketDir.dir)}catch{}
    const out={clean:report.clean&&!orphans.length,leftovers:[...report.leftovers,...orphans]};
    status.removeAllListeners();service.removeAllListeners();leaseService.removeAllListeners();tunnel.removeAllListeners();

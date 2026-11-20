@@ -131,32 +131,27 @@ export function pairAvailability(phase: SessionPhase, runtime: RuntimeSnapshot, 
 // ---- Toolbar and banners ----------------------------------------------------------------------------------------------------
 
 export interface ToolbarModel {
-  /** The right-hand buttons, in order. */
-  addPerson: 'enabled' | 'disabled';
   end: boolean;
   closedMarker: boolean;
-  readOnlyMarker: boolean;
   start: boolean;
   reopen: boolean;
 }
 
 export function toolbarModel(phase: SessionPhase, windowFailed = false): ToolbarModel {
   return {
-    addPerson: phase === 'online' || phase === 'trouble' || phase === 'connecting' ? 'enabled' : 'disabled',
     end: phase === 'online' || phase === 'trouble' || phase === 'connecting',
     closedMarker: phase === 'closed',
-    readOnlyMarker: phase === 'past',
     start: phase === 'ready',
     // Also while check-in is open but its window on the iPad could not be opened: Reopen tries that again.
     reopen: phase === 'closed' || phase === 'past' || (windowFailed && (phase === 'online' || phase === 'trouble' || phase === 'connecting')),
   };
 }
 
-/** "This session finished on Tue 21 Oct at 10:30. The register is shown as it was saved. Reopen check-in to accept late arrivals." */
+/** "This session finished on Tue 21 Oct at 10:30. Reopen check-in to accept late arrivals." */
 export function pastBanner(w: Pick<WorkshopSummary, 'date' | 'endTime' | 'startTime'>): string {
   const when = longDate(w.date);
   const at = w.endTime || w.startTime;
-  return `This session finished on ${when}${at ? ` at ${at}` : ''}. The register is shown as it was saved. Reopen check-in to accept late arrivals.`;
+  return `This session finished on ${when}${at ? ` at ${at}` : ''}. Reopen check-in to accept late arrivals.`;
 }
 
 // ---- Participant check-in window ---------------------------------------------------------------------------------------------

@@ -57,6 +57,14 @@ try {
   await page.waitForSelector('button:has-text("Start check-in")', { timeout: 15_000 });
   check(true, 'a new workshop opens on the register, ready to start check-in');
 
+  async function checkRegisterActions(phase) {
+    for (const label of ['Add person', 'Paste names…', 'Import a file…', 'Connect iPad']) {
+      const button = page.getByRole('button', { name: label, exact: true });
+      check(await button.isVisible() && await button.isEnabled(), `${label} is available ${phase}`);
+    }
+  }
+  await checkRegisterActions('before check-in starts');
+
   // Before check-in starts: paste three names, see the preview, add them, and see them in the register.
   await page.click('button:has-text("Paste names…")');
   await page.waitForSelector('[role=dialog][aria-label="Paste names"]');
@@ -77,6 +85,7 @@ try {
   await page.click('button:has-text("Start check-in")');
   await page.waitForSelector('[aria-label="Check-in: Online"]', { timeout: 15_000 });
   check(true, 'check-in starts on the fake runtime and goes online');
+  await checkRegisterActions('during check-in');
 
   await page.keyboard.press('Meta+Shift+N');
   await page.waitForSelector('[role=dialog][aria-label="Pair an iPad"] svg.qr', { timeout: 10_000 });
@@ -96,6 +105,7 @@ try {
   await page.waitForSelector('[aria-label="Check-in: Check-in closed"]', { timeout: 15_000 });
   await page.waitForSelector('button:has-text("Reopen check-in")');
   check(true, 'End check-in closes the address; the register stays and can be reopened');
+  await checkRegisterActions('after check-in ends');
 
   const state = await app.evaluate(({ BrowserWindow }) => ({
     dialogs: globalThis.__dialogCalls,

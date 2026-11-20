@@ -1,8 +1,7 @@
 // The name-list sheets and the recovery-file sheet, apart from Electron: read what the organiser pasted or chose (files are read here,
 // in the main process, never in the window), preview it against the register, and write it only when confirmed. Every preview and
 // every write goes to the register service through the organiser client, the same path a live session uses, so there is one write
-// path. With check-in open that is the live service; otherwise the runtime opens the workshop's register on loopback for as long as
-// a sheet needs it (RuntimePort.openRegister), with no check-in address.
+// path. Otherwise the runtime opens the register on loopback for each request, with no public check-in address.
 import { createHash } from 'node:crypto';
 import { open } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
@@ -10,7 +9,6 @@ import type { NearbyCheckIn, NearbyReceipt } from '../../server/nearby-protocol.
 import { MAX_LIST_ROWS, PLAN_CHANGED } from '../../server/names-list.ts';
 import type { Result } from '../shared/ipc.ts';
 import type { NameRow, NamesMapping, NamesPlan, NamesSheetView, RecoveryReport, RecoverySheetView } from '../shared/names-model.ts';
-import type { RegisterLease } from '../shared/runtime-types.ts';
 import { columnLabels, decodeText, detectMapping, parseDelimited, parsePaste, rowsFromTable } from './names-parse.ts';
 import { OrganiserError, type OrganiserClient, type OrganiserFactory } from './organiser-client.ts';
 import type { RuntimePort } from './runtime-port.ts';
@@ -88,10 +86,6 @@ const CHANGED = 'The list changed after the preview. Check the new preview, then
 
 export class NamesService {
   private state: NamesState | RecoveryState | null = null;
-  private lease: { id: string; lease: RegisterLease } | null = null;
-  /** Bumped when the sheet closes or moves to another workshop: a register still being opened for the old one is stopped as it arrives. */
-  private gen = 0;
-  private opening: { id: string; gen: number; p: Promise<RegisterLease>; dropped: boolean } | null = null;
   private readonly read: (path: string, max: number) => Promise<Uint8Array>;
   private readonly now: () => Date;
 
@@ -102,62 +96,15 @@ export class NamesService {
 
   // ---- the register ---------------------------------------------------------------------------------------------------------------
 
-  private async client(id: string): Promise<OrganiserClient> {
-    const s = this.d.port.status.get();
-    if (s.workshopId === id && s.session !== 'idle') {
-      if (s.session === 'running' && s.service.state === 'running') { await this.releaseLease(); return this.d.organiser(s.service.organiserUrl); }
-      throw new OrganiserError('Check-in is starting or closing. Try again in a moment.', 0);
-    }
-    return this.d.organiser((await this.leaseFor(id)).organiserUrl);
+  private withRegister<T>(s: NamesState | RecoveryState, use: (client: OrganiserClient) => Promise<T>): Promise<T> {
+    return this.d.port.withRegister(s.workshopId, (url) => {
+      if (this.state !== s) throw new OrganiserError('The sheet was closed or changed. Try again.', 0);
+      return use(this.d.organiser(url));
+    });
   }
 
-  /**
-   * The register opened for this sheet's workshop, opened once however many previews ask at the same time. A register that arrives
-   * after the sheet closed or moved on (or after another one was taken) is stopped at once, so every open has exactly one release.
-   */
-  private async leaseFor(id: string): Promise<RegisterLease> {
-    if (this.lease?.id === id) return this.lease.lease;
-    if (this.lease || (this.opening && this.opening.id !== id)) { this.gen += 1; await this.releaseLease(); }
-    const g = this.gen;
-    if (!this.opening || this.opening.id !== id || this.opening.gen !== g) this.opening = { id, gen: g, p: this.d.port.openRegister(id), dropped: false };
-    const o = this.opening;
-    let lease: RegisterLease;
-    try { lease = await o.p; } finally { if (this.opening === o) this.opening = null; }
-    if (g === this.gen && !o.dropped && (!this.lease || this.lease.lease === lease)) {
-      this.lease = { id, lease };
-      return lease;
-    }
-    if (this.lease?.lease !== lease && !o.dropped) {
-      o.dropped = true;
-      try { await lease.release(); } catch { /* the runtime stops it at quit */ }
-    }
-    throw new OrganiserError('The sheet was closed or changed. Try again.', 0);
-  }
-
-  private async releaseLease(): Promise<void> {
-    const l = this.lease;
-    this.lease = null;
-    if (l) { try { await l.lease.release(); } catch { /* the runtime stops it at quit */ } }
-  }
-
-  async recordNearbyCheckIn(id: string, checkIn: NearbyCheckIn): Promise<NearbyReceipt> {
-    const s = this.d.port.status.get();
-    if (s.workshopId === id && s.session === 'running' && s.service.state === 'running') {
-      return this.d.organiser(s.service.organiserUrl).recordNearbyCheckIn(checkIn, false);
-    }
-    // Reuse a names sheet's register for the same workshop. A different sheet
-    // owns the only offline lease; the iPad will retry when it is free.
-    if (this.state?.workshopId === id) return (await this.client(id)).recordNearbyCheckIn(checkIn, true);
-    if (this.state || this.opening || this.lease) throw new Error('The names sheet is using the offline register.');
-    const lease = await this.d.port.openRegister(id);
-    try {
-      const current = this.d.port.status.get();
-      const live = current.workshopId === id && current.session === 'running' && current.service.state === 'running'
-        && current.service.organiserUrl === lease.organiserUrl;
-      return await this.d.organiser(lease.organiserUrl).recordNearbyCheckIn(checkIn, !live);
-    } finally {
-      await lease.release().catch(() => { /* The runtime owns shutdown of the service. */ });
-    }
+  recordNearbyCheckIn(id: string, checkIn: NearbyCheckIn): Promise<NearbyReceipt> {
+    return this.d.port.withRegister(id, (url, live) => this.d.organiser(url).recordNearbyCheckIn(checkIn, !live));
   }
 
   // ---- name lists -----------------------------------------------------------------------------------------------------------------
@@ -177,8 +124,7 @@ export class NamesService {
     if (!hasName(s.mapping)) { s.plan = null; return { ok: true, value: this.view(s, 'Choose the column that holds the names.') }; }
     if (s.rows.length > MAX_LIST_ROWS) { s.plan = null; return { ok: true, value: this.view(s, `This list has more than ${MAX_LIST_ROWS} rows. A register holds up to 500 people.`) }; }
     try {
-      const c = await this.client(s.workshopId);
-      const r = await c.addNames(request(s), true);
+      const r = await this.withRegister(s, (c) => c.addNames(request(s), true));
       s.plan = r.plan;
       s.token = tokenOf(s);
       return { ok: true, value: this.view(s) };
@@ -241,11 +187,12 @@ export class NamesService {
     if (s?.kind !== 'names') return { ok: false, error: 'Paste or choose a list first.' };
     if (!s.plan || !s.token || s.token !== token || tokenOf(s) !== token) return { ok: false, error: CHANGED };
     try {
-      const c = await this.client(s.workshopId);
+      const input = request(s, s.plan.planKey);
       let r;
-      try { r = await c.addNames(request(s, s.plan.planKey), false); } catch (e) {
+      try { r = await this.withRegister(s, (c) => c.addNames(input, false)); } catch (e) {
         if (!(e instanceof OrganiserError && e.message === PLAN_CHANGED)) throw e;
         // The register changed since the preview: nothing was written. Show the new preview; Add needs its new token.
+        if (this.state !== s) return { ok: false, error: CHANGED };
         const again = await this.preview(s);
         return again.ok ? { ok: true, value: this.view(s, null, PLAN_CHANGED) } : again;
       }
@@ -254,7 +201,6 @@ export class NamesService {
         try {
           await this.d.port.recordRosterProvenance(s.workshopId, { kind: s.source === 'paste' ? 'paste' : 'spreadsheet', filename: s.filename, sha256: s.sha256, importedAt: this.now().toISOString(), count: r.plan.total });
         } catch { /* the names are in the register; only the library's count waits for the next list */ }
-        await this.releaseLease();
         await this.d.written(s.workshopId);
       }
       return { ok: true, value: this.view(s) };
@@ -274,8 +220,7 @@ export class NamesService {
       if ((file as { format?: unknown } | null)?.format !== 'attendance-recovery') throw new FileError('This is not an iPad recovery file.');
       const s: RecoveryState = { kind: 'recovery', workshopId, filename, file, report: null };
       this.state = s;
-      const c = await this.client(workshopId);
-      s.report = await c.importRecovery(file, true);
+      s.report = await this.withRegister(s, (c) => c.importRecovery(file, true));
       return { ok: true, value: { filename, report: s.report, error: null } };
     } catch (e) { return fail(e, 'That file could not be read.'); }
   }
@@ -285,18 +230,14 @@ export class NamesService {
     const s = this.state;
     if (s?.kind !== 'recovery') return { ok: false, error: 'Choose a recovery file first.' };
     try {
-      const c = await this.client(s.workshopId);
-      s.report = await c.importRecovery(s.file, false);
-      await this.releaseLease();
+      s.report = await this.withRegister(s, (c) => c.importRecovery(s.file, false));
       await this.d.written(s.workshopId);
       return { ok: true, value: { filename: s.filename, report: s.report, error: null } };
     } catch (e) { return fail(e, 'The check-ins could not be imported.'); }
   }
 
-  /** The sheet closed: nothing is kept, and a register opened for it is stopped. */
+  /** Discard the preview when the sheet closes. */
   async close(): Promise<void> {
     this.state = null;
-    this.gen += 1;
-    await this.releaseLease();
   }
 }

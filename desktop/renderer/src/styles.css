@@ -230,6 +230,7 @@ kbd { font: 11px ui-monospace, Menlo, Consolas, monospace; background: #eef1f4; 
 
 .panel.register { min-width: 0; }
 .reg-head { flex: none; background: var(--head); padding: 8px 14px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
+.reg-actions { flex: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--line); }
 .reg-count { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .reg-count b { font-size: 22px; }
 .progress { width: 300px; max-width: 100%; height: 5px; border-radius: 3px; background: #fff; overflow: hidden; }

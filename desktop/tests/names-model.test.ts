@@ -55,11 +55,12 @@ describe('commands', () => {
     ...IDLE_CTX, view: 'session', workshopCount: 1,
     session: { phase, registerOpen: false, pair: { ok: false, reason: 'x' }, canUndo: false, hasAddress: false, canRetry: false, hasPeople: false, hasPresent: false, otherLive: false, person: null, device: null, repairName: null },
   });
-  test('names and recovery files work before Start, while open and after End, but not while check-in is closing', () => {
+  test('name edits work while check-in is closing and recovery waits for it to close', () => {
     for (const phase of ['ready', 'online', 'closed', 'past'] as const) {
       for (const id of ['names.paste', 'names.import', 'ipad.import-recovery']) expect(registry.byId(id)!.available!(session(phase)), `${id} ${phase}`).toBeNull();
     }
-    for (const id of ['names.paste', 'names.import', 'ipad.import-recovery']) expect(registry.byId(id)!.available!(session('ending')), id).toBe('Wait until check-in has closed.');
+    for (const id of ['names.paste', 'names.import']) expect(registry.byId(id)!.available!(session('ending')), id).toBeNull();
+    expect(registry.byId('ipad.import-recovery')!.available!(session('ending'))).toBe('Wait until check-in has closed.');
     expect(registry.byId('ipad.import-recovery')!.available!({ ...IDLE_CTX, view: 'library', selectedWorkshop: true })).toBe('Open a workshop first.');
   });
 });

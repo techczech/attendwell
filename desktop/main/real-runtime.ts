@@ -109,6 +109,10 @@ export function createRealRuntime(opts: RealRuntimeOptions): RealRuntime {
         },
       };
     },
+    withRegister(id, use) {
+      const owner = rt;
+      return owner.withRegister(id, (info) => use(info.organiserUrl, info.live && owner.status.get().session === 'running'));
+    },
     async recordRosterProvenance(id, p) {
       rt.workshops.recordRosterProvenance(id, { kind: p.kind, filename: p.filename, sha256: p.sha256, importedAt: p.importedAt, count: p.count });
     },
