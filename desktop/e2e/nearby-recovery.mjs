@@ -43,8 +43,15 @@ try {
       ATTENDWELL_RUNTIME: 'fake', ATTENDWELL_USER_DATA: data, ATTENDWELL_REGISTERS: join(data, 'registers') },
   });
   const page = await app.firstWindow();
-  await app.evaluate(({ BrowserWindow }) => {
+  await app.evaluate(({ BrowserWindow, powerSaveBlocker }) => {
     globalThis.__visibleNearbyTestWindows = 0;
+    globalThis.__sleepBlockers = [];
+    const start = powerSaveBlocker.start.bind(powerSaveBlocker);
+    powerSaveBlocker.start = (type) => {
+      const id = start(type);
+      globalThis.__sleepBlockers.push({ type, id });
+      return id;
+    };
     const win = BrowserWindow.getAllWindows()[0];
     win.on('show', () => { globalThis.__visibleNearbyTestWindows += 1; });
     win.setSize(1440, 950);
@@ -58,6 +65,7 @@ try {
   const connected = panel.getByText('iPad connected locally: Room iPad', { exact: true });
   const lost = panel.getByText(/^Connection to the iPad lost at \d\d:\d\d$/);
   const reconnect = panel.getByRole('button', { name: 'Reconnect', exact: true });
+  assert.equal(await app.evaluate(() => globalThis.__sleepBlockers.length), 0);
   await page.getByRole('button', { name: 'Paste names…', exact: true }).click();
   await page.fill('#names-text', 'Alex Example, alex@example.org');
   await page.getByRole('button', { name: 'Add 1 person', exact: true }).click();
@@ -78,6 +86,9 @@ try {
   await panel.getByRole('button', { name: 'Try again', exact: true }).waitFor();
   await panel.getByText('Internet route (optional)', { exact: true }).waitFor();
   await page.getByLabel('Check-in: iPad connected locally', { exact: true }).waitFor();
+  await page.getByText('Keep the Mac’s lid open during check-in.', { exact: true }).waitFor();
+  assert.deepEqual(await app.evaluate(({ powerSaveBlocker }) => globalThis.__sleepBlockers.map(({ type, id }) =>
+    [type, powerSaveBlocker.isStarted(id)])), [['prevent-app-suspension', true]]);
   assert.equal(await page.getByLabel('Check-in: Connection trouble', { exact: true }).count(), 0);
   mkdirSync(shots, { recursive: true });
   await panel.screenshot({ path: join(shots, 'mac-connected.png') });
@@ -123,6 +134,13 @@ try {
   await panel.getByRole('button', { name: 'Try again', exact: true }).click();
   await page.getByLabel('Check-in: Online', { exact: true }).waitFor();
   console.log('Reconnect replaced the helper and the optional internet retry still works');
+
+  await page.getByRole('button', { name: 'End check-in', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'End check-in', exact: true }).click();
+  await page.getByLabel('Check-in: Check-in closed', { exact: true }).waitFor();
+  assert.deepEqual(await app.evaluate(({ powerSaveBlocker }) => globalThis.__sleepBlockers.map(({ id }) =>
+    powerSaveBlocker.isStarted(id))), [false]);
+  console.log('The Mac holds one idle-sleep assertion through the session and releases it on End');
 
   assert.equal(await app.evaluate(({ BrowserWindow }) =>
     globalThis.__visibleNearbyTestWindows + BrowserWindow.getAllWindows().filter((win) => win.isVisible()).length), 0);

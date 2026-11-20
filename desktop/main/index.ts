@@ -7,7 +7,7 @@ import { writeFile } from 'node:fs/promises';
 import { homedir, hostname } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, net, session, shell, type IpcMainInvokeEvent, type MenuItemConstructorOptions } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, net, powerSaveBlocker, session, shell, type IpcMainInvokeEvent, type MenuItemConstructorOptions } from 'electron';
 import { installSettingsWith, type SettingsHost, type BrowserWindowCtor, type DialogLike, type ElectronDeps, type IpcMainLike, type MenuLike } from '@app-patterns/settings-electron';
 import { createElectronFeedFetcher, createUpdateLinkOpener } from '@app-patterns/updates/electron';
 import type { UpdateSnapshot } from '@app-patterns/updates';
@@ -133,6 +133,16 @@ async function start(): Promise<void> {
   const bundle = createRuntimeBundle({ dataRoot: expandForPort(folder), resourcesRoot, env: ENV, log: (line) => appLog.write(line) });
   const port = bundle.port;
   port.status.onChange(runtimeChangeLogger((line) => appLog.write(line)));
+  let sleepBlocker: number | null = null;
+  function releaseSleepBlocker(): void {
+    if (sleepBlocker === null) return;
+    powerSaveBlocker.stop(sleepBlocker);
+    sleepBlocker = null;
+  }
+  if (process.platform === 'darwin') port.status.onChange(({ session: state }) => {
+    if (state === 'idle') releaseSleepBlocker();
+    else if (sleepBlocker === null) sleepBlocker = powerSaveBlocker.start('prevent-app-suspension');
+  });
   // Test mode only: the screenshot script drives the fake runtime from here (a global is not reachable from the window).
   if (TEST && bundle.fake) (globalThis as { __attendwellFake?: unknown }).__attendwellFake = bundle.fake;
   // Test mode only: the live smoke check reads the runtime's state and its own children's process IDs (never the organiser key).
@@ -467,6 +477,7 @@ async function start(): Promise<void> {
     // A register a names sheet opened is stopped first, then the runtime.
     appLog.write('Quitting.');
     void names.close().catch(() => undefined).then(() => port.shutdown()).catch(() => undefined).finally(() => {
+      releaseSleepBlocker();
       const left = bundle.real?.lastShutdown() ?? [];
       appLog.write(left.length ? `Quit left something running: ${left.join(' ')}` : 'Stopped cleanly.');
       appLog.close();

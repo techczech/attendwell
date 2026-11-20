@@ -107,7 +107,7 @@ export function SessionScreen(p: SessionScreenProps): JSX.Element {
           <ConnectionPanel model={conn} nearby={p.nearby} host={sv.hostName} compact={devices.length >= 4}
             onCopy={a.onCopyAddress} onRetry={a.onRetry} onReconnect={a.onReconnect} onChooseFolder={a.onChooseFolder} />
           {editable && sv.window ? (
-            <CheckInWindowPanel model={windowModel(sv.window, p.now)} openUntil={clockOf(new Date(p.now + sv.openMinutes * 60_000).toISOString())} busy={sv.busy}
+            <CheckInWindowPanel model={windowModel(sv.window, p.now)} openUntil={clockOf(new Date(p.now + sv.openMinutes * 60_000).toISOString())} busy={sv.busy} keepLidOpen={p.platform === 'mac'}
               onOpen={() => a.onWindow('open')} onExtend={() => a.onWindow('extend')} onClose={() => a.onWindow('close')} />
           ) : null}
           <DevicesPanel list={sv.devices} localNames={p.nearby?.peerNames ?? []} live={live && sv.phase !== 'ending'} closedAt={sv.closedAt} repair={repairIds} now={p.now} selectedId={p.selectedDeviceId}

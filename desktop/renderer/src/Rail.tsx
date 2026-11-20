@@ -57,8 +57,8 @@ export function ConnectionPanel({ model, nearby, host, compact, onCopy, onRetry,
 }
 
 /** Whether people can check themselves in on the iPad now, and the organiser's controls for it. */
-export function CheckInWindowPanel({ model, openUntil, busy, onOpen, onExtend, onClose }: {
-  model: WindowModel; openUntil: string | null; busy: boolean; onOpen(): void; onExtend(): void; onClose(): void;
+export function CheckInWindowPanel({ model, openUntil, busy, keepLidOpen, onOpen, onExtend, onClose }: {
+  model: WindowModel; openUntil: string | null; busy: boolean; keepLidOpen: boolean; onOpen(): void; onExtend(): void; onClose(): void;
 }): JSX.Element {
   return (
     <section className="panel rail-panel" aria-label="Check-in on the iPad">
@@ -73,6 +73,7 @@ export function CheckInWindowPanel({ model, openUntil, busy, onOpen, onExtend, o
           {model.canExtend ? <button type="button" className="btn" disabled={busy} onClick={onExtend}><Icon name="plus" />30 min</button> : null}
           {model.canClose ? <button type="button" className="btn" disabled={busy} onClick={onClose}><Icon name="lock" />Close now</button> : null}
         </div>
+        {keepLidOpen ? <p className="conn-host">Keep the Mac’s lid open during check-in.</p> : null}
       </div>
     </section>
   );
