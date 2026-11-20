@@ -3,7 +3,7 @@
 // state machine, and follows the runtime's states. The window renders `view()`; every action is a method that returns a Result.
 import { reduce, IDLE, type PairingState } from '../shared/pairing-model.ts';
 import type { DeviceList } from '../shared/devices-model.ts';
-import { checkedInList, type CheckInWindow, type Roster } from '../shared/register-model.ts';
+import { copyRegisterList, type CheckInWindow, type RegisterCopyChoice, type RegisterCopyResult, type Roster } from '../shared/register-model.ts';
 import type { Result } from '../shared/ipc.ts';
 import type { RuntimeSnapshot, WorkshopSummary } from '../shared/runtime-types.ts';
 import { defaultWindowMinutes, extendMinutes, phaseOf, type SessionPhase, type SessionView } from '../shared/session-model.ts';
@@ -421,14 +421,14 @@ export class SessionService {
     finally { this.d.changed(); }
   }
 
-  /** Read the current register for Copy checked-in list, including writes since the last screen refresh. */
-  async checkedInList(): Promise<Result<{ text: string; count: number }>> {
+  /** Read the current register for Copy, including writes since the last screen refresh. */
+  async copyList(choice: RegisterCopyChoice): Promise<Result<RegisterCopyResult>> {
     const workshop = this.workshop;
     if (!workshop || workshop.id !== this.viewing) return { ok: false, error: 'Open a workshop first.' };
     try {
       const roster = await this.d.port.readRegister(workshop.id);
       if (workshop.id !== this.viewing) return { ok: false, error: 'The workshop changed. Try again.' };
-      return { ok: true, value: checkedInList(workshop, roster ?? EMPTY) };
+      return { ok: true, value: copyRegisterList(workshop, roster ?? EMPTY, choice) };
     } catch { return { ok: false, error: 'The register could not be read. Try again.' }; }
   }
 

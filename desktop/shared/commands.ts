@@ -57,7 +57,7 @@ export const IDLE_CTX: CommandCtx = {
 };
 
 type Avail = 'always' | 'setup' | 'selection' | 'later' | 'idle' | 'example' | 'whats-new' | 'workshops'
-  | 'register' | 'check-in' | 'undo' | 'held' | 'pair' | 'pair-again' | 'device' | 'address' | 'retry' | 'end' | 'reopen' | 'export' | 'review' | 'copy-checked-in'
+  | 'register' | 'check-in' | 'undo' | 'held' | 'pair' | 'pair-again' | 'device' | 'address' | 'retry' | 'end' | 'reopen' | 'export' | 'review' | 'copy-register'
   | 'names' | 'recovery';
 
 const REASONS = {
@@ -71,7 +71,7 @@ const REASONS = {
   noWorkshops: 'There are no workshops yet.',
 } as const;
 
-const SESSION_KINDS: ReadonlySet<Avail> = new Set(['register', 'check-in', 'undo', 'held', 'pair', 'pair-again', 'device', 'address', 'retry', 'end', 'reopen', 'export', 'review', 'copy-checked-in']);
+const SESSION_KINDS: ReadonlySet<Avail> = new Set(['register', 'check-in', 'undo', 'held', 'pair', 'pair-again', 'device', 'address', 'retry', 'end', 'reopen', 'export', 'review', 'copy-register']);
 
 function notOpen(s: SessionCtx): string {
   return s.phase === 'ready' ? 'Start check-in first.' : s.phase === 'closed' || s.phase === 'past' ? 'Check-in is closed. Reopen check-in first.' : 'The register is not answering yet.';
@@ -83,7 +83,7 @@ function sessionReason(kind: Avail, c: CommandCtx): string | null {
   const s = c.session;
   switch (kind) {
     case 'register': return null;
-    case 'copy-checked-in': return c.platform === 'win' ? 'Available on Mac.' : null;
+    case 'copy-register': return c.platform === 'win' ? 'Available on Mac.' : null;
     case 'check-in':
       if (!s.registerOpen) return notOpen(s);
       if (!s.person) return 'Select a person first.';
@@ -192,7 +192,7 @@ export const COMMAND_ROWS: readonly Row[] = [
   { id: 'connection.copy-address', menu: 'Session', cheat: 'Session', label: 'Copy check-in address', key: '⌘⌥C', icon: 'copy', avail: 'address' },
   { id: 'connection.retry', menu: 'Session', cheat: 'Session', label: 'Retry connection', key: '⌘⇧R', icon: 'rotate-cw', avail: 'retry' },
   { id: 'review.email', menu: 'Session', cheat: 'Session', label: 'Email review…', key: '⌘E', icon: 'mail', avail: 'review' },
-  { id: 'register.copy-checked-in', menu: 'Session', cheat: 'Register', label: 'Copy checked-in list', key: '', icon: 'copy', avail: 'copy-checked-in' },
+  { id: 'register.copy-list', menu: 'Session', cheat: 'Register', label: 'Copy…', key: '', icon: 'copy', avail: 'copy-register' },
   { id: 'export.csv', menu: 'Session', cheat: 'Session', label: 'Export CSV…', key: '⌘⇧E', icon: 'file-down', avail: 'export' },
   { id: 'checkin.end', menu: 'Session', cheat: 'Session', label: 'End check-in', key: '', icon: 'power', avail: 'end' },
   { id: 'checkin.reopen', menu: 'Session', cheat: 'Session', label: 'Reopen check-in', key: '', icon: 'rotate-ccw', avail: 'reopen' },

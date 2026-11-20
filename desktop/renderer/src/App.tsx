@@ -3,7 +3,7 @@
 import { dispatchKey } from '@app-patterns/commands';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IDLE_CTX, registry, type CommandCtx, type ViewName } from '../../shared/commands.ts';
-import { buildRegister, stepSelection, SORT_ORDER, type Roster } from '../../shared/register-model.ts';
+import { buildRegister, stepSelection, SORT_ORDER, type RegisterCopyChoice, type Roster } from '../../shared/register-model.ts';
 import { repairsIn, sessionCtxOf, statusChip, type SessionSelection, type SessionView } from '../../shared/session-model.ts';
 import { getStartedButton } from '../../shared/get-started.ts';
 import type { AppSnapshot, SessionAction } from '../../shared/ipc.ts';
@@ -25,7 +25,7 @@ import { ImportNamesSheet, PasteNamesSheet, RecoverySheet } from './NamesSheets.
 import { StatusBar } from './StatusBar.tsx';
 import { updateActionsFor } from './updateActions.ts';
 
-type Overlay = null | { kind: 'palette'; scope: 'all' | 'selection' } | { kind: 'switcher' } | { kind: 'cheat' } | { kind: 'new' } | { kind: 'add-person' } | { kind: 'pair' } | { kind: 'end' } | { kind: 'quit' } | { kind: 'revoke'; id: string } | { kind: 'rename'; id: string } | { kind: 'review' } | { kind: 'notes'; version: string; items: Array<{ title: string | null; text: string }> }
+type Overlay = null | { kind: 'palette'; scope: 'all' | 'selection' } | { kind: 'switcher' } | { kind: 'cheat' } | { kind: 'new' } | { kind: 'add-person' } | { kind: 'copy-register' } | { kind: 'pair' } | { kind: 'end' } | { kind: 'quit' } | { kind: 'revoke'; id: string } | { kind: 'rename'; id: string } | { kind: 'review' } | { kind: 'notes'; version: string; items: Array<{ title: string | null; text: string }> }
   | { kind: 'names-paste' } | { kind: 'names-import'; view: NamesSheetView } | { kind: 'recovery' } | { kind: 'nearby' };
 
 /** Who the quit sheet names: the one paired iPad by its name, otherwise "the iPad". */
@@ -124,6 +124,18 @@ export function App(): JSX.Element | null {
     const r = await api.sessionAct(a);
     return r.ok ? null : r.error;
   }, []);
+  const closeCopyMenu = (): void => setOverlay((open) => open?.kind === 'copy-register' ? null : open);
+  const copyList = async (choice: RegisterCopyChoice): Promise<void> => {
+    closeCopyMenu();
+    const result = await api.sessionAct({ kind: 'copy-register', ...choice });
+    if (!result.ok) { flash(result.error); return; }
+    const { count = 0, skipped = 0 } = result.value;
+    const namesFormat = choice.format === 'names-and-emails';
+    const item = namesFormat ? 'name' : 'email address';
+    const plural = namesFormat ? 'names' : 'email addresses';
+    const copied = `Copied ${count} ${count === 1 ? item : plural}`;
+    flash(namesFormat ? copied : `${copied}. ${skipped} skipped without an email.`);
+  };
   const showAll = useCallback(() => {
     setOverlay(null);
     if (view === 'session') void api.sessionAct({ kind: 'leave' });
@@ -223,14 +235,7 @@ export function App(): JSX.Element | null {
       case 'connection.retry': setOverlay(null); void act({ kind: 'retry' }); return;
       case 'checkin.end': setOverlay({ kind: 'end' }); return;
       case 'checkin.reopen': setOverlay(null); void act({ kind: 'start' }); return;
-      case 'register.copy-checked-in':
-        setOverlay(null);
-        void api.sessionAct({ kind: 'copy-checked-in' }).then((r) => {
-          if (!r.ok) { flash(r.error); return; }
-          const count = r.value.count ?? 0;
-          flash(`Copied ${count} ${count === 1 ? 'name' : 'names'}`);
-        });
-        return;
+      case 'register.copy-list': setOverlay((open) => open?.kind === 'copy-register' ? null : { kind: 'copy-register' }); return;
       case 'export.csv': setOverlay(null); void exportCsv(); return;
       case 'review.email': setOverlay({ kind: 'review' }); return;
       case 'names.paste': setOverlay(null); void withWorkshop(() => setOverlay({ kind: 'names-paste' })); return;
@@ -294,10 +299,11 @@ export function App(): JSX.Element | null {
       ) : (
         sv ? (
           <SessionScreen sv={sv} workshop={sessionWorkshop} register={register} ui={ui} selectedDeviceId={deviceId} searchTick={regSearchTick} bindings={snap.bindings} platform={snap.platform} now={now}
+            copyMenu={snap.platform === 'mac' ? { open: overlay?.kind === 'copy-register', toggle: () => run('register.copy-list'), close: closeCopyMenu, copy: (choice) => void copyList(choice) } : undefined}
             actions={{
               onUi: setUi, onShowAll: showAll, onStart: () => void act({ kind: 'start' }), onEnd: () => setOverlay({ kind: 'end' }), onReopen: () => void act({ kind: 'start' }),
               onAdd: () => run('person.add'), onUndo: () => run('register.undo'), onConnectIPad: () => run('nearby.test'),
-              onCommands: () => run('app.palette'), onCopyCheckedIn: () => run('register.copy-checked-in'), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
+              onCommands: () => run('app.palette'), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
               onRetry: () => void act({ kind: 'retry' }),
               onWindow: (action) => void act({ kind: 'window', action }, action === 'close' ? 'Check-in on the iPad is closed.' : 'Check-in on the iPad is open.'), onMark: (id, present) => void act({ kind: 'mark', id, present }),
               onResolve: (id, action) => void act({ kind: 'resolve', id, action }), onExport: () => void exportCsv(), onReview: () => setOverlay({ kind: 'review' }),

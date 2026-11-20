@@ -151,11 +151,11 @@ describe('commands on the session screen', () => {
       for (const id of ['person.add', 'names.paste', 'names.import']) expect(why(id, c), `${phase}: ${id}`).toBeNull();
     }
   });
-  test('copy checked-in list is available in every Mac workshop phase', () => {
+  test('the Copy menu is available in every Mac workshop phase', () => {
     for (const phase of ['ready', 'connecting', 'online', 'trouble', 'ending', 'closed', 'past'] as const) {
       const c = ctx(view({ phase, registerOpen: false }));
-      expect(why('register.copy-checked-in', { ...c, platform: 'mac' })).toBeNull();
-      expect(why('register.copy-checked-in', { ...c, platform: 'win' })).toBe('Available on Mac.');
+      expect(why('register.copy-list', { ...c, platform: 'mac' })).toBeNull();
+      expect(why('register.copy-list', { ...c, platform: 'win' })).toBe('Available on Mac.');
     }
   });
   test('Email review needs someone who is here', () => {

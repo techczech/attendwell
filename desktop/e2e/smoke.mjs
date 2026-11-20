@@ -63,15 +63,18 @@ try {
       check(await button.isVisible() && await button.isEnabled(), `${label} is available ${phase}`);
     }
   }
-  const copyCheckedIn = page.getByRole('button', { name: 'Copy checked-in list', exact: true });
-  async function checkCopy(count) {
+  const copyButton = page.getByRole('button', { name: 'Copy…', exact: true });
+  async function checkCopy(option, confirmation) {
     if (process.platform !== 'darwin') return;
-    await copyCheckedIn.click();
-    await page.getByText(`Copied ${count} ${count === 1 ? 'name' : 'names'}`, { exact: true }).waitFor();
-    check(true, `Copy checked-in list confirms ${count}`);
+    await copyButton.click();
+    const options = page.getByRole('group', { name: 'Copy options' });
+    check(await options.getByRole('button').count() === 4, 'Copy shows four options');
+    await options.getByRole('button', { name: option, exact: true }).click();
+    await page.getByText(confirmation, { exact: true }).waitFor();
+    check(true, `Copy announces ${confirmation}`);
   }
   await checkRegisterActions('before check-in starts');
-  await checkCopy(0);
+  await checkCopy('Names and emails — checked in', 'Copied 0 names');
 
   // Before check-in starts: paste three names, see the preview, add them, and see them in the register.
   await page.click('button:has-text("Paste names…")');
@@ -107,7 +110,10 @@ try {
   await page.click('[role=dialog] button:has-text("Add person")');
   await page.waitForSelector('[role=option]:has-text("Test Walkin"):has-text("Walk-in")', { timeout: 10_000 });
   check(true, 'a walk-in is added on the laptop and shown as here');
-  await checkCopy(1);
+  await checkCopy('Names and emails — checked in', 'Copied 1 name');
+  await checkCopy('Names and emails — not checked in', 'Copied 3 names');
+  await checkCopy('Emails only — checked in', 'Copied 0 email addresses. 1 skipped without an email.');
+  await checkCopy('Emails only — not checked in', 'Copied 2 email addresses. 1 skipped without an email.');
 
   await page.click('button:has-text("End check-in")');
   await page.click('[role=dialog] button:has-text("End check-in")');
@@ -115,7 +121,7 @@ try {
   await page.waitForSelector('button:has-text("Reopen check-in")');
   check(true, 'End check-in closes the address; the register stays and can be reopened');
   await checkRegisterActions('after check-in ends');
-  await checkCopy(1);
+  await checkCopy('Names and emails — checked in', 'Copied 1 name');
 
   const state = await app.evaluate(({ BrowserWindow }) => ({
     dialogs: globalThis.__dialogCalls,

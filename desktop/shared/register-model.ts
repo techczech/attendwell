@@ -157,7 +157,7 @@ export function countsOf(rows: RegisterRow[]): RegisterCounts {
   };
 }
 
-const byName = (a: RegisterRow, b: RegisterRow): number => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }) || a.id.localeCompare(b.id);
+const byName = (a: Pick<RegisterRow, 'id' | 'name'>, b: Pick<RegisterRow, 'id' | 'name'>): number => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }) || a.id.localeCompare(b.id);
 const time = (r: RegisterRow): number => (r.arrivedAt ? new Date(r.arrivedAt).getTime() : 0);
 
 export function sortRows(rows: RegisterRow[], sort: RegisterSort, pinHeld: boolean): RegisterRow[] {
@@ -214,22 +214,41 @@ export function registerCsv(roster: Roster): string {
   return lines.join('\r\n') + '\r\n';
 }
 
-/** One clipboard line per person in register arrival order. The total is the eligible register, including people yet to arrive. */
-export function checkedInList(workshop: { title: string; date: string }, roster: Roster): { text: string; count: number } {
+export interface RegisterCopyChoice {
+  attendance: 'checked-in' | 'not-checked-in';
+  format: 'names-and-emails' | 'emails-only';
+}
+
+export interface RegisterCopyResult { text: string; count: number; skipped: number }
+
+/** The eligible register in arrival order for check-ins, or in name order for those still to arrive. */
+export function copyRegisterList(workshop: { title: string; date: string }, roster: Roster, choice: RegisterCopyChoice): RegisterCopyResult {
   const visible = roster.participants.filter((person) => person.active !== false && isEligible(person));
-  const arrival = (person: RosterPerson): number => {
-    const timestamp = Date.parse(person.updatedAt ?? '');
-    return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
-  };
-  const checkedIn = visible.filter((person) => person.present).sort((a, b) => arrival(a) - arrival(b));
+  const checkedIn = choice.attendance === 'checked-in';
+  const picked = visible.filter((person) => person.present === checkedIn);
+  if (checkedIn) {
+    const arrival = (person: RosterPerson): number => {
+      const timestamp = Date.parse(person.updatedAt ?? '');
+      return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
+    };
+    picked.sort((a, b) => arrival(a) - arrival(b));
+  } else {
+    picked.sort(byName);
+  }
   const oneLine = (text: string): string => text.replace(/[\t\r\n]+/g, ' ').trim();
-  const lines = [`Checked in: ${checkedIn.length} of ${visible.length} — ${oneLine(workshop.title)}, ${longDate(workshop.date)}`];
-  for (const person of checkedIn) {
+  if (choice.format === 'emails-only') {
+    const emails = picked.map((person) => oneLine(person.email)).filter(Boolean);
+    return { text: emails.join('; '), count: emails.length, skipped: picked.length - emails.length };
+  }
+
+  const label = checkedIn ? 'Checked in' : 'Not checked in';
+  const lines = [`${label}: ${picked.length} of ${visible.length} — ${oneLine(workshop.title)}, ${longDate(workshop.date)}`];
+  for (const person of picked) {
     const name = oneLine(person.name);
     const email = oneLine(person.email);
     lines.push(spreadsheetSafe(email ? `${name} <${email}>` : name));
   }
-  return { text: lines.join('\n'), count: checkedIn.length };
+  return { text: lines.join('\n'), count: picked.length, skipped: 0 };
 }
 
 const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;

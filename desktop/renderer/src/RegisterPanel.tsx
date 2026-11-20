@@ -1,8 +1,8 @@
 // The register: who is here, who is not yet, who is held for review. The list fills the window; the view model is shared/register-model.ts.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FILTER_LABELS, FILTER_ORDER, SORT_LABELS, SORT_ORDER, STATUS_LABELS,
-  type RegisterFilter, type RegisterRow, type RegisterSort, type RegisterView,
+  type RegisterCopyChoice, type RegisterFilter, type RegisterRow, type RegisterSort, type RegisterView,
 } from '../../shared/register-model.ts';
 import type { RepairBanner } from '../../shared/devices-model.ts';
 import { Icon } from './icons.tsx';
@@ -33,9 +33,43 @@ export interface RegisterPanelProps {
   canReview: boolean;
   onAdd(): void;
   onUndo(): void;
-  onCopyCheckedIn(): void;
+  copyMenu?: RegisterCopyMenu | undefined;
   onPasteNames(): void;
   onImportNames(): void;
+}
+
+export interface RegisterCopyMenu {
+  open: boolean;
+  toggle(): void;
+  close(): void;
+  copy(choice: RegisterCopyChoice): void;
+}
+
+const COPY_OPTIONS = [
+  { label: 'Names and emails — checked in', attendance: 'checked-in', format: 'names-and-emails' },
+  { label: 'Names and emails — not checked in', attendance: 'not-checked-in', format: 'names-and-emails' },
+  { label: 'Emails only — checked in', attendance: 'checked-in', format: 'emails-only' },
+  { label: 'Emails only — not checked in', attendance: 'not-checked-in', format: 'emails-only' },
+] as const;
+
+function CopyMenu({ open, toggle, close, copy }: RegisterCopyMenu): JSX.Element {
+  const trigger = useRef<HTMLButtonElement>(null);
+  const options = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (open) options.current?.querySelector('button')?.focus(); }, [open]);
+  return (
+    <div className="reg-copy" onBlur={(e) => { if (open && !e.currentTarget.contains(e.relatedTarget)) close(); }}
+      onKeyDown={(e) => { if (open && e.key === 'Escape') { e.preventDefault(); trigger.current?.focus(); close(); } }}>
+      <button ref={trigger} type="button" className="btn big-action" onClick={toggle}
+        aria-expanded={open} aria-controls={open ? 'register-copy-options' : undefined}><Icon name="copy" />Copy…</button>
+      {open ? (
+        <div ref={options} id="register-copy-options" role="group" aria-label="Copy options" className="menu reg-copy-options">
+          {COPY_OPTIONS.map(({ label, ...choice }) => (
+            <button key={label} type="button" className="menu-item" onClick={() => { trigger.current?.focus(); copy(choice); }}>{label}</button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 const CHIP: Record<string, string> = { here: 'here', 'walk-in': 'walkin', 'not-yet': 'notyet', held: 'held', waiting: 'notyet' };
@@ -80,7 +114,7 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
         <button type="button" className="btn primary" onClick={p.onAdd}><Icon name="user-plus" />Add person</button>
         <button type="button" className="btn" onClick={p.onPasteNames}><Icon name="clipboard-paste" />Paste names…</button>
         <button type="button" className="btn" onClick={p.onImportNames}><Icon name="file-up" />Import a file…</button>
-        {p.platform === 'mac' ? <button type="button" className="btn" onClick={p.onCopyCheckedIn}><Icon name="copy" />Copy checked-in list</button> : null}
+        {p.copyMenu ? <CopyMenu {...p.copyMenu} /> : null}
         {p.canUndo ? <button type="button" className="btn" onClick={p.onUndo} disabled={p.busy}><Icon name="undo-2" />Undo last change</button> : null}
         {p.canExport ? <button type="button" className="btn" onClick={p.onExport}><Icon name="file-down" />Export CSV</button> : null}
         {p.canReview ? <button type="button" className="btn" onClick={p.onReview}><Icon name="mail" />Email review</button> : null}

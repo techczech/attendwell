@@ -9,7 +9,7 @@ import { longDate, shortPath, timeRange } from '../../shared/workshops.ts';
 import { Icon } from './icons.tsx';
 import { Keys } from './Keys.tsx';
 import { CheckInWindowPanel, ConnectionPanel, DevicesPanel, PairButton } from './Rail.tsx';
-import { RegisterPanel, type RegisterUi } from './RegisterPanel.tsx';
+import { RegisterPanel, type RegisterCopyMenu, type RegisterUi } from './RegisterPanel.tsx';
 
 export interface SessionActions {
   onUi(patch: Partial<RegisterUi>): void;
@@ -21,7 +21,6 @@ export interface SessionActions {
   onUndo(): void;
   onConnectIPad(): void;
   onCommands(): void;
-  onCopyCheckedIn(): void;
   onPair(targetId?: string): void;
   onCopyAddress(): void;
   onRetry(): void;
@@ -50,6 +49,7 @@ export interface SessionScreenProps {
   bindings: Record<string, string>;
   platform: 'mac' | 'win';
   now: number;
+  copyMenu?: RegisterCopyMenu | undefined;
   actions: SessionActions;
 }
 
@@ -97,7 +97,7 @@ export function SessionScreen(p: SessionScreenProps): JSX.Element {
           repair={banner} repairChord={pairChord} platform={p.platform} rosterError={sv.rosterError} busy={sv.busy}
           canUndo={editable && sv.canUndo} canExport={sum.total > 0} canReview={sum.here > 0}
           onUi={a.onUi} onMark={a.onMark} onResolve={a.onResolve} onRepair={() => a.onPair(banner?.targetId ?? undefined)} onExport={a.onExport} onReview={a.onReview}
-          onAdd={a.onAdd} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} onUndo={a.onUndo} onCopyCheckedIn={a.onCopyCheckedIn} />
+          onAdd={a.onAdd} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} onUndo={a.onUndo} copyMenu={p.copyMenu} />
         <aside className="rail" aria-label="Connection and iPads">
           <button type="button" className="btn primary big" onClick={a.onConnectIPad}><Icon name="plug-zap" />Connect iPad</button>
           {sv.windowError ? <div className="warn-card" role="alert"><Icon name="circle-alert" size={16} /><span>{sv.windowError}</span></div> : null}

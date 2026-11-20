@@ -354,12 +354,12 @@ async function start(): Promise<void> {
           : a.what === 'pair-address' ? open?.baseUrl ?? null : v.roster ? reviewRecipients(v.roster).bcc || null : null;
         return copy(text).ok ? { ok: true } : { ok: false, error: 'There is nothing to copy yet.' };
       }
-      case 'copy-checked-in': {
-        if (platform !== 'mac') return { ok: false, error: 'Copy checked-in list is available on Mac.' };
-        const result = await sess.checkedInList();
+      case 'copy-register': {
+        if (platform !== 'mac') return { ok: false, error: 'Copy is available on Mac.' };
+        const result = await sess.copyList(a);
         if (!result.ok) return result;
-        copy(result.value.text);
-        return { ok: true, value: { count: result.value.count } };
+        if (!TEST) clipboard.writeText(result.value.text);
+        return { ok: true, value: { count: result.value.count, skipped: result.value.skipped } };
       }
       case 'export-csv': {
         const v = sess.view();
