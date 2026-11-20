@@ -6,11 +6,16 @@ import WorkshopCheckInCore
 @main
 @MainActor
 struct AttendWellApp: App {
+    private struct InternetPresentation: Identifiable {
+        let id = UUID()
+        let model: KioskModel?
+        let scannedCode: String?
+    }
+
     @StateObject private var nearby = SpikeModel(allowSpike: false)
     @Environment(\.scenePhase) private var phase
     @State private var legacy: KioskModel?
-    @State private var showingInternet = false
-    @State private var scannedInternetCode: String?
+    @State private var internet: InternetPresentation?
     @State private var demo: DemoSession?
 
     #if DEBUG
@@ -64,7 +69,9 @@ struct AttendWellApp: App {
                     onDemo: { demo = try? DemoSession() })
             .onChange(of: phase) { if $0 == .active { nearby.appDidBecomeActive() } }
             .task(prepareSimulatorFixture)
-            .fullScreenCover(isPresented: $showingInternet) { internetContent }
+            .fullScreenCover(item: $internet) { presentation in
+                internetContent(presentation)
+            }
             .fullScreenCover(item: $demo) { session in
                 KioskView(model: session.model, onLeaveDemo: { session.end(); demo = nil })
             }
@@ -72,30 +79,30 @@ struct AttendWellApp: App {
 
     @MainActor private func prepareSimulatorFixture() async {
         #if ATTENDWELL_STARTUP_FIXTURES && targetEnvironment(simulator)
-        guard !showingInternet,
+        guard internet == nil,
               let state = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--startup-internet-") }) else { return }
         if state != "--startup-internet-error" {
             let paired = state != "--startup-internet-setup"
             legacy = try? Self.fixture(home: paired, inMemory: true, directoryName: "StartupFixture",
                                        closed: state == "--startup-internet-closed").0
         }
-        showingInternet = true
+        internet = InternetPresentation(model: legacy, scannedCode: nil)
         #endif
     }
 
-    private var internetContent: some View {
+    private func internetContent(_ presentation: InternetPresentation) -> some View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("AttendWell").font(.title.bold()).accessibilityAddTraits(.isHeader)
                 Text(Self.version).font(.title3)
-                KioskTile("Back to local check-in", icon: "arrow.left") { showingInternet = false }
+                KioskTile("Back to local check-in", icon: "arrow.left") { internet = nil }
             }
             .padding(20).frame(maxWidth: .infinity, alignment: .leading)
-            if let legacy {
-                KioskView(model: legacy, initialQR: scannedInternetCode, onNearbyCode: { payload in
+            if let model = presentation.model {
+                KioskView(model: model, initialQR: presentation.scannedCode, onNearbyCode: { payload in
                     guard case .nearby(let code) = NearbyPairingQR(payload) else { return false }
                     nearby.pair(code)
-                    showingInternet = false
+                    internet = nil
                     return true
                 })
             } else {
@@ -108,9 +115,9 @@ struct AttendWellApp: App {
     }
 
     private func openInternet(_ code: String?) {
-        if legacy == nil { legacy = try? Self.live() }
-        scannedInternetCode = code
-        showingInternet = true
+        let model = legacy ?? (try? Self.live())
+        legacy = model
+        internet = InternetPresentation(model: model, scannedCode: code)
     }
 
     private static var version: String {
@@ -176,7 +183,7 @@ struct AttendWellApp: App {
             _ = try store.applyRoster(RosterSnapshot(eventId: offer.eventId, eventCode: offer.eventCode,
                 serverTime: Date(), window: window, people: people))
             try store.setPairing(eventId: offer.eventId, participantAddress: "https://checkin.example.org/s/k3v9")
-            _ = try store.recordCheckIn(eventId: offer.eventId, personToken: "pt_fixture_2")
+            if !closed { _ = try store.recordCheckIn(eventId: offer.eventId, personToken: "pt_fixture_2") }
             try credentials.write(CredentialState(active: ActiveCredential(credential: DeviceCredential.generate(),
                 address: "https://checkin.example.org/s/k3v9", offer: offer, deviceId: "dev_fixture_preview")))
             let salt = try DeviceCredential.generate()

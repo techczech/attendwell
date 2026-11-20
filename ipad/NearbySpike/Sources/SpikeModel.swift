@@ -165,7 +165,7 @@ final class SpikeModel: ObservableObject {
         }
         hasPairing = true
         guard state != "--startup-reconnecting" else { return }
-        connectedMac = "Workshop Mac"
+        if state != "--startup-offline-open" { connectedMac = "Workshop Mac" }
         let names = ["Alex Morgan", "Riya Shah", "Sam Taylor", "Jo Okafor"].enumerated().map {
             NameEntry(id: String($0.offset), displayName: $0.element, hidden: false, checkedIn: $0.offset == 3)
         }

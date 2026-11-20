@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var scanning = false
     @State private var cameraReady = false
     @State private var cameraMessage = "Opening the camera…"
+    @State private var scannedPayload: String?
 
     private var namesFirst: Bool {
         model.connectedMac != nil && model.snapshot?.open == true
@@ -46,7 +47,7 @@ struct ContentView: View {
         .foregroundStyle(KioskTile.ink)
         .background(KioskTile.surface.ignoresSafeArea())
         .preferredColorScheme(.light)
-        .sheet(isPresented: $scanning, content: scanner)
+        .sheet(isPresented: $scanning, onDismiss: handleCode, content: scanner)
         .onChange(of: model.snapshot?.workshopId) { _ in search = "" }
     }
 
@@ -113,7 +114,10 @@ struct ContentView: View {
             Text("Scan the code on the Mac").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
             Text("Open Connect iPad on the Mac and point the camera at the QR code.").font(.title2)
             if cameraReady {
-                QRScannerView(onCode: handleCode, onUnavailable: { message in
+                QRScannerView(onCode: { payload in
+                    scannedPayload = payload
+                    scanning = false
+                }, onUnavailable: { message in
                     cameraReady = false
                     cameraMessage = message
                 })
@@ -141,8 +145,9 @@ struct ContentView: View {
         }
     }
 
-    private func handleCode(_ payload: String) {
-        scanning = false
+    private func handleCode() {
+        guard let payload = scannedPayload else { return }
+        scannedPayload = nil
         switch NearbyPairingQR(payload) {
         case .nearby(let code): model.pair(code)
         case .internet(let code):

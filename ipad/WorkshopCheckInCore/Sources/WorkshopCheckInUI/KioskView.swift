@@ -24,7 +24,6 @@ private struct RecoveryDocument: FileDocument {
 public struct KioskView: View {
     @ObservedObject private var model: KioskModel
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .largeTitle) private var heroSize = 56.0
     @ScaledMetric(relativeTo: .title2) private var nameSize = 28.0
@@ -124,8 +123,8 @@ public struct KioskView: View {
             }
         case .manual:
             panel("Enter a code", icon: "keyboard", detail: "Both are shown on the laptop under “Can't scan?”") {
-                TextField("Address", text: $address).textFieldStyle(.roundedBorder).font(.title2).accessibilityLabel("Address")
-                TextField("Code", text: $code).textFieldStyle(.roundedBorder).font(.title2.monospaced()).accessibilityLabel("Code")
+                TextField("Address", text: $address, prompt: prompt("Address")).textFieldStyle(.roundedBorder).font(.title2).accessibilityLabel("Address")
+                TextField("Code", text: $code, prompt: prompt("Code")).textFieldStyle(.roundedBorder).font(.title2.monospaced()).accessibilityLabel("Code")
                 action("Pair", icon: "link") { model.address = address; model.code = code; Task { await model.inspectPairing() } }
                 action("Cancel", icon: "xmark") { model.cancelSetup() }
             }
@@ -152,10 +151,10 @@ public struct KioskView: View {
             }
         case .setPIN:
             panel("Choose a 6-digit organiser PIN.", icon: "lock", detail: "Participants won't need it.") {
-                SecureField("New PIN", text: $pin).font(.title).textFieldStyle(.roundedBorder)
+                SecureField("New PIN", text: $pin, prompt: prompt("New PIN")).font(.title).textFieldStyle(.roundedBorder)
                     .onTapGesture { editingConfirmation = false }
                     .onChange(of: pin) { value in pin = digits(value); if pin.count == 6 { editingConfirmation = true } }
-                SecureField("Enter it again.", text: $confirmation).font(.title).textFieldStyle(.roundedBorder)
+                SecureField("Enter it again.", text: $confirmation, prompt: prompt("Enter it again.")).font(.title).textFieldStyle(.roundedBorder)
                     .onTapGesture { editingConfirmation = true }.onChange(of: confirmation) { confirmation = digits($0) }
                 digitPad(Binding(get: { editingConfirmation ? confirmation : pin }, set: { value in
                     if editingConfirmation { confirmation = value } else { pin = value }
@@ -194,7 +193,7 @@ public struct KioskView: View {
             }
         case .pin:
             panel("Organiser PIN", icon: "lock", detail: "Forgotten the PIN? Show a new pairing code on the laptop and scan it.") {
-                SecureField("Six-digit PIN", text: $pin).font(.title).textFieldStyle(.roundedBorder)
+                SecureField("Six-digit PIN", text: $pin, prompt: prompt("Six-digit PIN")).font(.title).textFieldStyle(.roundedBorder)
                     .onSubmit { Task { await model.unlock(pin); pin = "" } }
                     .onChange(of: pin) { pin = digits($0) }
                 digitPad($pin)
@@ -219,13 +218,17 @@ public struct KioskView: View {
             panel("Recovery file saved", icon: "doc", detail: "Send this file to the organiser's laptop and import it under Devices → Import iPad recovery file.") {
                 Text("Names and check-ins only. No email addresses.")
                 if let recoveryURL {
-                    ShareLink(item: recoveryURL) { Label("Share file", systemImage: "square.and.arrow.up").font(.title2.bold()).frame(minHeight: 64) }
+                    ShareLink(item: recoveryURL) {
+                        actionLabel("Share file", icon: "square.and.arrow.up")
+                    }.buttonStyle(KioskFilledStyle(prominent: true))
                 }
                 action(model.recoveryFromHandover ? "Continue to hand over" : "Back to Organiser", icon: "arrow.right") { model.continueAfterRecovery() }
             }
         case .handoverConfirm:
             panel("Hand over this iPad?", icon: "hand.raised", detail: handoverDetail) {
-                Button("Hand over", role: .destructive) { Task { await model.handOver() } }.font(.title2.bold()).frame(minHeight: 72)
+                Button(role: .destructive) { Task { await model.handOver() } } label: {
+                    actionLabel("Hand over", icon: "hand.raised")
+                }.buttonStyle(KioskFilledStyle(prominent: true))
                 action("Cancel", icon: "xmark") { model.backToOrganiser() }
             }
         case .differentEvent:
@@ -247,7 +250,7 @@ public struct KioskView: View {
             }.padding(28).foregroundStyle(.white).background(KioskStyle.teal)
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    TextField("Search your name", text: $model.query).font(.title2).textFieldStyle(.roundedBorder)
+                    TextField("Search your name", text: $model.query, prompt: prompt("Search your name")).font(.title2).textFieldStyle(.roundedBorder)
                         .accessibilityLabel("Search your name")
                     section("Find your name", icon: "person", rows: model.findRows)
                     if model.findRows.isEmpty {
@@ -264,7 +267,7 @@ public struct KioskView: View {
     private func section(_ title: String, icon: String, rows: [PersonRow]) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Label(title, systemImage: icon).font(.title.bold()).accessibilityAddTraits(.isHeader)
-            LazyVGrid(columns: typeSize.isAccessibilitySize ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: 300), spacing: 16)], spacing: 16) {
+            LazyVStack(spacing: 16) {
                 ForEach(rows, id: \.personToken) { row in
                     Button { model.select(row) } label: {
                         HStack(spacing: 16) {
@@ -352,23 +355,27 @@ public struct KioskView: View {
     }
     private func action(_ title: String, icon: String, perform: @escaping () -> Void) -> some View {
         Button(action: perform) {
-            Label(title, systemImage: icon).font(.title2.bold()).multilineTextAlignment(.leading)
-                .padding(.horizontal, 20).frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
+            actionLabel(title, icon: icon)
         }.buttonStyle(KioskFilledStyle(prominent: true)).disabled(model.busy)
     }
+    private func actionLabel(_ title: String, icon: String) -> some View {
+        Label(title, systemImage: icon).font(.title2.bold()).multilineTextAlignment(.leading)
+            .padding(.horizontal, 20).frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
+    }
+    private func prompt(_ label: String) -> Text { Text(label).foregroundColor(KioskStyle.ink) }
     private func digits(_ value: String) -> String { String(value.filter { $0.isASCII && $0.isNumber }.prefix(6)) }
     private func digitPad(_ value: Binding<String>) -> some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
             ForEach(["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "delete"], id: \.self) { key in
-                if key.isEmpty { Color.clear.frame(height: 72).accessibilityHidden(true) }
+                if key.isEmpty { Color.clear.frame(height: 80).accessibilityHidden(true) }
                 else {
                     Button {
                         if key == "delete" { if !value.wrappedValue.isEmpty { value.wrappedValue.removeLast() } }
                         else if value.wrappedValue.count < 6 { value.wrappedValue += key }
                     } label: {
-                        if key == "delete" { Image(systemName: "delete.left").font(.title).frame(maxWidth: .infinity, minHeight: 72) }
-                        else { Text(key).font(.largeTitle.bold()).frame(maxWidth: .infinity, minHeight: 72) }
-                    }.accessibilityLabel(key == "delete" ? "Delete last digit" : key)
+                        if key == "delete" { Image(systemName: "delete.left").font(.title).frame(maxWidth: .infinity, minHeight: 80) }
+                        else { Text(key).font(.largeTitle.bold()).frame(maxWidth: .infinity, minHeight: 80) }
+                    }.buttonStyle(KioskFilledStyle(prominent: false)).accessibilityLabel(key == "delete" ? "Delete last digit" : key)
                 }
             }
         }.frame(maxWidth: 420)
