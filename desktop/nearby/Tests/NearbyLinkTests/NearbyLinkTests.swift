@@ -128,4 +128,30 @@ final class NearbyLinkTests: XCTestCase {
         XCTAssertEqual(client.pendingCount, 1)
         XCTAssertEqual(PendingQueue(url: url).items, [operation])
     }
+
+    func testClientReconnectsAfterTheHostRebuildsForWakeAndNetworkChanges() {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("nearby-rebuild-\(UUID().uuidString).json")
+        let host = NearbyMacHost(key: key, deviceName: "Fictional Mac")
+        let client = NearbyIPadClient(key: key, deviceName: "Fictional iPad", queue: PendingQueue(url: url))
+        defer { client.stop(); host.stop() }
+        let initial = expectation(description: "Initial connection")
+        client.onPeer = { _, state in if state == .connected { initial.fulfill() } }
+        host.start()
+        client.start()
+        guard XCTWaiter.wait(for: [initial], timeout: 20) == .completed else {
+            return XCTFail("The local test peers did not connect")
+        }
+        for reason in ["Mac woke from sleep", "network path changed"] {
+            let recovered = expectation(description: "Reconnects after \(reason)")
+            client.onPeer = { _, state in if state == .connected { recovered.fulfill() } }
+            host.reconnect(reason: reason)
+            guard XCTWaiter.wait(for: [recovered], timeout: 20) == .completed else {
+                return XCTFail("The iPad did not reconnect after \(reason)")
+            }
+        }
+        let manual = expectation(description: "iPad Reconnect rebuilds and connects again")
+        client.onPeer = { _, state in if state == .connected { manual.fulfill() } }
+        client.reconnect()
+        wait(for: [manual], timeout: 20)
+    }
 }
