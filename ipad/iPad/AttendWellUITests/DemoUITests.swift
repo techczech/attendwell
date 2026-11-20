@@ -71,6 +71,8 @@ final class DemoUITests: XCTestCase {
         launch("--startup-nearby-open")
         XCTAssertTrue(app.staticTexts["Spring Workshop"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.textFields["Search your name"].exists)
+        XCTAssertTrue(app.staticTexts["nearby-connected"].exists)
+        XCTAssertFalse(app.buttons["nearby-reconnect"].exists)
         XCTAssertFalse(app.buttons["Organiser"].exists)
         XCTAssertFalse(app.buttons["Connect Mac locally"].exists)
         let alex = app.buttons["Alex Morgan, Not checked in"]
@@ -108,6 +110,28 @@ final class DemoUITests: XCTestCase {
         XCTAssertTrue(connections.exists)
         XCTAssertFalse(app.buttons["Organiser"].exists)
         shot("06-closed")
+
+        launch("--startup-offline-open")
+        let loss = app.staticTexts["nearby-connection-lost"]
+        let reconnect = app.buttons["nearby-reconnect"]
+        XCTAssertTrue(loss.waitForExistence(timeout: 10))
+        XCTAssertTrue(reconnect.exists)
+        XCTAssertTrue(app.buttons["Alex Morgan, Not checked in"].exists)
+        shot("07-nearby-connection-lost")
+        alex.tap()
+        app.buttons["Yes, check me in"].tap()
+        XCTAssertTrue(saved.waitForExistence(timeout: 2))
+        saved.tap()
+
+        connections.tap()
+        XCTAssertTrue(local.waitForExistence(timeout: 10))
+        XCTAssertTrue(loss.exists)
+        XCTAssertTrue(reconnect.exists)
+        XCTAssertTrue(app.staticTexts["Unsent check-ins: 1"].exists)
+        shot("08-connections-reconnect")
+
+        launch("--startup-no-discovery")
+        XCTAssertTrue(app.staticTexts["nearby-discovery-guidance"].waitForExistence(timeout: 10))
     }
     #endif
 

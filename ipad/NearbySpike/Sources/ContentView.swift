@@ -34,6 +34,11 @@ struct ContentView: View {
             if let participantContent {
                 VStack(spacing: 0) {
                     HStack {
+                        if model.connectedMac != nil {
+                            Label(model.status, systemImage: "checkmark.circle.fill")
+                                .font(.body.weight(.semibold))
+                                .accessibilityIdentifier("nearby-connected")
+                        }
                         Spacer()
                         Button { connectionsOpen = true } label: {
                             Label("Connections", systemImage: "link").font(.body.bold())
@@ -41,6 +46,9 @@ struct ContentView: View {
                         }.buttonStyle(KioskTile.FilledStyle(prominent: true))
                     }.padding(.horizontal, 24).padding(.vertical, 8)
                     if model.hasPairing {
+                        if model.connectionLost || model.discoveryTimedOut {
+                            reconnectPanel.padding(.horizontal, 24)
+                        }
                         participantContent()
                     } else {
                         VStack(alignment: .leading, spacing: 16) {
@@ -105,6 +113,7 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Connections").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
                 Text(model.status).font(.title2.bold()).accessibilityIdentifier("nearby-connection")
+                if model.hasPairing && model.connectedMac == nil { reconnectPanel }
                 Text("Unsent check-ins: \(model.pending)").font(.title3)
                 Text(version).font(.title3)
                 if let error = model.error { Text(error).font(.title3.bold()) }
@@ -126,6 +135,27 @@ struct ContentView: View {
         .foregroundStyle(KioskTile.ink)
         .background(KioskTile.surface.ignoresSafeArea())
         .sheet(isPresented: $scanning, onDismiss: handleCode, content: scanner)
+    }
+
+    private var reconnectPanel: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if model.connectionLost {
+                Label("Connection to the Mac lost — check-ins are saved on this iPad", systemImage: "wifi.slash")
+                    .font(.title2.bold())
+                    .foregroundStyle(Color(red: 0.49, green: 0.12, blue: 0.14))
+                    .accessibilityIdentifier("nearby-connection-lost")
+            }
+            if model.discoveryTimedOut {
+                Text("Can't see the Mac. Put both on the same Wi-Fi — a phone hotspot works; eduroam blocks this.")
+                    .font(.body)
+                    .accessibilityIdentifier("nearby-discovery-guidance")
+            }
+            KioskTile("Reconnect", icon: "arrow.clockwise", prominent: true) { model.reconnect() }
+                .accessibilityIdentifier("nearby-reconnect")
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(KioskTile.amber, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private var header: some View {

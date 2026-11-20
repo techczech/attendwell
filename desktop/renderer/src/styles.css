@@ -177,7 +177,7 @@ kbd { font: 11px ui-monospace, Menlo, Consolas, monospace; background: #eef1f4; 
 .recips { margin: 10px 0 0 18px; display: flex; flex-direction: column; gap: 2px; }
 .field .help { color: var(--muted); }
 
-.rail { display: flex; flex-direction: column; gap: 14px; min-height: 0; min-width: 0; }
+.rail { display: flex; flex-direction: column; gap: 14px; min-height: 0; min-width: 0; overflow: auto; }
 .rail-panel { flex: none; }
 .rail-panel.devices { flex: 1; min-height: 120px; }
 .rail-panel .panel-head { min-height: 38px; }
@@ -189,6 +189,7 @@ kbd { font: 11px ui-monospace, Menlo, Consolas, monospace; background: #eef1f4; 
 .conn-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .conn-state { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; border: 1px solid #b9c3cc; background: #eef1f4; color: #3b4b55; }
 .conn-state > div { display: flex; flex-direction: column; min-width: 0; }
+.conn-state b, .dev-main > b { overflow-wrap: anywhere; }
 .conn-state b { font-size: 1.15em; }
 .conn-state.good { background: var(--good-tint); border-color: #8ec6a4; color: #146236; }
 .conn-state.warn { background: #fff3d6; border-color: #e0b95a; color: var(--warn); }

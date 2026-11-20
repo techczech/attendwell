@@ -102,6 +102,10 @@ describe('toolbar and banners', () => {
   test('the status bar chip: connecting, online, trouble, ended', () => {
     expect(['connecting', 'online', 'trouble', 'closed'].map((p) => statusChip(p as never).text)).toEqual(['Connecting…', 'Online', 'Connection trouble', 'Check-in closed']);
   });
+  test('an internet failure keeps the status green while the local iPad is connected', () => {
+    expect(statusChip('trouble', true)).toEqual({ tone: 'good', text: 'iPad connected locally' });
+    expect(statusChip('closed', true)).toEqual({ tone: 'off', text: 'Check-in closed' });
+  });
 });
 
 const view = (over: Partial<SessionView> = {}): SessionView => ({

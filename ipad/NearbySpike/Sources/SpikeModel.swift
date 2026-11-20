@@ -7,6 +7,8 @@ final class SpikeModel: ObservableObject {
     @Published private(set) var hasPairing = false
     @Published private(set) var snapshot: Snapshot?
     @Published private(set) var connectedMac: String?
+    @Published private(set) var discoveryTimedOut = false
+    @Published private(set) var hasConnected = false
     @Published private(set) var pending = 0
     @Published private(set) var pendingNames: Set<String> = []
     @Published private(set) var confirmation: String?
@@ -39,6 +41,8 @@ final class SpikeModel: ObservableObject {
         return "Looking for the Mac"
     }
 
+    var connectionLost: Bool { connectedMac == nil && (hasConnected || snapshot != nil) }
+
     func invalidCode() {
         error = "This QR code is not an AttendWell pairing code."
     }
@@ -50,7 +54,7 @@ final class SpikeModel: ObservableObject {
         }
         guard key.tag != pairingTag else {
             error = nil
-            client?.appDidBecomeActive()
+            if connectedMac == nil { reconnect() }
             return
         }
         guard pending == 0 else {
@@ -87,6 +91,7 @@ final class SpikeModel: ObservableObject {
     }
 
     func appDidBecomeActive() { client?.appDidBecomeActive() }
+    func reconnect() { client?.reconnect() }
 
     private func showConfirmation(for name: NameEntry) {
         confirmationTask?.cancel()
@@ -121,12 +126,19 @@ final class SpikeModel: ObservableObject {
         confirmationTask?.cancel()
         confirmation = nil
         connectedMac = nil
+        hasConnected = false
+        discoveryTimedOut = false
         snapshot = (try? Data(contentsOf: snapshotURL)).flatMap { try? JSONDecoder().decode(Snapshot.self, from: $0) }
         let queue = PendingQueue(url: directory.appendingPathComponent("queue.json"))
         let next = NearbyIPadClient(key: key, deviceName: Self.deviceName, queue: queue)
         next.onPeer = { [weak self, weak next] _, _ in
             guard let self, self.client === next else { return }
             self.connectedMac = next?.connectedMac
+            if self.connectedMac != nil { self.hasConnected = true }
+        }
+        next.onDiscoveryTimedOut = { [weak self, weak next] timedOut in
+            guard let self, self.client === next else { return }
+            self.discoveryTimedOut = timedOut
         }
         next.onSnapshot = { [weak self, weak next] snapshot, _ in
             guard let self, self.client === next else { return }
@@ -176,7 +188,12 @@ final class SpikeModel: ObservableObject {
         }
         hasPairing = true
         guard state != "--startup-reconnecting" else { return }
-        if state != "--startup-offline-open" { connectedMac = "Workshop Mac" }
+        if state == "--startup-offline-open" || state == "--startup-no-discovery" {
+            hasConnected = true
+            discoveryTimedOut = state == "--startup-no-discovery"
+        } else {
+            connectedMac = "Workshop Mac"
+        }
         let names = ["Alex Morgan", "Riya Shah", "Sam Taylor", "Jo Okafor"].enumerated().map {
             NameEntry(id: String($0.offset), displayName: $0.element, hidden: false, checkedIn: $0.offset == 3)
         }

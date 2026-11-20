@@ -6,7 +6,7 @@ import { IDLE_CTX, registry, type CommandCtx, type ViewName } from '../../shared
 import { buildRegister, stepSelection, SORT_ORDER, type RegisterCopyChoice, type Roster } from '../../shared/register-model.ts';
 import { repairsIn, sessionCtxOf, statusChip, type SessionSelection, type SessionView } from '../../shared/session-model.ts';
 import { getStartedButton } from '../../shared/get-started.ts';
-import type { AppSnapshot, SessionAction } from '../../shared/ipc.ts';
+import type { AppSnapshot, NearbyStatus, SessionAction } from '../../shared/ipc.ts';
 import { addedText, type NamesSheetView } from '../../shared/names-model.ts';
 import { allWorkshops, countWorkshops, longDate, shortPath } from '../../shared/workshops.ts';
 import { TEXT_SIZE_PX } from '../../shared/settings-schema.ts';
@@ -47,6 +47,7 @@ export function App(): JSX.Element | null {
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [searchTick, setSearchTick] = useState(0);
   const [sv, setSv] = useState<SessionView | null>(null);
+  const [nearby, setNearby] = useState<NearbyStatus | null>(null);
   const [ui, setUiState] = useState<RegisterUi>({ filter: 'all', sort: 'newest', query: '', selectedId: null });
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [regSearchTick, setRegSearchTick] = useState(0);
@@ -71,8 +72,14 @@ export function App(): JSX.Element | null {
   // The clock of the session screen (countdown of the pairing code, "last seen" ages).
   useEffect(() => {
     if (view !== 'session') return;
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
+    let active = true;
+    const tick = (): void => {
+      setNow(Date.now());
+      void api.nearbyStatus().then((status) => { if (active) setNearby(status); });
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => { active = false; clearInterval(t); };
   }, [view]);
   useEffect(() => { setUiState({ filter: 'all', sort: 'newest', query: '', selectedId: null }); setDeviceId(null); }, [sv?.workshopId]);
 
@@ -298,13 +305,14 @@ export function App(): JSX.Element | null {
           onHide={() => void api.setGetStartedHidden(true)} onLibrary={showAll} />
       ) : (
         sv ? (
-          <SessionScreen sv={sv} workshop={sessionWorkshop} register={register} ui={ui} selectedDeviceId={deviceId} searchTick={regSearchTick} bindings={snap.bindings} platform={snap.platform} now={now}
+          <SessionScreen sv={sv} nearby={nearby} workshop={sessionWorkshop} register={register} ui={ui} selectedDeviceId={deviceId} searchTick={regSearchTick} bindings={snap.bindings} platform={snap.platform} now={now}
             copyMenu={snap.platform === 'mac' ? { open: overlay?.kind === 'copy-register', toggle: () => run('register.copy-list'), close: closeCopyMenu, copy: (choice) => void copyList(choice) } : undefined}
             actions={{
               onUi: setUi, onShowAll: showAll, onStart: () => void act({ kind: 'start' }), onEnd: () => setOverlay({ kind: 'end' }), onReopen: () => void act({ kind: 'start' }),
               onAdd: () => run('person.add'), onUndo: () => run('register.undo'), onConnectIPad: () => run('nearby.test'),
               onCommands: () => run('app.palette'), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
               onRetry: () => void act({ kind: 'retry' }),
+              onReconnect: () => { void api.nearbyReconnect().then(setNearby); },
               onWindow: (action) => void act({ kind: 'window', action }, action === 'close' ? 'Check-in on the iPad is closed.' : 'Check-in on the iPad is open.'), onMark: (id, present) => void act({ kind: 'mark', id, present }),
               onResolve: (id, action) => void act({ kind: 'resolve', id, action }), onExport: () => void exportCsv(), onReview: () => setOverlay({ kind: 'review' }),
               onSelectDevice: setDeviceId, onRenameDevice: (id) => setOverlay({ kind: 'rename', id }), onRevokeDevice: (id) => setOverlay({ kind: 'revoke', id }),
@@ -313,7 +321,7 @@ export function App(): JSX.Element | null {
             }} />
         ) : null
       )}
-      {view === 'first-run' ? null : <StatusBar left={statusLeft} version={snap.version} update={snap.update} actions={actions} notice={notice} chip={view === 'session' && sv ? statusChip(sv.phase) : null} />}
+      {view === 'first-run' ? null : <StatusBar left={statusLeft} version={snap.version} update={snap.update} actions={actions} notice={notice} chip={view === 'session' && sv ? statusChip(sv.phase, !!nearby?.peerNames.length) : null} />}
 
       {overlay?.kind === 'palette' ? (
         <CommandPalette scope={overlay.scope} ctx={ctx} bindings={snap.bindings} platform={snap.platform} recent={recent} onRun={(id) => run(id)} onClose={() => setOverlay(null)}

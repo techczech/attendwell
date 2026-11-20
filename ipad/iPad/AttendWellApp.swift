@@ -15,6 +15,7 @@ struct AttendWellApp: App {
     @StateObject private var nearbyKiosk = NearbyKioskModel(link: SpikeModel(allowSpike: false))
     private var nearby: SpikeModel { nearbyKiosk.link }
     @Environment(\.scenePhase) private var phase
+    @State private var wasInBackground = false
     @State private var legacy: KioskModel?
     @State private var internet: InternetPresentation?
     @State private var demo: DemoSession?
@@ -69,7 +70,13 @@ struct AttendWellApp: App {
         ContentView(model: nearby, version: Self.version, onInternet: openInternet,
                     onDemo: { demo = try? DemoSession() },
                     participantContent: { AnyView(KioskParticipantView(model: nearbyKiosk)) })
-            .onChange(of: phase) { if $0 == .active { nearby.appDidBecomeActive() } }
+            .onChange(of: phase) {
+                if $0 == .background { wasInBackground = true }
+                if $0 == .active && wasInBackground {
+                    wasInBackground = false
+                    nearby.appDidBecomeActive()
+                }
+            }
             .task(prepareSimulatorFixture)
             .fullScreenCover(item: $internet) { presentation in
                 internetContent(presentation)
@@ -277,7 +284,7 @@ private final class NearbyKioskModel: KioskParticipantModel {
     }
 
     // NearbyIPadClient delivers from its persisted queue and retries on its own.
-    func sendNow() async { link.appDidBecomeActive() }
+    func sendNow() async { if link.connectedMac == nil { link.reconnect() } }
 
     private func refresh() {
         let snapshot = link.snapshot

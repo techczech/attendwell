@@ -5,6 +5,7 @@ import { repairBanner, repairTargets } from '../../shared/devices-model.ts';
 import { clockOf, summaryOf, type RegisterView } from '../../shared/register-model.ts';
 import { connectionModel, pairAvailability, pastBanner, toolbarModel, windowModel, type SessionView } from '../../shared/session-model.ts';
 import type { WorkshopSummary } from '../../shared/runtime-types.ts';
+import type { NearbyStatus } from '../../shared/ipc.ts';
 import { longDate, shortPath, timeRange } from '../../shared/workshops.ts';
 import { Icon } from './icons.tsx';
 import { Keys } from './Keys.tsx';
@@ -24,6 +25,7 @@ export interface SessionActions {
   onPair(targetId?: string): void;
   onCopyAddress(): void;
   onRetry(): void;
+  onReconnect(): void;
   onWindow(action: 'open' | 'extend' | 'close'): void;
   onMark(id: string, present: boolean): void;
   onResolve(id: string, action: 'check-in' | 'dismiss'): void;
@@ -41,6 +43,7 @@ export interface SessionActions {
 
 export interface SessionScreenProps {
   sv: SessionView;
+  nearby: NearbyStatus | null;
   workshop: WorkshopSummary | null;
   register: RegisterView;
   ui: RegisterUi;
@@ -101,12 +104,13 @@ export function SessionScreen(p: SessionScreenProps): JSX.Element {
         <aside className="rail" aria-label="Connection and iPads">
           <button type="button" className="btn primary big" onClick={a.onConnectIPad}><Icon name="plug-zap" />Connect iPad</button>
           {sv.windowError ? <div className="warn-card" role="alert"><Icon name="circle-alert" size={16} /><span>{sv.windowError}</span></div> : null}
-          <ConnectionPanel model={conn} host={sv.hostName} compact={devices.length >= 4} onCopy={a.onCopyAddress} onRetry={a.onRetry} onChooseFolder={a.onChooseFolder} />
+          <ConnectionPanel model={conn} nearby={p.nearby} host={sv.hostName} compact={devices.length >= 4}
+            onCopy={a.onCopyAddress} onRetry={a.onRetry} onReconnect={a.onReconnect} onChooseFolder={a.onChooseFolder} />
           {editable && sv.window ? (
             <CheckInWindowPanel model={windowModel(sv.window, p.now)} openUntil={clockOf(new Date(p.now + sv.openMinutes * 60_000).toISOString())} busy={sv.busy}
               onOpen={() => a.onWindow('open')} onExtend={() => a.onWindow('extend')} onClose={() => a.onWindow('close')} />
           ) : null}
-          <DevicesPanel list={sv.devices} live={live && sv.phase !== 'ending'} closedAt={sv.closedAt} repair={repairIds} now={p.now} selectedId={p.selectedDeviceId}
+          <DevicesPanel list={sv.devices} localNames={p.nearby?.peerNames ?? []} live={live && sv.phase !== 'ending'} closedAt={sv.closedAt} repair={repairIds} now={p.now} selectedId={p.selectedDeviceId}
             canAct={editable} onSelect={a.onSelectDevice} onRename={a.onRenameDevice} onPairAgain={(id) => a.onPair(id)} onRevoke={a.onRevokeDevice} onDismissHold={a.onDismissHold}
             canImport={sv.phase !== 'ending'} onImportRecovery={a.onImportRecovery} />
           <PairButton avail={avail} label={pairLabel} chord={pairChord} platform={p.platform} onClick={() => a.onPair(banner?.targetId ?? undefined)} />

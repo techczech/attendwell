@@ -264,7 +264,8 @@ export function sessionCtxOf(v: SessionView, sel: SessionSelection): SessionCtx 
 }
 
 /** The status bar's session state: connecting, online, trouble, or ended. */
-export function statusChip(phase: SessionPhase): { tone: 'good' | 'warn' | 'bad' | 'off'; text: string } {
+export function statusChip(phase: SessionPhase, localConnected = false): { tone: 'good' | 'warn' | 'bad' | 'off'; text: string } {
+  if (localConnected && (phase === 'trouble' || phase === 'connecting')) return { tone: 'good', text: 'iPad connected locally' };
   switch (phase) {
     case 'connecting': return { tone: 'warn', text: 'Connecting…' };
     case 'online': return { tone: 'good', text: 'Online' };
