@@ -104,4 +104,28 @@ final class NearbyLinkTests: XCTestCase {
         XCTAssertTrue(queue.items.isEmpty)
         XCTAssertEqual(try Data(contentsOf: url), contents)
     }
+
+    func testReconnectKeepsTheQueueAndDoesNotPostponeDiscoveryGuidance() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("nearby-retry-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let client = NearbyIPadClient(key: key, deviceName: "Fictional iPad", queue: PendingQueue(url: url))
+        let noMac = expectation(description: "No matching Mac after 15 seconds")
+        let retry = expectation(description: "Timed recovery builds a fresh session and browser")
+        var reasons: [String] = []
+        client.onLog = { line in
+            reasons.append(line)
+            if line.contains("still disconnected after 15 seconds") { retry.fulfill() }
+        }
+        client.onDiscoveryTimedOut = { timedOut in if timedOut { noMac.fulfill() } }
+        client.start()
+        defer { client.stop() }
+        let operation = try client.checkIn(nameId: "example", workshopId: "fictional")
+        client.appDidBecomeActive()
+        client.reconnect()
+        wait(for: [noMac, retry], timeout: 23)
+        XCTAssertTrue(reasons.contains { $0.contains("app returned to foreground") })
+        XCTAssertTrue(reasons.contains { $0.contains("Reconnect tapped") })
+        XCTAssertEqual(client.pendingCount, 1)
+        XCTAssertEqual(PendingQueue(url: url).items, [operation])
+    }
 }

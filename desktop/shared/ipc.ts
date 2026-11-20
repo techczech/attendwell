@@ -41,6 +41,8 @@ export const CH = {
   quitRequested: 'attendwell:quit-requested',
   // the nearby link test sheet
   nearbyView: 'attendwell:nearby-view',
+  nearbyStatus: 'attendwell:nearby-status',
+  nearbyReconnect: 'attendwell:nearby-reconnect',
   nearbyShowLog: 'attendwell:nearby-show-log',
 } as const;
 
@@ -183,6 +185,13 @@ export interface AppSnapshot {
 
 export type Result<T = void> = ({ ok: true } & (T extends void ? unknown : { value: T })) | { ok: false; error: string };
 
+export interface NearbyStatus {
+  available: boolean;
+  peerNames: string[];
+  lostAt: string | null;
+  discoveryTimedOut: boolean;
+}
+
 export interface NearbyView {
   /** False when the helper is not in this build or could not be started. */
   available: boolean;
@@ -227,6 +236,8 @@ export interface AttendWellApi {
   onQuitRequested(cb: () => void): () => void;
   /** The Connect iPad sheet: the link's state, and opening its log file. */
   nearbyView(): Promise<NearbyView>;
+  nearbyStatus(): Promise<NearbyStatus>;
+  nearbyReconnect(): Promise<NearbyStatus>;
   nearbyShowLog(): Promise<void>;
 }
 

@@ -8,7 +8,7 @@ import { deviceText, HIDDEN_NAME } from '../../server/device-text.ts';
 import { isNearbyCheckIn, nearbyNameId, type NearbyCheckIn, type NearbyReceipt } from '../../server/nearby-protocol.ts';
 import { isEligible } from '../../server/eligibility-attendance.ts';
 import type { Roster } from '../shared/register-model.ts';
-import type { NearbyView } from '../shared/ipc.ts';
+import type { NearbyStatus, NearbyView } from '../shared/ipc.ts';
 
 export const NEARBY_WORKSHOP_ID = 'nearby-test';
 
@@ -35,7 +35,9 @@ export interface NearbyWorkshop {
 }
 
 export interface NearbyLink {
+  status(): NearbyStatus;
   view(): NearbyView;
+  reconnect(): void;
   extendPairingQR(payload: string): string;
   updateWorkshop(workshop: NearbyWorkshop | null): void;
   readonly logFile: string;
@@ -51,13 +53,16 @@ export interface NearbyOptions {
   recordCheckIn(workshopId: string, checkIn: NearbyCheckIn): Promise<NearbyReceipt>;
   platform?: NodeJS.Platform;
   spawnFn?: (program: string, args: string[]) => ChildProcess;
-  /** Delay before the one restart after an unexpected exit. */
+  /** Initial delay after an unexpected exit. */
   restartDelayMs?: number;
 }
 
 export function startNearbyLink(o: NearbyOptions): NearbyLink {
   const logFile = join(o.userData, 'nearby.log');
-  const state = { available: false, connected: false, peerName: null as string | null, checkins: 0 };
+  let available = false;
+  let checkins = 0;
+  let lostAt: string | null = null;
+  let waitingSince = Date.now();
   const inFlight = new Map<string, Promise<NearbyReceipt>>();
   let writes: Promise<unknown> = Promise.resolve();
   const peers = new Map<string, string>();
@@ -67,27 +72,33 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
   let version = 1;
   let key: NearbyKey | null = null;
   let stopping = false;
-  let restarts = 0;
+  let failures = 0;
+  let restartTimer: ReturnType<typeof setTimeout> | undefined;
+  let replacing = false;
   let child: ChildProcess | null = null;
   let pairingCode: string | null = null;
 
   const link: NearbyLink = {
     logFile,
+    status: () => ({
+      available, peerNames: [...peers.values()], lostAt,
+      discoveryTimedOut: available && peers.size === 0 && Date.now() - waitingSince >= 15_000,
+    }),
     view: () => {
-      if (child && !stopping) send(child, { type: 'pairing-sheet' });
+      if (child && !stopping && !replacing) send(child, { type: 'pairing-sheet' });
       return {
-        available: state.available, state: state.connected ? 'connected' : 'waiting', peerName: state.peerName, checkins: state.checkins,
+        available, state: peers.size > 0 ? 'connected' : 'waiting', peerName: [...peers.values()].at(-1) ?? null, checkins,
         workshopTitle: workshop?.title ?? emptyTitle,
-        payload: state.available && key ? JSON.stringify({ v: 1, workshopId: key.workshopId, key: key.key }) : null,
+        payload: available && key ? JSON.stringify({ v: 1, workshopId: key.workshopId, key: key.key }) : null,
         pairingCode,
       };
     },
     // Build 2 reads the fragment as query items. An escaped inner fragment
     // carries the key while leaving the two legacy items intact.
-    extendPairingQR: (payload) => state.available && key ? `${payload}%23nearby=${key.key}` : payload,
+    extendPairingQR: (payload) => available && key ? `${payload}%23nearby=${key.key}` : payload,
     updateWorkshop: (w) => {
       workshop = w;
-      if (!state.available) return;
+      if (!available) return;
       const next = {
         workshopId: w?.id ?? '',
         title: w ? deviceText(w.title, 'Workshop') : emptyTitle,
@@ -99,9 +110,21 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
       if (JSON.stringify(next) === JSON.stringify(snapshot)) return;
       snapshot = next;
       version += 1;
-      if (child) sendSnapshot(child);
+      if (child && !replacing) sendSnapshot(child);
     },
-    stop: () => { stopping = true; try { child?.stdin?.end(); } catch { /* already gone */ } },
+    reconnect: () => {
+      if (!available || stopping || replacing) return;
+      clearTimeout(restartTimer);
+      failures = 0;
+      if (child) {
+        replacing = true;
+        clearPeers();
+        child.kill();
+      } else {
+        launch();
+      }
+    },
+    stop: () => { stopping = true; clearTimeout(restartTimer); try { child?.stdin?.end(); } catch { /* already gone */ } },
   };
 
   const platform = o.platform ?? process.platform;
@@ -112,6 +135,17 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
 
   const log = (line: string): void => { try { appendFileSync(logFile, `${new Date().toISOString()} ${line}\n`, { mode: 0o600 }); } catch { /* the link must never break the app */ } };
   try { key = loadOrCreateKey(o.userData); } catch (e) { o.appLog(`Nearby link: could not make the key: ${(e as Error).message}`); return link; }
+  available = true;
+
+  function markLost(): void {
+    waitingSince = Date.now();
+    lostAt = new Date(waitingSince).toISOString();
+  }
+  function clearPeers(): void {
+    if (peers.size > 0) markLost();
+    peers.clear();
+    pairingCode = null;
+  }
 
   const send = (c: ChildProcess, message: unknown): void => {
     try { c.stdin?.write(JSON.stringify(message) + '\n'); }
@@ -129,49 +163,62 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
       const checkIn = { opId: op.opId, nameId: op.nameId, at: op.at };
       const write = writes.then(() => o.recordCheckIn(id, checkIn));
       receipt = write.then((result) => {
-        if (result.recorded) state.checkins += 1;
+        if (result.recorded) checkins += 1;
         return result;
       }).finally(() => { inFlight.delete(opKey); });
       inFlight.set(opKey, receipt);
       writes = receipt.catch(() => { log('Check-in not acknowledged: the register did not record it.'); });
     }
     void receipt.then(() => {
-      if (child === c && !stopping) send(c, { type: 'ack', opIds: [op.opId] });
+      if (child === c && !stopping && !replacing) send(c, { type: 'ack', opIds: [op.opId] });
     }, () => { /* A replay will try the write again. */ });
   };
 
-  const launch = (): void => {
+  function retry(why: string): void {
+    o.appLog(`Nearby link: the helper stopped unexpectedly (${why}).`);
+    const delay = Math.min(30_000, (o.restartDelayMs ?? 1000) * 2 ** failures);
+    failures = Math.min(failures + 1, 30);
+    restartTimer = setTimeout(launch, delay);
+    restartTimer.unref?.();
+  }
+
+  function launch(): void {
+    if (stopping || child) return;
+    const startedAt = performance.now();
     let c: ChildProcess;
     try { c = (o.spawnFn ?? ((p, a) => spawn(p, a, { stdio: ['pipe', 'pipe', 'pipe'] })))(program, ['--role', 'mac']); } catch (e) {
-      o.appLog(`Nearby link: could not start the helper: ${(e as Error).message}`); state.available = false; return;
+      retry((e as Error).message); return;
     }
     child = c;
-    state.available = true;
     log(`started helper pid ${c.pid}`);
-    let ended = false;
     const gone = (why: string): void => {
-      if (ended) return;
-      ended = true;
-      pairingCode = null;
-      peers.clear();
-      state.connected = false; state.peerName = null;
-      if (child === c) child = null;
+      if (child !== c) return;
+      child = null;
+      clearPeers();
       log(`helper stopped: ${why}`);
       if (stopping) return;
-      o.appLog(`Nearby link: the helper stopped unexpectedly (${why}).`);
-      if (restarts < 1) { restarts += 1; setTimeout(() => { if (!stopping) launch(); }, o.restartDelayMs ?? 1000).unref?.(); }
-      else { state.available = false; o.appLog('Nearby link: not restarted again; the nearby link is off until AttendWell restarts.'); }
+      if (replacing) {
+        replacing = false;
+        launch();
+        return;
+      }
+      if (performance.now() - startedAt >= 60_000) failures = 0;
+      retry(why);
     };
-    c.on('error', (e) => gone(`error ${e.message}`));
+    c.on('error', (e) => {
+      if (c.pid === undefined) gone(`error ${e.message}`);
+      else log(`helper error: ${e.message}`);
+    });
     c.on('exit', (code, sig) => gone(`code=${code} signal=${sig}`));
     c.stderr?.on('data', (d: Buffer) => log(`stderr: ${d.toString().trimEnd()}`));
     let buffer = '';
     c.stdout?.on('data', (d: Buffer) => {
+      if (child !== c || stopping || replacing) return;
       buffer += d.toString();
       let i: number;
       while ((i = buffer.indexOf('\n')) >= 0) {
         const line = buffer.slice(0, i); buffer = buffer.slice(i + 1);
-        let e: { type?: string; state?: string; peer?: string; workshopId?: unknown; code?: unknown };
+        let e: { type?: string; state?: string; peer?: string; peerId?: string; workshopId?: unknown; code?: unknown };
         try { e = JSON.parse(line); } catch { continue; }
         if (!e || typeof e !== 'object') continue;
         if (e.type === 'pairing-code') {
@@ -180,10 +227,13 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
         }
         if (e.type !== 'checkin') log(line);
         if (e.type === 'peer' && typeof e.peer === 'string') {
-          if (e.state === 'connected') peers.set(e.peer, e.peer.slice(0, 80));
-          else if (e.state === 'notConnected') peers.delete(e.peer);
-          state.connected = peers.size > 0;
-          state.peerName = [...peers.values()].at(-1) ?? null;
+          const id = typeof e.peerId === 'string' ? e.peerId : e.peer;
+          if (e.state === 'connected') {
+            peers.set(id, e.peer.slice(0, 80));
+            lostAt = null;
+          } else if (e.state === 'notConnected' && peers.delete(id) && peers.size === 0) {
+            markLost();
+          }
         } else if (e.type === 'checkin' && isNearbyCheckIn(e)) {
           accept(c, e);
         }
@@ -192,7 +242,7 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
     c.stdin?.on('error', () => undefined);
     send(c, { type: 'key', ...key });
     sendSnapshot(c);
-  };
+  }
   launch();
   return link;
 }

@@ -165,16 +165,22 @@ describe('the nearby link', () => {
     second.link.stop();
   });
 
-  test('restarts the helper once after an unexpected exit, then gives up quietly', async () => {
-    const kids = [fakeChild(), fakeChild()]; let n = 0; const logs: string[] = [];
-    const link = startNearbyLink({ ...noRecord, userData: tmp(), resourcesRoot: helperRoot(), env: {}, platform: 'darwin', appLog: (l) => logs.push(l), restartDelayMs: 5, spawnFn: () => kids[n++]!.c as unknown as ChildProcess });
-    kids[0]!.c.emit('exit', 1, null);
-    await new Promise((r) => setTimeout(r, 40));
-    expect(n).toBe(2); expect(link.view().available).toBe(true);
-    kids[1]!.c.emit('exit', 1, null);
-    await new Promise((r) => setTimeout(r, 40));
-    expect(n).toBe(2); expect(link.view().available).toBe(false);
-    expect(logs.some((l) => l.includes('stopped unexpectedly'))).toBe(true);
+  test('recovers from consecutive helper exits and ignores delayed output from an old helper', async () => {
+    const kids = Array.from({ length: 3 }, fakeChild);
+    let n = 0;
+    const link = startNearbyLink({ ...noRecord, userData: tmp(), resourcesRoot: helperRoot(), env: {}, platform: 'darwin', appLog: () => undefined, restartDelayMs: 5, spawnFn: () => kids[n++]!.c as unknown as ChildProcess });
+    try {
+      kids[0]!.c.emit('exit', 1, null);
+      await until(() => n === 2);
+      kids[1]!.c.emit('exit', 1, null);
+      await until(() => n === 3);
+      expect(n).toBe(3);
+      expect(link.view().available).toBe(true);
+      kids[0]!.c.stdout.write('{"type":"peer","state":"connected","peer":"Stale iPad"}\n');
+      expect(link.view().state).toBe('waiting');
+      kids[2]!.c.stdout.write('{"type":"peer","state":"connected","peer":"Room iPad"}\n');
+      expect(link.view().peerName).toBe('Room iPad');
+    } finally { link.stop(); }
   });
 
   test('a stop is not an unexpected exit', async () => {
@@ -183,5 +189,26 @@ describe('the nearby link', () => {
     link.stop(); k.c.emit('exit', 0, null);
     await new Promise((r) => setTimeout(r, 30));
     expect(n).toBe(1);
+  });
+
+  test('Reconnect replaces a running helper and preserves pairing and the latest workshop snapshot', () => {
+    const first = fakeChild();
+    const next = fakeChild();
+    let launches = 0;
+    const children = [Object.assign(first.c, { kill: () => first.c.emit('exit', null, 'SIGTERM') }), next.c];
+    const link = startNearbyLink({ ...noRecord, userData: tmp(), resourcesRoot: helperRoot(), env: {}, platform: 'darwin',
+      appLog: () => undefined, spawnFn: () => children[launches++]! as unknown as ChildProcess });
+    try {
+      link.updateWorkshop({ id: 'fictional', title: 'Test workshop', open: true, roster: null });
+      first.c.stdout.write('{"type":"peer","state":"connected","peer":"Room iPad"}\n');
+      expect(link.status()).toMatchObject({ peerNames: ['Room iPad'], lostAt: null });
+      link.reconnect();
+      expect(launches).toBe(2);
+      expect(link.status()).toMatchObject({ peerNames: [], lostAt: expect.any(String) });
+      expect(first.written[0] === next.written[0]).toBe(true);
+      expect(JSON.parse(next.written[1]!)).toMatchObject({ type: 'snapshot', workshopId: 'fictional', open: true });
+      next.c.stdout.write('{"type":"peer","state":"connected","peer":"Room iPad"}\n');
+      expect(link.status()).toMatchObject({ peerNames: ['Room iPad'], lostAt: null });
+    } finally { link.stop(); }
   });
 });

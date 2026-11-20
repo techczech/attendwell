@@ -2,6 +2,8 @@
 // attendwell-nearby --role ipad-sim   headless fake iPad for measurement: --queue <file> [--count N] [--interval-ms N] [--device name]
 // The shared key arrives on stdin as the first line {"type":"key","key":...,"workshopId":...}; never on argv.
 import Foundation
+import AppKit
+import Network
 import NearbyLink
 
 setvbuf(stdout, nil, _IOLBF, 0)
@@ -42,6 +44,17 @@ let hostName = Host.current().localizedName ?? "Mac"
 
 if role == "mac" {
     var host: NearbyMacHost?
+    let workspace = NSWorkspace.shared.notificationCenter
+    let wakeObserver = workspace.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { _ in
+        host?.reconnect(reason: "Mac woke from sleep")
+    }
+    let pathMonitor = NWPathMonitor()
+    var receivedInitialPath = false
+    pathMonitor.pathUpdateHandler = { _ in
+        if receivedInitialPath { host?.reconnect(reason: "network path changed") }
+        receivedInitialPath = true
+    }
+    pathMonitor.start(queue: .main)
     var pairingKey: String?
     var offer: ShortCodeHost?
     var sheetTimeout: DispatchWorkItem?
@@ -51,7 +64,7 @@ if role == "mac" {
             pairingKey = (try? JSONSerialization.jsonObject(with: line) as? [String: Any])?["key"] as? String
             let h = NearbyMacHost(key: key, deviceName: arg("--device") ?? hostName)
             h.onLog = log
-            h.onPeer = { peer, state in emit("peer", ["state": state.rawValue, "peer": peer]) }
+            h.onPeer = { peer, state, id in emit("peer", ["state": state.rawValue, "peer": peer, "peerId": id]) }
             h.onSnapshotSent = { peer, bytes in emit("snapshot-sent", ["peer": peer, "bytes": bytes]) }
             h.onCheckin = { c, peer in
                 var fields = ["opId": c.opId, "nameId": c.nameId, "at": c.at, "peer": peer]
@@ -82,7 +95,7 @@ if role == "mac" {
         case "ack": host?.ack(opIds: o["opIds"] as? [String] ?? [])
         default: break
         }
-    }, onEOF: { host?.stop(); exit(0) })
+    }, onEOF: { workspace.removeObserver(wakeObserver); pathMonitor.cancel(); host?.stop(); exit(0) })
 } else {
     guard let queuePath = arg("--queue") else { FileHandle.standardError.write(Data("--queue <file> required\n".utf8)); exit(2) }
     let count = Int(arg("--count") ?? "0") ?? 0

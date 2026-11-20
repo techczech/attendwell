@@ -13,6 +13,7 @@ const C = {
   rebind: 'attendwell:rebind', sessionView: 'attendwell:session-view', sessionChanged: 'attendwell:session-changed', sessionAction: 'attendwell:session-action',
   quitRequested: 'attendwell:quit-requested', updateAction: 'attendwell:update-action', updateNotes: 'attendwell:update-notes', view: 'attendwell:view',
   nearbyView: 'attendwell:nearby-view', nearbyShowLog: 'attendwell:nearby-show-log',
+  nearbyStatus: 'attendwell:nearby-status', nearbyReconnect: 'attendwell:nearby-reconnect',
 } as const satisfies Partial<typeof CH>;
 
 const listen = <T>(channel: string, cb: (v: T) => void): (() => void) => {
@@ -45,6 +46,8 @@ const api: AttendWellApi = {
   sheetAct: (a: SessionAction) => ipcRenderer.invoke(C.sessionAction, a),
   pathForFile: (file: File) => webUtils.getPathForFile(file),
   nearbyView: () => ipcRenderer.invoke(C.nearbyView),
+  nearbyStatus: () => ipcRenderer.invoke(C.nearbyStatus),
+  nearbyReconnect: () => ipcRenderer.invoke(C.nearbyReconnect),
   nearbyShowLog: () => ipcRenderer.invoke(C.nearbyShowLog),
   onQuitRequested: (cb) => listen<null>(C.quitRequested, () => cb()),
 };

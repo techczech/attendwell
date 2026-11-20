@@ -316,6 +316,8 @@ async function start(): Promise<void> {
     return r.ok ? { ok: true } : { ok: false, error: r.error };
   });
   handle(CH.nearbyView, () => nearby.view());
+  handle(CH.nearbyStatus, () => nearby.status());
+  handle(CH.nearbyReconnect, () => { nearby.reconnect(); return nearby.status(); });
   handle(CH.nearbyShowLog, async () => { if (TEST) return; try { appendFileSync(nearby.logFile, '', { mode: 0o600 }); } catch { /* opened below if it exists */ } await shell.openPath(nearby.logFile); });
   handle(CH.noteRan, (_e, id) => { const c = str(id, 80); if (registry.byId(c)) ctl.noteRan(c); });
 
