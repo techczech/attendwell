@@ -65,30 +65,49 @@ function setup(o:SetupOpts={}){
 }
 const workshop=(rt:ReturnType<typeof setup>['rt'])=>{const w=rt.workshops.create({title:'Fictional Lab',date:'2031-03-04'});rt.openWorkshop(w.id);return w;};
 
+test('Start and End both finish while the optional tunnel hangs',async()=>{
+ const {rt,tunnelsList}=setup({tunnel:()=>{}});
+ const w=workshop(rt);
+ const start=rt.startSession();
+ try{
+  await until(()=>tunnelsList().length===1);
+  await until(()=>rt.status.get().session==='running',500);
+  expect(rt.status.get()).toMatchObject({session:'running',service:{state:'running',participantOrigin:null},tunnel:{state:'starting'}});
+  expect((await start).session).toBe('running');
+  expect(await rt.withRegister(w.id,async info=>info.live)).toBe(true);
+  expect((await rt.endSession()).clean).toBe(true);
+  expect(tunnelsList()[0]!.done).toBe(true);
+ }finally{await rt.shutdown();await start.catch(()=>{});}
+});
+
 test('a local register request runs during tunnel startup and finishes before the public register takes over',async()=>{
  const {rt,sidecars,tunnelsList}=setup({tunnel:()=>{}});
  const w=workshop(rt);
  const start=rt.startSession();
  let finish!:()=>void;
  const writePending=new Promise<void>(resolve=>{finish=resolve;});
+ let writing=false;
  try{
   await until(()=>tunnelsList().length===1);
+  expect((await start).session).toBe('running');
   const edit=rt.withRegister(w.id,async(info)=>{
-   expect(info.live).toBe(false);
+   expect(info.live).toBe(true);
    expect(rt.organiserAuth(info.organiserUrl)).toBeTruthy();
-   expect(rt.status.get().session).toBe('starting');
+   expect(rt.status.get().session).toBe('running');
+   writing=true;
    await writePending;
   });
-  await until(()=>rt.childPids().lease!==null);
+  await until(()=>writing);
   const local=sidecars()[0]!;
   expect(local.req.env.ATTENDANCE_PARTICIPANT_ORIGIN).toBeUndefined();
   ONLINE(URL_A)(tunnelsList()[0]!);
-  await until(()=>rt.status.get().tunnel.state==='online');
+  await new Promise(resolve=>setImmediate(resolve));
+  expect(rt.status.get().tunnel.state).toBe('starting');
   expect(sidecars()).toEqual([local]);
   expect(local.done).toBe(false);
   finish();
   await edit;
-  expect((await start).session).toBe('running');
+  await until(()=>rt.status.get().tunnel.state==='online');
   expect(local.done).toBe(true);
   expect(sidecars()[1]?.req.env.ATTENDANCE_PARTICIPANT_ORIGIN).toBe(URL_A);
  }finally{finish();await rt.shutdown();await start.catch(()=>{});}
@@ -179,14 +198,14 @@ test('if the tunnel cannot start, the register still runs locally and the failur
  expect((await rt.endSession()).clean).toBe(true);
 });
 
-test('race: shutdown while startSession waits for the tunnel leaves nothing running and starts no register',async()=>{
+test('race: shutdown while the initial tunnel is pending stops both children',async()=>{
  const {rt,host,sidecars,tunnelsList}=setup({tunnel:()=>{}}); // cloudflared never comes online
  workshop(rt);
- const starting=rt.startSession();
+ const started=await rt.startSession();
  await until(()=>tunnelsList().length===1);
+ expect(started.session).toBe('running');
  const report=await rt.shutdown();
- await expect(starting).rejects.toThrow();
- expect(sidecars()).toHaveLength(0);
+ expect(sidecars()).toHaveLength(1);
  expect(host.children.every(c=>c.done)).toBe(true);
  expect(report).toEqual({clean:true,leftovers:[]});
  expect(rt.status.get().session).toBe('idle');

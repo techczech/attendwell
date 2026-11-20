@@ -91,9 +91,16 @@ export function createRuntime(opts:RuntimeOptions){
  let launch:ServiceLaunch|null=null;
  // The workshop whose register the session supervisor started, until that process is confirmed gone.
  let serviceWorkshop:string|null=null;
+ let startingRoute:Promise<void>|null=null;
+ let routeAbort:AbortController|null=null;
  let disposed=false;
  let orphans:string[]=[];
- const snapshot=():RuntimeSnapshot=>({workshopId:active?.id??null,session,service:service.state,tunnel:tunnel.state,orphans:[...orphans]});
+ const snapshot=():RuntimeSnapshot=>{
+  const local=service.state,route=tunnel.state;
+  // Cloudflare can report a URL before the register accepts that exact origin.
+  const waitingForOrigin=route.state==='online'&&local.state==='running'&&local.participantOrigin!==route.url;
+  return {workshopId:active?.id??null,session,service:local,tunnel:waitingForOrigin?{state:'starting'}:route,orphans:[...orphans]};
+ };
  status.get=snapshot;
  const changed=()=>status.emit('change',snapshot());
  // The gateway forwards only to the register child the supervisor says is live. The supervisor emits this
@@ -109,8 +116,7 @@ export function createRuntime(opts:RuntimeOptions){
  tunnel.on('state',(t:TunnelState)=>{if(t.state!=='online')cancelProbe?.();});
  tunnel.on('origin-changed',()=>cancelProbe?.());
 
- // One queue for every lifecycle operation: start, retry, end, shutdown, and the restart after a new quick-tunnel
- // address. Each runs only after the previous one has finished, so no two of them start or stop children at once.
+ // Serialize lifecycle mutations. The initial optional tunnel's network wait runs outside this queue.
  let queue:Promise<unknown>=Promise.resolve();
  const serial=<T>(fn:()=>Promise<T>):Promise<T>=>{const run=queue.then(fn,fn);queue=run.catch(()=>{});return run;};
  let registerQueue:Promise<unknown>=Promise.resolve();
@@ -126,26 +132,59 @@ export function createRuntime(opts:RuntimeOptions){
   if(r.killed.length||r.unresolved.length)changed();
  });
 
- // A restarted quick tunnel has a new address. The participant listener only answers its exact origin,
- // so the register restarts on the same ports with the new origin, and the UI is told to re-pair devices.
- tunnel.on('origin-changed',({previous,current}:{previous:string;current:string})=>{
-  void serial(async()=>{
-   if(disposed||!launch||session!=='running'||!active)return;
-   launch={...launch,participantOrigin:current};
-   const next=launch;
-   await registerSerial(async()=>{await service.stop();try{await service.start(next)}catch{}});
-   status.emit('participant-origin-changed',{workshopId:active.id,previous,current} satisfies OriginChange);
+ // The participant listener only answers its exact origin. When a public
+ // address arrives late or changes, use the existing protected register restart.
+ async function installOrigin(current:string){
+  if(disposed||!launch||session!=='running'||!active||tunnel.url!==current)return;
+  const previous=launch.participantOrigin;
+  if(previous===current)return;
+  const next={...launch,participantOrigin:current};
+  await registerSerial(async()=>{
+   if(disposed||tunnel.url!==current)return;
+   const stopped=await service.stop();
+   if(!stopped.stopped||disposed)return;
+   try{
+    await service.start(next);
+    launch=next;
+   }catch(e){
+    // An unusable optional route must leave the local register available.
+    await tunnel.stop();
+    if(!disposed&&!service.holdsProcess){
+     const local={...next,participantOrigin:null};
+     launch=local;
+     await service.start(local);
+    }
+    throw e;
+   }
   });
- });
+  if(previous&&launch===next)status.emit('participant-origin-changed',{workshopId:active.id,previous,current} satisfies OriginChange);
+ }
 
- async function startTunnel():Promise<string|null>{
+ const reportRouteError=(e:unknown)=>log('Could not prepare the optional internet route: '+(e as Error).message);
+ function scheduleOrigin(current:string,owner:AbortController|null){
+  void serial(async()=>{if(routeAbort===owner&&!owner?.signal.aborted)await installOrigin(current);}).catch(reportRouteError);
+ }
+ tunnel.on('origin-changed',({current}:{current:string})=>scheduleOrigin(current,routeAbort));
+
+ async function startTunnel(signal?:AbortSignal):Promise<string|null>{
   const t=settings?.tunnel;
   if(t?.mode!=='quick')return null;
   // The gateway is bound before cloudflared starts and stays bound until the session ends.
   const port=await gateway.start();
+  if(signal?.aborted)return null;
   alive();
   try{return await tunnel.start(t,port)}
   catch(e){if(e instanceof TunnelError)return null;throw e;}
+ }
+
+ async function stopPublicRoute(){
+  routeAbort?.abort();
+  routeAbort=null;
+  const result=await tunnel.stop();
+  // A cancelled start may still be binding the gateway. Wait for the bind
+  // before the caller closes it, without waiting for the network.
+  await startingRoute;
+  return result;
  }
 
  async function verifyStopped(l:ServiceLaunch|null,gatewayPort:number|null,serviceStopped:boolean,tunnelStopped:boolean):Promise<StopReport>{
@@ -166,14 +205,14 @@ export function createRuntime(opts:RuntimeOptions){
  async function end():Promise<StopReport>{
   const l=launch;const gatewayPort=gateway.port;
   if(session==='idle'&&!l){
-   const t=await tunnel.stop();
+   const t=await stopPublicRoute();
    const s=await registerSerial(async()=>{const stopped=await service.stop();if(!service.holdsProcess)serviceWorkshop=null;return stopped;});
    await gateway.close();
    return verifyStopped(null,gatewayPort,s.stopped,t.stopped);
   }
   session='ending';changed();
   cancelProbe?.();
-  const t=await tunnel.stop();
+  const t=await stopPublicRoute();
   if(l&&active&&service.state.state==='running'){
    const roster=await loopbackJson(l.organiserPort,'/api/roster',`127.0.0.1:${l.organiserPort}`,3000,service.organiserBearer??undefined) as {participants?:{present?:boolean}[]}|null;
    if(Array.isArray(roster?.participants))try{workshops.recordAttendedCount(active.id,roster.participants.filter(p=>p.present).length)}catch{}
@@ -242,8 +281,8 @@ export function createRuntime(opts:RuntimeOptions){
    if(session!=='idle'&&active?.id!==id)throw new Error('End the current session before opening another workshop.');
    active=workshops.get(id);changed();return active;
   },
-  // Gateway, then tunnel (to learn the public origin), then the register with that origin. If the tunnel cannot start,
-  // the register still runs for the organiser on this computer, and the snapshot carries the tunnel's failure.
+  // Open the local register immediately. If the optional tunnel is ready
+  // before the register starts, use its origin on the first launch.
   startSession():Promise<RuntimeSnapshot>{
    if(disposed)return Promise.reject(new Error(SHUTTING_DOWN));
    return serial(async()=>{
@@ -255,8 +294,15 @@ export function createRuntime(opts:RuntimeOptions){
     alive();
     const workshopId=active.id;
     session='starting';changed();
+    let initialOrigin:string|null=null;
+    const owner=new AbortController();
+    routeAbort=owner;
+    const route=startTunnel(owner.signal).then(origin=>{
+     initialOrigin=origin;
+     if(origin&&!owner.signal.aborted)scheduleOrigin(origin,owner);
+    }).catch(reportRouteError).finally(()=>{if(startingRoute===route)startingRoute=null;});
+    startingRoute=route;
     try{
-     const origin=await startTunnel();
      await registerSerial(async()=>{
       alive();
       if(lease?.id===workshopId){const r=await stopLease();if(!r.clean)throw new Error(LEASE_NOT_STOPPED);}
@@ -267,7 +313,7 @@ export function createRuntime(opts:RuntimeOptions){
       const paths=workshops.prepareService(workshopId,organiserPort);
       const hostSecretPath=workshops.hostSecretPath();
       checkRunDir(runDirOptions,true);
-      launch={paths,organiserPort,participantPort,participantOrigin:origin,hostSecretPath};
+      launch={paths,organiserPort,participantPort,participantOrigin:initialOrigin===tunnel.url?initialOrigin:null,hostSecretPath};
       serviceWorkshop=workshopId;
       try{await service.start(launch)}catch(e){
        await service.stop().catch(()=>{});
@@ -279,7 +325,7 @@ export function createRuntime(opts:RuntimeOptions){
      });
      return snapshot();
     }catch(e){
-     await tunnel.stop().catch(()=>{});await gateway.close().catch(()=>{});
+     await stopPublicRoute().catch(()=>{});await gateway.close().catch(()=>{});
      const failedService=service.state;
      session='idle';launch=null;changed();
      throw Object.assign(new Error((e as Error).message),{service:failedService});
@@ -291,17 +337,11 @@ export function createRuntime(opts:RuntimeOptions){
    return serial(async()=>{
     alive();
     if(session!=='running'||!launch||!active)throw new Error('Start the session first.');
-    if(tunnel.state.state==='online')return snapshot();
+    if(startingRoute||tunnel.state.state==='online')return snapshot();
     await tunnel.stop();
     const origin=await startTunnel();
     alive();
-    if(origin&&origin!==launch.participantOrigin){
-     const previous=launch.participantOrigin;
-     launch={...launch,participantOrigin:origin};
-     const next=launch;
-     await registerSerial(async()=>{await service.stop();await service.start(next);});
-     if(previous)status.emit('participant-origin-changed',{workshopId:active.id,previous,current:origin} satisfies OriginChange);
-    }
+    if(origin)await installOrigin(origin);
     return snapshot();
    });
   },
@@ -346,6 +386,7 @@ export function createRuntime(opts:RuntimeOptions){
   // reports anything left (including processes from an earlier run that could not be confirmed or stopped).
   async shutdown():Promise<StopReport>{
    disposed=true;
+   routeAbort?.abort();
    // Cut short whatever start is in flight (a session start, or a tunnel retry); queued operations then see `disposed`.
    if(session==='starting'){void tunnel.stop().catch(()=>{});void service.stop().catch(()=>{});}
    else if(tunnel.state.state==='starting')void tunnel.stop().catch(()=>{});

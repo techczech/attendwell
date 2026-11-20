@@ -194,14 +194,21 @@ export class SessionService {
    * address tries again) and the reason is kept for the session screen; returns that reason, or null once the window is open.
    */
   private async openWindow(c: OrganiserClient): Promise<string | null> {
+    const workshopId = this.viewing;
+    if (workshopId === null) return null;
     const minutes = defaultWindowMinutes(this.workshop, this.now());
     try {
-      const w = await c.checkInWindow();
-      // An open window that already runs at least that long is left alone; anything else (closed, expired, shorter) is opened.
-      const next = w.open && (w.closesAt ?? 0) >= this.now() + minutes * 60_000 ? w : await c.setCheckInWindow('open', minutes);
+      // A late tunnel address can restart the register. Hold it until the
+      // local check-in window is saved.
+      const next = await this.d.port.withRegister(workshopId, async (_url, live) => {
+        if (!live) throw new Error(SessionService.OFFLINE);
+        const w = await c.checkInWindow();
+        return w.open && (w.closesAt ?? 0) >= this.now() + minutes * 60_000 ? w : c.setCheckInWindow('open', minutes);
+      });
       if (c !== this.client) return null;
       this.window = next; this.windowError = null; this.openWindowOnConnect = false;
       this.log(`Start check-in: check-in on the iPad is open for ${minutes} minutes.`);
+      this.d.changed();
       return null;
     } catch (e) {
       const why = say(e, 'The register did not answer.');
