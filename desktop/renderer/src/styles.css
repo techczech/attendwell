@@ -27,6 +27,7 @@ kbd { font: 11px ui-monospace, Menlo, Consolas, monospace; background: #eef1f4; 
 .btn:focus-visible, .row:focus-visible, .seg button:focus-visible, .link:focus-visible, .menu-item:focus-visible { outline: 3px solid rgba(33, 96, 127, .45); outline-offset: 1px; }
 .btn.primary { background: var(--accent); border-color: var(--accent-dark); color: #fff; }
 .btn.primary:hover { background: var(--accent-dark); }
+.btn.big-action { height: 44px; padding: 0 18px; font-size: 1.1em; }
 .btn.gs { background: var(--accent-tint); border-color: #7fa9c7; color: #1c5679; }
 .btn.icon { width: 34px; padding: 0; justify-content: center; }
 .btn.big { height: 40px; padding: 0 16px; font-size: 1.1em; }

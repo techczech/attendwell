@@ -278,7 +278,7 @@ export function App(): JSX.Element | null {
           getStarted={gs} bindings={snap.bindings} selectedId={selectedId} searchFocusTick={searchTick}
           onSelect={setSelectedId} onOpen={(id) => void open(id)} onReveal={(id) => void api.runCommand('workshop.reveal', id)}
           onNew={() => run('workshop.new')} onChooseFolder={() => void api.chooseFolder().then((p) => { if (p) void api.setRegistersFolder(p); })}
-          onGetStarted={() => run('app.get-started')} onRemoveExample={() => run('app.remove-example')} />
+          onGetStarted={() => run('app.get-started')} onRemoveExample={() => run('app.remove-example')} onConnectIPad={() => run('nearby.test')} onSettings={() => run('settings')} />
       ) : view === 'get-started' ? (
         <GetStarted ran={snap.ran} bindings={snap.bindings} platform={snap.platform} exampleOffered={snap.exampleId !== null && !snap.exampleRemoved} hidden={snap.getStartedHidden}
           onOpenExample={() => void (async () => { const e = await api.createExample(); if (e.ok) await open(e.value.id); else flash(e.error); })()}
