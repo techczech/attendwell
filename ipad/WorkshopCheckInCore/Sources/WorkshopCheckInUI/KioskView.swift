@@ -24,6 +24,9 @@ private struct RecoveryDocument: FileDocument {
 public struct KioskView: View {
     @ObservedObject private var model: KioskModel
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// Names go in two columns when the iPad is held landscape (as in 1.0.0).
+    @State private var isLandscape = false
     @State private var address = "https://checkin.example.org/s/k3v9"
     @State private var code = "K7QM-4TZP"
     @State private var pin = ""
@@ -414,11 +417,16 @@ struct KioskParticipantView<Model: KioskParticipantModel>: View {
                 footer.frame(maxWidth: .infinity, alignment: .leading).background(Color.white)
             }
         }
+        .background(GeometryReader { g in
+            Color.clear
+                .onAppear { isLandscape = g.size.width > g.size.height }
+                .onChange(of: g.size) { size in isLandscape = size.width > size.height }
+        })
     }
     private func section(_ title: String, icon: String, rows: [PersonRow]) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Label(title, systemImage: icon).font(.title.bold()).accessibilityAddTraits(.isHeader)
-            LazyVStack(spacing: 16) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: typeSize.isAccessibilitySize || !isLandscape ? 1 : 2), spacing: 16) {
                 ForEach(rows, id: \.personToken) { row in
                     Button { model.select(row) } label: {
                         HStack(spacing: 16) {
