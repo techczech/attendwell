@@ -10,8 +10,8 @@
 		118A1E80A9697C980B08DBC4 /* NearbyLink in Frameworks */ = {isa = PBXBuildFile; productRef = 8A9092FCF233548D0D9F14B3 /* NearbyLink */; };
 		21DE8F587958D5A2D96F413F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF896FAFAD654712A513B28 /* ContentView.swift */; };
 		3350FC10AEED99D1751819CC /* SpikeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76040EE50F73973AB376FCD /* SpikeModel.swift */; };
-		75170C9B3073E6CE1FDB91DF /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7291D28BDF34F9F1C9805F /* QRScannerView.swift */; };
 		903A759B1B9D4960E18D141C /* NearbyLink in Frameworks */ = {isa = PBXBuildFile; productRef = E0CE452BCF2C2188CDCABABC /* NearbyLink */; };
+		C58DC61BB937D38608BBE772 /* PairingScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63908A1751960D85D432C5C6 /* PairingScanner.swift */; };
 		CCD07902396CADCA8B6761BF /* NearbySpikeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52EBB27582DE7DBE81316392 /* NearbySpikeApp.swift */; };
 		E76D13F568803B15BDD0ADDA /* SimulatorRoundTripTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F3487E57FBF19E4D9DDE5B /* SimulatorRoundTripTests.swift */; };
 /* End PBXBuildFile section */
@@ -22,7 +22,7 @@
 		3515009F87D7ADA3DDE8BFB4 /* NearbySpike.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NearbySpike.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AF896FAFAD654712A513B28 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		52EBB27582DE7DBE81316392 /* NearbySpikeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbySpikeApp.swift; sourceTree = "<group>"; };
-		5C7291D28BDF34F9F1C9805F /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		63908A1751960D85D432C5C6 /* PairingScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingScanner.swift; sourceTree = "<group>"; };
 		875348075B5A87601885E9BF /* NearbySpikeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = NearbySpikeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F76040EE50F73973AB376FCD /* SpikeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpikeModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -53,6 +53,7 @@
 				C28FF3F319886EC51AFFFBC5 /* NearbySpikeTests */,
 				11E7BCAE91D57F01AB997BD8 /* Packages */,
 				4FF08E020EB2B975A88636DA /* Sources */,
+				C73F59E45CBCFE05CD16145C /* WorkshopCheckInUI */,
 				2FF7739E19886B6F9F609FB0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -79,7 +80,6 @@
 			children = (
 				4AF896FAFAD654712A513B28 /* ContentView.swift */,
 				52EBB27582DE7DBE81316392 /* NearbySpikeApp.swift */,
-				5C7291D28BDF34F9F1C9805F /* QRScannerView.swift */,
 				F76040EE50F73973AB376FCD /* SpikeModel.swift */,
 			);
 			path = Sources;
@@ -92,6 +92,15 @@
 			);
 			name = NearbySpikeTests;
 			path = Tests/NearbySpikeTests;
+			sourceTree = "<group>";
+		};
+		C73F59E45CBCFE05CD16145C /* WorkshopCheckInUI */ = {
+			isa = PBXGroup;
+			children = (
+				63908A1751960D85D432C5C6 /* PairingScanner.swift */,
+			);
+			name = WorkshopCheckInUI;
+			path = ../WorkshopCheckInCore/Sources/WorkshopCheckInUI;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -184,7 +193,7 @@
 			files = (
 				21DE8F587958D5A2D96F413F /* ContentView.swift in Sources */,
 				CCD07902396CADCA8B6761BF /* NearbySpikeApp.swift in Sources */,
-				75170C9B3073E6CE1FDB91DF /* QRScannerView.swift in Sources */,
+				C58DC61BB937D38608BBE772 /* PairingScanner.swift in Sources */,
 				3350FC10AEED99D1751819CC /* SpikeModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -69,15 +69,19 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
   let stopping = false;
   let restarts = 0;
   let child: ChildProcess | null = null;
+  let pairingCode: string | null = null;
 
   const link: NearbyLink = {
     logFile,
-    view: () => ({
-      available: state.available, state: state.connected ? 'connected' : 'waiting', peerName: state.peerName, checkins: state.checkins,
-      workshopTitle: workshop?.title ?? emptyTitle,
-      payload: state.available && key ? JSON.stringify({ v: 1, workshopId: key.workshopId, key: key.key }) : null,
-      key: state.available && key ? key.key : null,
-    }),
+    view: () => {
+      if (child && !stopping) send(child, { type: 'pairing-sheet' });
+      return {
+        available: state.available, state: state.connected ? 'connected' : 'waiting', peerName: state.peerName, checkins: state.checkins,
+        workshopTitle: workshop?.title ?? emptyTitle,
+        payload: state.available && key ? JSON.stringify({ v: 1, workshopId: key.workshopId, key: key.key }) : null,
+        pairingCode,
+      };
+    },
     // Build 2 reads the fragment as query items. An escaped inner fragment
     // carries the key while leaving the two legacy items intact.
     extendPairingQR: (payload) => state.available && key ? `${payload}%23nearby=${key.key}` : payload,
@@ -148,6 +152,7 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
     const gone = (why: string): void => {
       if (ended) return;
       ended = true;
+      pairingCode = null;
       peers.clear();
       state.connected = false; state.peerName = null;
       if (child === c) child = null;
@@ -166,9 +171,13 @@ export function startNearbyLink(o: NearbyOptions): NearbyLink {
       let i: number;
       while ((i = buffer.indexOf('\n')) >= 0) {
         const line = buffer.slice(0, i); buffer = buffer.slice(i + 1);
-        let e: { type?: string; state?: string; peer?: string; workshopId?: unknown };
+        let e: { type?: string; state?: string; peer?: string; workshopId?: unknown; code?: unknown };
         try { e = JSON.parse(line); } catch { continue; }
         if (!e || typeof e !== 'object') continue;
+        if (e.type === 'pairing-code') {
+          if (child === c) pairingCode = typeof e.code === 'string' && /^[2-9A-HJ-NP-Z]{8}$/.test(e.code) ? e.code : null;
+          continue;
+        }
         if (e.type !== 'checkin') log(line);
         if (e.type === 'peer' && typeof e.peer === 'string') {
           if (e.state === 'connected') peers.set(e.peer, e.peer.slice(0, 80));

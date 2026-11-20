@@ -9,8 +9,11 @@ struct ContentView: View {
     var onDemo: (() -> Void)?
     @State private var search = ""
     @State private var scanning = false
-    @State private var cameraReady = false
-    @State private var cameraMessage = "Opening the camera…"
+    @State private var cameraMessage: String?
+    @State private var enteringCode = false
+    @State private var typedCode = ""
+    @State private var pairing: ShortCodeClient?
+    @State private var pairingMessage: String?
     @State private var scannedPayload: String?
 
     private var namesFirst: Bool {
@@ -104,28 +107,50 @@ struct ContentView: View {
     }
 
     private func openScanner() {
-        cameraReady = false
-        cameraMessage = "Opening the camera…"
+        cameraMessage = nil
+        enteringCode = false
+        typedCode = ""
+        pairingMessage = nil
         scanning = true
     }
 
     private func scanner() -> some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Scan the code on the Mac").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
-            Text("Open Connect iPad on the Mac and point the camera at the QR code.").font(.title2)
-            if cameraReady {
-                QRScannerView(onCode: { payload in
-                    scannedPayload = payload
-                    scanning = false
-                }, onUnavailable: { message in
-                    cameraReady = false
-                    cameraMessage = message
-                })
-                .frame(maxHeight: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+        VStack(alignment: .leading, spacing: 16) {
+            if enteringCode {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Enter the Mac code").font(.largeTitle.bold())
+                        Text("On the Mac, open Connect iPad. Type the eight characters shown beside the QR code.").font(.title2)
+                        TextField("8-character code", text: $typedCode)
+                            .keyboardType(.asciiCapable).textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled().font(.title.monospaced()).textFieldStyle(.roundedBorder)
+                            .disabled(pairing != nil)
+                        if let pairingMessage { Text(pairingMessage).font(.title2.bold()) }
+                        KioskTile("Connect", icon: "link", prominent: true, action: connectByCode)
+                            .disabled(pairing != nil)
+                    }
+                }
             } else {
-                Text(cameraMessage).font(.title2.bold())
-                Spacer()
+                Text("Scan the code on the Mac").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+                Text("Open Connect iPad on the Mac and point the camera at the QR code.").font(.title2)
+                if let cameraMessage {
+                    Text(cameraMessage).font(.title2.bold())
+                    Spacer()
+                } else {
+                    PairingScanner(onCode: { payload in
+                        scannedPayload = payload
+                        scanning = false
+                    }, onDenied: {
+                        switch AVCaptureDevice.authorizationStatus(for: .video) {
+                        case .denied: cameraMessage = "Allow camera access in Settings, or enter the Mac code below."
+                        case .restricted: cameraMessage = "Camera access is restricted. Enter the Mac code below."
+                        default: cameraMessage = "The camera could not start. Enter the Mac code below."
+                        }
+                    })
+                    .frame(maxHeight: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                KioskTile("Enter the Mac code", icon: "keyboard") { enteringCode = true }
             }
             KioskTile("Back", icon: "arrow.left") { scanning = false }
         }
@@ -133,16 +158,26 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .foregroundStyle(KioskTile.ink)
         .background(KioskTile.surface)
-        .task {
-            guard QRScannerView.isSupported else {
-                cameraMessage = "The camera scanner is unavailable on this device."
+        .onDisappear { pairing?.stop(); pairing = nil }
+    }
+
+    private func connectByCode() {
+        guard let code = ShortCodeClient.normalise(typedCode) else {
+            pairingMessage = "Enter the eight characters shown on the Mac."
+            return
+        }
+        pairingMessage = "Looking for the Mac…"
+        let client = ShortCodeClient(code: code) { key in
+            pairing = nil
+            guard let key else {
+                pairingMessage = "Could not connect. Keep Connect iPad open on the Mac, check its current code and try again."
                 return
             }
-            let allowed = await AVCaptureDevice.requestAccess(for: .video)
-            guard !Task.isCancelled else { return }
-            cameraReady = allowed && QRScannerView.isAvailable
-            if !cameraReady { cameraMessage = "Allow camera access in Settings to scan the code." }
+            model.pair(key)
+            scanning = false
         }
+        pairing = client
+        client.start()
     }
 
     private func handleCode() {

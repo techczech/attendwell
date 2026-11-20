@@ -26,6 +26,7 @@
 	<array>
 		<string>_attendwell-nb._tcp</string>
 		<string>_attendwell-nb._udp</string>
+		<string>_attendwell-pair._tcp</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Scan the pairing code shown on the Mac.</string>

@@ -48,6 +48,7 @@ mac:
     NSBonjourServices:
       - _attendwell-nb._tcp
       - _attendwell-nb._udp
+      - _attendwell-pair._tcp
     NSBluetoothAlwaysUsageDescription: AttendWell finds the check-in iPad in the room.
   # No signing here: identity null stops electron-builder from picking a certificate that happens to be installed (dist:mac overrides it).
   identity: null

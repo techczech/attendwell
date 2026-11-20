@@ -80,9 +80,9 @@ export function NearbySheet({ onClose }: { onClose(): void }): JSX.Element {
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <p role="status" style={{ fontSize: '1.35rem', fontWeight: 700 }}>{status}</p>
                 <p><b>{v.workshopTitle}</b></p>
-                <p>On the iPad, tap Connect to Mac (nearby) and scan this code. You can also paste the key below.</p>
+                <p>On the iPad, tap <b>Connect Mac locally</b>. Scan the QR code or tap <b>Enter the Mac code</b> and type the eight characters below.</p>
+                <p aria-label="Pairing code" style={{ fontFamily: 'monospace', fontSize: '2rem', fontWeight: 700, letterSpacing: '0.1em' }}>{v.pairingCode ?? 'Preparing code…'}</p>
                 <p>Check-ins received: <b>{v.checkins}</b></p>
-                <input readOnly value={v.key!} aria-label="Key" style={{ width: '100%', fontFamily: 'ui-monospace, monospace' }} onFocus={(e) => e.currentTarget.select()} />
               </div>
             </div>
           ) : null}

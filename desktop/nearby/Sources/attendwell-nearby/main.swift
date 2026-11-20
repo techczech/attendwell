@@ -42,9 +42,13 @@ let hostName = Host.current().localizedName ?? "Mac"
 
 if role == "mac" {
     var host: NearbyMacHost?
+    var pairingKey: String?
+    var offer: ShortCodeHost?
+    var sheetTimeout: DispatchWorkItem?
     readLines({ line in
         if host == nil {
             guard let (key, _) = parseKeyLine(line) else { log("first line must be the key"); exit(3) }
+            pairingKey = (try? JSONSerialization.jsonObject(with: line) as? [String: Any])?["key"] as? String
             let h = NearbyMacHost(key: key, deviceName: arg("--device") ?? hostName)
             h.onLog = log
             h.onPeer = { peer, state in emit("peer", ["state": state.rawValue, "peer": peer]) }
@@ -61,6 +65,19 @@ if role == "mac" {
         }
         guard let o = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { return }
         switch o["type"] as? String {
+        case "pairing-sheet":
+            sheetTimeout?.cancel()
+            let timeout = DispatchWorkItem { offer?.stop() }
+            sheetTimeout = timeout
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: timeout)
+            if offer == nil, let pairingKey, let next = try? ShortCodeHost(key: pairingKey) {
+                offer = next
+                next.onReady = { [weak next] in
+                    if let next { emit("pairing-code", ["code": next.code]) }
+                }
+                next.onEnd = { offer = nil; emit("pairing-code") }
+                next.start()
+            }
         case "snapshot": if let m = try? JSONDecoder().decode(Message.self, from: line), case .snapshot(let s) = m { host?.setSnapshot(s); emit("snapshot-set", ["version": s.version, "names": s.names.count]) }
         case "ack": host?.ack(opIds: o["opIds"] as? [String] ?? [])
         default: break

@@ -9,6 +9,14 @@ branch: spike/multipeer-nearby-link
 
 # Spike: Multipeer Connectivity as the nearby Mac↔iPad link
 
+## Pairing an older iPad (20 November 2026)
+
+On Mac 1.1.0-alpha.4 open **Connect iPad** and leave the window open. On iPad build 5 tap **Connect Mac locally**. Scan the QR, or tap **Enter the Mac code**, type the eight characters beside the QR and tap **Connect**. Check-in can be closed while pairing. An already paired iPad reconnects using its saved key. The QR on Mac alpha.3 also works with the new reader.
+
+Builds 3 and 4 used VisionKit’s scanner, which requires an A12 chip or newer. Build 5 uses the same AVFoundation QR reader as the internet setup. Both the signed iPad app and its executable specify iPadOS 16.0 as the minimum. The typed route exchanges the existing pairing key over a local, authenticated TLS connection. The eight-character code expires after two minutes or one successful use. Closing the Mac sheet stops accepting it within five seconds.
+
+With camera permission denied on an iPadOS 26.5 simulator, typing the eight characters connected the app to the Mac helper and displayed a fictional workshop and participant. A separate loopback test rejected a wrong code, accepted the correct code, then rejected its reuse. Scanning and local discovery on physical iPadOS 16.7.16 hardware still need verification.
+
 ## Verdict
 
 **Conditional go.** On one Mac, the Multipeer link does everything the plan asks. It connects in about a second, and it resumes by itself after the Mac helper is killed and after the iPad side is killed. It delivered 500 of 500 check-ins exactly once in both kill tests and refused a wrong key. The signed app bundle carries the permission keys, and the helper signs cleanly inside it.

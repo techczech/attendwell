@@ -184,9 +184,9 @@ export interface NearbyView {
   peerName: string | null;
   checkins: number;
   workshopTitle: string;
-  /** The QR payload and the key text for pasting; null when the link is not available. */
+  /** The QR carries the durable key. The typed code is a separate, temporary credential. */
   payload: string | null;
-  key: string | null;
+  pairingCode: string | null;
 }
 
 export interface AttendWellApi {

@@ -15,6 +15,7 @@ targets:
     deploymentTarget: "16.0"
     sources:
       - Sources
+      - ../WorkshopCheckInCore/Sources/WorkshopCheckInUI/PairingScanner.swift
     dependencies:
       - package: NearbyLink
         product: NearbyLink
@@ -32,6 +33,7 @@ targets:
         NSBonjourServices:
           - _attendwell-nb._tcp
           - _attendwell-nb._udp
+          - _attendwell-pair._tcp
         NSBluetoothAlwaysUsageDescription: AttendWell Nearby Spike finds the Mac running check-in in the room.
         NSCameraUsageDescription: Scan the pairing code shown on the Mac.
     settings:

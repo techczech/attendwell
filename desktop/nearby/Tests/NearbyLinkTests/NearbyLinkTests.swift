@@ -1,4 +1,5 @@
 import XCTest
+import Network
 @testable import NearbyLink
 
 final class NearbyLinkTests: XCTestCase {
@@ -53,6 +54,33 @@ final class NearbyLinkTests: XCTestCase {
         XCTAssertEqual(parsed, original)
         XCTAssertNil(NearbyPairingQR(extended + "&other=x"))
         XCTAssertNil(NearbyPairingQR(original + "%23nearby=invalid"))
+    }
+
+    func testEightCharacterPairingOverLoopback() throws {
+        let durable = SharedKey.generate()
+        let server = try ShortCodeHost(key: durable)
+        defer { server.stop() }
+        XCTAssertEqual(server.code.count, 8)
+        XCTAssertNil(ShortCodeClient.normalise("123456789"))
+        XCTAssertEqual(ShortCodeClient.normalise(server.code.lowercased()), server.code)
+        let ready = expectation(description: "Listener ready")
+        server.onReady = { ready.fulfill() }
+        server.start()
+        wait(for: [ready], timeout: 5)
+        let endpoint = NWEndpoint.hostPort(host: "127.0.0.1", port: try XCTUnwrap(server.port))
+        func attempt(_ code: String, succeeds: Bool) {
+            let done = expectation(description: "Pairing completes")
+            let client = ShortCodeClient(code: code) { received in
+                XCTAssertTrue(succeeds ? received == durable : received == nil)
+                done.fulfill()
+            }
+            client.connect(to: endpoint, serviceName: server.serviceName)
+            wait(for: [done], timeout: 15)
+            client.stop()
+        }
+        attempt(server.code == "AAAAAAAA" ? "BBBBBBBB" : "AAAAAAAA", succeeds: false)
+        attempt(server.code, succeeds: true)
+        attempt(server.code, succeeds: false)
     }
 
     func testQueueSurvivesReload() throws {

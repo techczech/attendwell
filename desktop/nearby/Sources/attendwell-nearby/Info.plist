@@ -5,6 +5,6 @@
 <key>CFBundleName</key><string>attendwell-nearby</string>
 <key>CFBundleVersion</key><string>1</string>
 <key>NSLocalNetworkUsageDescription</key><string>AttendWell finds the check-in iPad in the room.</string>
-<key>NSBonjourServices</key><array><string>_attendwell-nb._tcp</string><string>_attendwell-nb._udp</string></array>
+<key>NSBonjourServices</key><array><string>_attendwell-nb._tcp</string><string>_attendwell-nb._udp</string><string>_attendwell-pair._tcp</string></array>
 <key>NSBluetoothAlwaysUsageDescription</key><string>AttendWell finds the check-in iPad in the room.</string>
 </dict></plist>
