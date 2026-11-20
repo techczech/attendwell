@@ -32,6 +32,15 @@ How to tell it worked: Apple emails "AttendWell 1.0.1 (2) for iOS is now availab
 
 You don't need a redeem code. TestFlight only gives those to external testers. You are an internal tester, invited on 28 Oct 2026, and every iPad signed in to TestFlight with your Apple ID sees the app.
 
+For an iPad signed in to someone else's Apple ID, either sign its App Store into your own Apple ID (Settings → your name → Media & Purchases → Sign Out, then sign in with yours; iCloud stays as it is), or get a redeem code. A redeem code only comes in an **external** tester invitation email, and external builds pass Apple's beta review first (usually within a day):
+
+1. App Store Connect → Apps → AttendWell → TestFlight.
+2. Sidebar, **External Testing** → **+** → name the group "Other iPads" → **Create**.
+3. **Testers** tab → **+** → **Add New Testers** → an address you read, e.g. `dominiklukes+ipad@gmail.com` → **Add**.
+4. **Builds** tab → **+** → pick the build → **Next** → write one line in "What to Test" → **Submit for Review**. The first time, Apple also asks for a short app description, a feedback email and contact details. Say no sign-in is needed (the app has "Try a demo").
+5. When Apple approves the build, the invitation goes to that address. The redeem code is in the email.
+6. On the iPad: TestFlight → **Redeem** → type the code → **Install**.
+
 To set up an iPad that has never had AttendWell: install **TestFlight** from the App Store, sign in with your Apple ID, then open the email "DOMINIK LUKES has invited you to test AttendWell" (28 Oct 2026) on that iPad and tap **View in TestFlight**.
 
 ## Doing without these steps
