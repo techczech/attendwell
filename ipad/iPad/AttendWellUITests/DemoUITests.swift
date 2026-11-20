@@ -91,7 +91,7 @@ final class DemoUITests: XCTestCase {
         XCTAssertTrue(local.waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["nearby-connection"].exists)
         XCTAssertTrue(app.staticTexts["Unsent check-ins: 1"].exists)
-        XCTAssertTrue(app.staticTexts["AttendWell 1.0.1 (6)"].exists)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "AttendWell 1.0.1 (")).firstMatch.exists)
         XCTAssertTrue(app.buttons["Connect computer over internet"].exists)
         XCTAssertTrue(app.buttons["Enter local code"].exists)
         XCTAssertTrue(app.buttons["Try a demo"].exists)

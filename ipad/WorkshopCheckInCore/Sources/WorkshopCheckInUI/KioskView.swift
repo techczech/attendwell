@@ -6,10 +6,13 @@ import UIKit
 #endif
 
 private enum KioskStyle {
-    static let teal = Color(red: 11/255, green: 107/255, blue: 107/255)
+    /// Navy, the Mac app's accent (#21607f); the name kept so every use follows.
+    static let teal = Color(red: 33/255, green: 96/255, blue: 127/255)
     static let warm = Color(red: 251/255, green: 248/255, blue: 243/255)
-    static let ink = Color(red: 0.06, green: 0.10, blue: 0.10)
-    static let tile = Color(red: 0.87, green: 0.92, blue: 0.89)
+    static let ink = Color(red: 0.06, green: 0.09, blue: 0.13)
+    static let tile = Color(red: 225/255, green: 237/255, blue: 247/255)
+    /// "Checked in" stays green (#e4f3ea), the Mac's good tint.
+    static let doneTile = Color(red: 228/255, green: 243/255, blue: 234/255)
     static let amber = Color(red: 251/255, green: 227/255, blue: 176/255)
 }
 
@@ -285,11 +288,12 @@ public struct KioskView: View {
 
 private struct KioskFilledStyle: ButtonStyle {
     var prominent: Bool
+    var done: Bool = false
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(prominent ? Color.white : KioskStyle.ink)
-            .background(prominent ? KioskStyle.teal : KioskStyle.tile, in: RoundedRectangle(cornerRadius: 14))
+            .background(prominent ? KioskStyle.teal : (done ? KioskStyle.doneTile : KioskStyle.tile), in: RoundedRectangle(cornerRadius: 14))
             .scaleEffect(configuration.isPressed ? 0.99 : 1)
     }
 }
@@ -438,7 +442,7 @@ struct KioskParticipantView<Model: KioskParticipantModel>: View {
                             Spacer(minLength: 0)
                             if !row.status.isDone { Image(systemName: "chevron.right") }
                         }.padding(20).frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
-                    }.buttonStyle(KioskFilledStyle(prominent: !row.status.isDone))
+                    }.buttonStyle(KioskFilledStyle(prominent: !row.status.isDone, done: row.status.isDone))
                         .accessibilityLabel("\(row.displayName), \(row.status.label)")
                         .accessibilityHint(row.status.isDone ? "Shows your saved status" : "Opens check-in confirmation")
                 }

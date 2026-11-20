@@ -267,10 +267,10 @@ struct ContentView: View {
 }
 
 struct KioskTile: View {
-    static let ink = Color(red: 0.06, green: 0.10, blue: 0.10)
+    static let ink = Color(red: 0.06, green: 0.09, blue: 0.13)
     static let surface = Color(red: 0.96, green: 0.97, blue: 0.95)
-    static let teal = Color(red: 0.00, green: 0.30, blue: 0.27)
-    static let tile = Color(red: 0.87, green: 0.92, blue: 0.89)
+    static let teal = Color(red: 23/255, green: 74/255, blue: 99/255)
+    static let tile = Color(red: 225/255, green: 237/255, blue: 247/255)
 
     let title: String
     let icon: String
