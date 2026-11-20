@@ -155,7 +155,7 @@ struct ContentView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(KioskTile.amber, in: RoundedRectangle(cornerRadius: 12))
+        .background(Color(red: 251/255, green: 227/255, blue: 176/255), in: RoundedRectangle(cornerRadius: 12))
     }
 
     private var header: some View {

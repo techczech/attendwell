@@ -124,6 +124,13 @@ struct AttendWellApp: App {
     }
 
     private func openInternet(_ code: String?) {
+        #if ATTENDWELL_STARTUP_FIXTURES && targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--startup-nearby-open") {
+            let setup = try? Self.fixture(home: false, inMemory: true, directoryName: "StartupFixture").0
+            internet = InternetPresentation(model: setup, scannedCode: code)
+            return
+        }
+        #endif
         let model = legacy ?? (try? Self.live())
         legacy = model
         internet = InternetPresentation(model: model, scannedCode: code)
