@@ -49,7 +49,11 @@ if role == "mac" {
             h.onLog = log
             h.onPeer = { peer, state in emit("peer", ["state": state.rawValue, "peer": peer]) }
             h.onSnapshotSent = { peer, bytes in emit("snapshot-sent", ["peer": peer, "bytes": bytes]) }
-            h.onCheckin = { c, peer in emit("checkin", ["opId": c.opId, "nameId": c.nameId, "at": c.at, "peer": peer]) }
+            h.onCheckin = { c, peer in
+                var fields = ["opId": c.opId, "nameId": c.nameId, "at": c.at, "peer": peer]
+                if let workshopId = c.workshopId { fields["workshopId"] = workshopId }
+                emit("checkin", fields)
+            }
             host = h
             h.start()
             emit("ready")
@@ -78,7 +82,7 @@ if role == "mac" {
         let i = next
         next += 1
         // Queue first, progress second: a kill in between repeats the same opId (the Mac dedups) instead of losing one.
-        _ = c.checkIn(nameId: "n\(i % 500)", opId: opId(i))
+        guard (try? c.checkIn(nameId: "n\(i % 500)", opId: opId(i))) != nil else { log("could not save check-in"); return }
         try? String(next).write(to: progressURL, atomically: true, encoding: .utf8)
         emit("checkin-created", ["index": i, "opId": opId(i)])
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(intervalMs), execute: produce)

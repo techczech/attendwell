@@ -13,6 +13,9 @@ public final class NearbyIPadClient: NSObject, MCSessionDelegate, MCNearbyServic
     public var onQueueChanged: ((Int) -> Void)?
     public private(set) var connectedMac: String?
     public var pendingCount: Int { queue.items.count }
+    public func pendingNames(for workshopId: String?) -> Set<String> {
+        Set(queue.items.filter { $0.workshopId == workshopId }.map(\.nameId))
+    }
 
     private let key: SharedKey
     private let device: String
@@ -22,6 +25,7 @@ public final class NearbyIPadClient: NSObject, MCSessionDelegate, MCNearbyServic
     private let queue: PendingQueue
     private var candidates = Set<MCPeerID>()
     private var lastSnapshotVersion = 0
+    private var workshopPeer: MCPeerID?
     private var backoff = 0.5
     private var retry: DispatchWorkItem?
     private var running = false
@@ -60,16 +64,21 @@ public final class NearbyIPadClient: NSObject, MCSessionDelegate, MCNearbyServic
     public func appDidBecomeActive() { guard running else { return }; backoff = 0.5; if connectedMac == nil { restartBrowsing(); inviteIfNeeded() } }
 
     @discardableResult
-    public func checkIn(nameId: String, at: String = CheckIn.isoNow(), opId: String = UUID().uuidString) -> CheckIn {
-        let c = CheckIn(opId: opId, nameId: nameId, at: at)
-        queue.append(c)
+    public func checkIn(nameId: String, at: String = CheckIn.isoNow(), opId: String = UUID().uuidString, workshopId: String? = nil) throws -> CheckIn {
+        let c = CheckIn(opId: opId, nameId: nameId, at: at, workshopId: workshopId)
+        try queue.append(c)
         onQueueChanged?(queue.items.count)
         if let p = session.connectedPeers.first { send(.checkin(c), to: p) }
         return c
     }
 
     private func send(_ m: Message, to peer: MCPeerID) {
-        if case .checkin(let c) = m { sentAt[c.opId] = Date() }
+        if case .checkin(let c) = m {
+            // The old test helper acknowledged synthetic operations without
+            // saving them. Hold real operations until this peer sends a real snapshot.
+            guard c.workshopId == nil || workshopPeer == peer else { return }
+            sentAt[c.opId] = Date()
+        }
         do { try session.send(try m.sealed(with: key), toPeers: [peer], with: .reliable) } catch { onLog?("send failed: \(error)") }
     }
 
@@ -85,6 +94,7 @@ public final class NearbyIPadClient: NSObject, MCSessionDelegate, MCNearbyServic
         session.delegate = self
         connectingSince = nil
         connectedMac = nil
+        workshopPeer = nil
         restartBrowsing()
     }
 
@@ -124,12 +134,14 @@ public final class NearbyIPadClient: NSObject, MCSessionDelegate, MCNearbyServic
 
     public func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
         DispatchQueue.main.async { [self] in
+            guard running else { return }
             guard info?["tag"] == key.tag else { onLog?("ignored \(peerID.displayName): wrong tag"); return }
             // A Mac that was killed and restarted comes back as a new peer with the same name while MC still reports the old
             // connection as up (it takes about 10 s to notice). The old one is dead: drop it so the new one is invited at once.
             if session.connectedPeers.contains(where: { $0.displayName == peerID.displayName && $0 != peerID }) {
                 onLog?("\(peerID.displayName) came back as a new peer; dropping the stale connection")
                 session.disconnect()
+                workshopPeer = nil
                 connectedMac = nil
                 connectingSince = nil
                 scheduleRetry()
@@ -156,7 +168,7 @@ public final class NearbyIPadClient: NSObject, MCSessionDelegate, MCNearbyServic
 
     public func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         DispatchQueue.main.async { [self] in
-            onPeer?(peerID.displayName, state.peerState)
+            guard running, session === self.session else { return }
             switch state {
             case .connected:
                 connectingSince = nil
@@ -167,19 +179,37 @@ public final class NearbyIPadClient: NSObject, MCSessionDelegate, MCNearbyServic
                 for c in queue.items { send(.checkin(c), to: peerID) }
             case .notConnected:
                 connectingSince = nil
+                if workshopPeer == peerID { workshopPeer = nil }
                 if session.connectedPeers.isEmpty { connectedMac = nil; scheduleRetry() }
             case .connecting: break
             @unknown default: break
             }
+            onPeer?(peerID.displayName, state.peerState)
         }
     }
 
     public func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         DispatchQueue.main.async { [self] in
+            guard running, session === self.session, session.connectedPeers.contains(peerID) else { return }
             guard let m = try? Message.open(data, with: key) else { onLog?("dropped unreadable message"); return }
             switch m {
-            case .snapshot(let s): lastSnapshotVersion = s.version; onSnapshot?(s, data.count)
-            case .ack(let ids): queue.remove(opIds: ids); ids.forEach { sentAt[$0] = nil }; onQueueChanged?(queue.items.count); onLog?("ack \(ids.count), \(queue.items.count) left")
+            case .snapshot(let s):
+                let firstRealSnapshot = s.acceptsWorkshopCheckIns == true && workshopPeer != peerID
+                if s.acceptsWorkshopCheckIns == true { workshopPeer = peerID }
+                lastSnapshotVersion = s.version
+                onSnapshot?(s, data.count)
+                if firstRealSnapshot {
+                    for c in queue.items where c.workshopId != nil { send(.checkin(c), to: peerID) }
+                }
+            case .ack(let ids):
+                let acknowledged = Set(ids)
+                let accepted = queue.items.filter { acknowledged.contains($0.opId) && ($0.workshopId == nil || workshopPeer == peerID) }.map(\.opId)
+                do {
+                    try queue.remove(opIds: accepted)
+                    accepted.forEach { sentAt[$0] = nil }
+                    onQueueChanged?(queue.items.count)
+                    onLog?("ack \(accepted.count), \(queue.items.count) left")
+                } catch { onLog?("could not save the acknowledged queue; will retry") }
             case .hello, .checkin: break
             }
         }

@@ -1,69 +1,188 @@
+import AVFoundation
 import SwiftUI
 import NearbyLink
 
 struct ContentView: View {
     @ObservedObject var model: SpikeModel
+    var version = ""
+    var onInternet: ((String?) -> Void)?
+    var onDemo: (() -> Void)?
     @State private var search = ""
     @State private var scanning = false
+    @State private var cameraReady = false
+    @State private var cameraMessage = "Opening the camera…"
 
     private var shown: [NameEntry] {
-        let visible = model.names.filter { !$0.hidden }
-        return search.isEmpty ? visible : visible.filter { $0.displayName.localizedCaseInsensitiveContains(search) }
+        (model.snapshot?.names ?? []).filter {
+            !$0.hidden && (search.isEmpty || $0.displayName.localizedCaseInsensitiveContains(search))
+        }
     }
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                pairing
-                Text(model.status).font(.headline).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal).padding(.vertical, 8)
-                    .background(model.connectedMac == nil ? Color.orange.opacity(0.25) : Color.green.opacity(0.25))
-                HStack(spacing: 0) {
-                    namesList
-                    Divider()
-                    logView
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                header
+                if model.hasPairing {
+                    if let snapshot = model.snapshot { workshop(snapshot) }
+                    KioskTile("Connect to a different Mac", icon: "qrcode.viewfinder", action: openScanner)
+                } else {
+                    KioskTile("Connect Mac locally", icon: "qrcode.viewfinder", prominent: true, action: openScanner)
                 }
+                if let onInternet {
+                    KioskTile("Connect computer over internet", icon: "globe") { onInternet(nil) }
+                }
+                if let onDemo, !model.hasPairing { KioskTile("Try a demo", icon: "play.circle", action: onDemo) }
+                if model.snapshot?.open == true { namesList }
             }
-            .navigationTitle(model.title.isEmpty ? "Nearby Spike" : model.title)
-            .navigationBarTitleDisplayMode(.inline)
+            .frame(maxWidth: 880, alignment: .leading)
+            .padding(32)
+            .frame(maxWidth: .infinity, alignment: .top)
         }
-        .navigationViewStyle(.stack)
-        .sheet(isPresented: $scanning) { QRScannerView { code in model.keyText = code; scanning = false; model.connect() } }
+        .foregroundStyle(KioskTile.ink)
+        .background(KioskTile.surface.ignoresSafeArea())
+        .preferredColorScheme(.light)
+        .sheet(isPresented: $scanning, content: scanner)
+        .onChange(of: model.snapshot?.workshopId) { _ in search = "" }
     }
 
-    private var pairing: some View {
-        HStack {
-            TextField("Paste key (or the QR text)", text: $model.keyText).textFieldStyle(.roundedBorder).autocapitalization(.none).disableAutocorrection(true)
-            Button("Connect") { model.connect() }.buttonStyle(.borderedProminent)
-            if QRScannerView.isAvailable { Button("Scan") { scanning = true }.buttonStyle(.bordered) }
-        }.padding(.horizontal).padding(.top, 8)
-        .overlay(alignment: .bottomLeading) { if let e = model.keyError { Text(e).font(.caption).foregroundColor(.red).padding(.horizontal) } }
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("AttendWell").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+            if !version.isEmpty { Text(version).font(.title3.weight(.medium)) }
+            Text(model.status).font(.title.bold()).accessibilityIdentifier("nearby-connection")
+            if model.hasPairing {
+                Text("Unsent check-ins: \(model.pending)").font(.title3.weight(.semibold))
+            }
+            if let error = model.error { Text(error).font(.title2.bold()) }
+        }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func workshop(_ snapshot: Snapshot) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(snapshot.title).font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+            if snapshot.open {
+                Text("Find your name, then tap it to check in.").font(.title2)
+            } else if !snapshot.workshopId.isEmpty {
+                Text("Check-in is closed").font(.title2.bold())
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var namesList: some View {
-        VStack(spacing: 0) {
-            TextField("Search names", text: $search).textFieldStyle(.roundedBorder).padding(8)
-            List(shown, id: \.id) { n in
-                Button { model.checkIn(n) } label: {
-                    HStack { Text(n.displayName); Spacer(); if model.checkedIn.contains(n.id) { Image(systemName: "checkmark.circle.fill").foregroundColor(.green) } }
+        VStack(alignment: .leading, spacing: 12) {
+            if let confirmation = model.confirmation {
+                Label(confirmation, systemImage: "checkmark.circle.fill")
+                    .font(.title2.bold()).foregroundStyle(.white)
+                    .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(KioskTile.teal, in: RoundedRectangle(cornerRadius: 14))
+                    .accessibilityIdentifier("nearby-confirmation")
+            }
+            TextField("Search your name", text: $search, prompt: Text("Search your name").foregroundColor(KioskTile.ink))
+                .font(.title2).padding(16)
+                .background(.white, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(KioskTile.teal, lineWidth: 1))
+            if shown.isEmpty { Text("No names to show.").font(.title2) }
+            LazyVStack(spacing: 12) {
+                ForEach(shown, id: \.id) { name in
+                    if model.isCheckedIn(name) {
+                        Label("\(name.displayName) · Checked in", systemImage: "checkmark.circle.fill")
+                            .font(.title2.bold()).padding(16)
+                            .frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
+                            .background(KioskTile.tile, in: RoundedRectangle(cornerRadius: 14))
+                    } else {
+                        KioskTile(name.displayName, icon: "person", prominent: true) { model.checkIn(name) }
+                    }
                 }
-            }.listStyle(.plain)
-        }.frame(minWidth: 280, maxWidth: .infinity)
+            }
+        }
     }
 
-    private var logView: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("Event log (\(model.log.count))").font(.subheadline.bold())
+    private func openScanner() {
+        cameraReady = false
+        cameraMessage = "Opening the camera…"
+        scanning = true
+    }
+
+    private func scanner() -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Scan the code on the Mac").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+            Text("Open Connect iPad on the Mac and point the camera at the QR code.").font(.title2)
+            if cameraReady {
+                QRScannerView(onCode: handleCode, onUnavailable: { message in
+                    cameraReady = false
+                    cameraMessage = message
+                })
+                .frame(maxHeight: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            } else {
+                Text(cameraMessage).font(.title2.bold())
                 Spacer()
-                ShareLink(item: model.logText) { Label("Share log", systemImage: "square.and.arrow.up") }
-            }.padding(8)
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 2) {
-                        ForEach(Array(model.log.enumerated()), id: \.offset) { i, l in Text(l).font(.system(size: 11, design: .monospaced)).id(i) }
-                    }.padding(.horizontal, 8)
-                }.onChange(of: model.log.count) { n in proxy.scrollTo(n - 1, anchor: .bottom) }
             }
-        }.frame(minWidth: 280, maxWidth: .infinity).background(Color(white: 0.5, opacity: 0.08))
+            KioskTile("Back", icon: "arrow.left") { scanning = false }
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .foregroundStyle(KioskTile.ink)
+        .background(KioskTile.surface)
+        .task {
+            guard QRScannerView.isSupported else {
+                cameraMessage = "The camera scanner is unavailable on this device."
+                return
+            }
+            let allowed = await AVCaptureDevice.requestAccess(for: .video)
+            guard !Task.isCancelled else { return }
+            cameraReady = allowed && QRScannerView.isAvailable
+            if !cameraReady { cameraMessage = "Allow camera access in Settings to scan the code." }
+        }
+    }
+
+    private func handleCode(_ payload: String) {
+        scanning = false
+        switch NearbyPairingQR(payload) {
+        case .nearby(let code): model.pair(code)
+        case .internet(let code):
+            if let onInternet { onInternet(code) } else { model.invalidCode() }
+        case nil: model.invalidCode()
+        }
+    }
+}
+
+struct KioskTile: View {
+    static let ink = Color(red: 0.06, green: 0.10, blue: 0.10)
+    static let surface = Color(red: 0.96, green: 0.97, blue: 0.95)
+    static let teal = Color(red: 0.00, green: 0.30, blue: 0.27)
+    static let tile = Color(red: 0.87, green: 0.92, blue: 0.89)
+
+    let title: String
+    let icon: String
+    var prominent = false
+    let action: () -> Void
+
+    init(_ title: String, icon: String, prominent: Bool = false, action: @escaping () -> Void) {
+        self.title = title
+        self.icon = icon
+        self.prominent = prominent
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.title2.bold()).multilineTextAlignment(.leading)
+                .padding(.horizontal, 20).padding(.vertical, 12)
+                .frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
+        }
+        .buttonStyle(FilledStyle(prominent: prominent))
+    }
+
+    private struct FilledStyle: ButtonStyle {
+        var prominent: Bool
+
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .foregroundStyle(prominent ? Color.white : KioskTile.ink)
+                .background(prominent ? KioskTile.teal : KioskTile.tile, in: RoundedRectangle(cornerRadius: 14))
+                .scaleEffect(configuration.isPressed ? 0.99 : 1)
+        }
     }
 }

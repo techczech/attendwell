@@ -8,6 +8,8 @@ import UIKit
 private enum KioskStyle {
     static let teal = Color(red: 11/255, green: 107/255, blue: 107/255)
     static let warm = Color(red: 251/255, green: 248/255, blue: 243/255)
+    static let ink = Color(red: 0.06, green: 0.10, blue: 0.10)
+    static let tile = Color(red: 0.87, green: 0.92, blue: 0.89)
     static let amber = Color(red: 251/255, green: 227/255, blue: 176/255)
 }
 
@@ -36,24 +38,23 @@ public struct KioskView: View {
     @AccessibilityFocusState private var headingFocused: Bool
     private let onTryDemo: (() -> Void)?
     private let onLeaveDemo: (() -> Void)?
-    private let onNearbyTest: (() -> Void)?
-    /// `onTryDemo` adds the secondary "Try a demo" button to the set-up screen;
-    /// `onLeaveDemo` is called by the banner of a demo model; `onNearbyTest` adds
-    /// "Nearby link test" to the set-up and Organiser screens (spike only).
+    private let initialQR: String?
+    private let onNearbyCode: ((String) -> Bool)?
+
     public init(model: KioskModel, onTryDemo: (() -> Void)? = nil, onLeaveDemo: (() -> Void)? = nil,
-                onNearbyTest: (() -> Void)? = nil) {
+                initialQR: String? = nil, onNearbyCode: ((String) -> Bool)? = nil) {
         self.model = model
-        self.onTryDemo = onTryDemo; self.onLeaveDemo = onLeaveDemo; self.onNearbyTest = onNearbyTest
+        self.onTryDemo = onTryDemo; self.onLeaveDemo = onLeaveDemo
+        self.initialQR = initialQR; self.onNearbyCode = onNearbyCode
         _address = State(initialValue: model.address); _code = State(initialValue: model.code)
     }
 
     public var body: some View {
         VStack(spacing: 0) {
             if model.isDemo {
-                HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("Demo — names are made up and nothing is sent anywhere.").font(.callout.weight(.semibold))
-                    Spacer(minLength: 0)
-                    Button("Leave demo") { onLeaveDemo?() }.buttonStyle(.borderedProminent).controlSize(.regular)
+                    action("Leave demo", icon: "arrow.left") { onLeaveDemo?() }
                 }
                 .padding(.horizontal, 16).padding(.vertical, 8).frame(maxWidth: .infinity)
                 .background(KioskStyle.amber)
@@ -64,9 +65,12 @@ public struct KioskView: View {
             }
             content
         }
-        .background(KioskStyle.warm).tint(KioskStyle.teal)
+        .foregroundStyle(KioskStyle.ink).background(KioskStyle.warm.ignoresSafeArea()).tint(KioskStyle.teal)
         .buttonStyle(.bordered).controlSize(.large)
-        .task { await model.start() }
+        .task {
+            await model.start()
+            if let initialQR, !Task.isCancelled { await model.scan(initialQR) }
+        }
         .task(id: model.screen) {
             pin = ""; confirmation = ""; editingConfirmation = false; headingFocused = true
             if model.screen == .done {
@@ -100,17 +104,7 @@ public struct KioskView: View {
                 action("Scan pairing code", icon: "qrcode.viewfinder") { model.showScanner() }
                 action("Enter a code instead", icon: "keyboard") { model.showManual() }
                 if model.canCancelSetup { action("Cancel", icon: "xmark") { model.cancelSetup() } }
-                if let onTryDemo {
-                    Button("Try a demo", action: onTryDemo).buttonStyle(.plain).font(.body)
-                        .foregroundStyle(.secondary).underline().padding(.top, 12).disabled(model.busy)
-                        .accessibilityHint("Opens a practice check-in with made-up names. Nothing is sent or saved.")
-                }
-                // Only on an unpaired iPad: a paired iPad reaches it from the PIN-gated Organiser screen.
-                if let onNearbyTest, model.active == nil {
-                    Button("Nearby link test", action: onNearbyTest).buttonStyle(.plain).font(.body)
-                        .foregroundStyle(.secondary).underline().padding(.top, 4).disabled(model.busy)
-                        .accessibilityHint("Tests the direct connection to the organiser's Mac with made-up names. Your check-ins are not touched.")
-                }
+                if let onTryDemo { action("Try a demo", icon: "play.circle", perform: onTryDemo) }
             }
         case .scan:
             scanner
@@ -255,15 +249,6 @@ public struct KioskView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     TextField("Search your name", text: $model.query).font(.title2).textFieldStyle(.roundedBorder)
                         .accessibilityLabel("Search your name")
-                    ScrollView(.horizontal) {
-                        HStack {
-                            Button("All") { model.letter = "" }
-                            ForEach(Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), id: \.self) { c in
-                                Button(String(c)) { model.letter = String(c) }.frame(minWidth: 48, minHeight: 48)
-                                    .accessibilityLabel("Names beginning with \(String(c))")
-                            }
-                        }
-                    }
                     section("Find your name", icon: "person", rows: model.findRows)
                     if model.findRows.isEmpty {
                         Text(model.doneRows.isEmpty ? "No names match '\(model.query)'. Check the spelling, or speak to the organiser." : "No names here match '\(model.query)'. Look under Already done below.")
@@ -273,8 +258,7 @@ public struct KioskView: View {
                     section("Already done", icon: "clock.arrow.circlepath", rows: model.doneRows)
                 }.padding(24)
             }
-            ViewThatFits(in: .horizontal) { footer(horizontal: true); footer(horizontal: false) }
-                .frame(maxWidth: .infinity, alignment: .leading).background(Color.white)
+            footer.frame(maxWidth: .infinity, alignment: .leading).background(Color.white)
         }
     }
     private func section(_ title: String, icon: String, rows: [PersonRow]) -> some View {
@@ -291,24 +275,20 @@ public struct KioskView: View {
                             }
                             Spacer(minLength: 0)
                             if !row.status.isDone { Image(systemName: "chevron.right") }
-                        }.padding(20).frame(maxWidth: .infinity, minHeight: 108, alignment: .leading)
-                    }.buttonStyle(.plain).foregroundStyle(row.status.isDone ? Color.primary : KioskStyle.teal)
-                        .background(row.status == .savedOnThisIPad || row.status == .withTheOrganiser ? KioskStyle.amber : Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 16)).overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.gray.opacity(0.4)))
+                        }.padding(20).frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
+                    }.buttonStyle(KioskFilledStyle(prominent: !row.status.isDone))
                         .accessibilityLabel("\(row.displayName), \(row.status.label)")
                         .accessibilityHint(row.status.isDone ? "Shows your saved status" : "Opens check-in confirmation")
                 }
             }
         }
     }
-    private func footer(horizontal: Bool) -> some View {
-        let layout = horizontal ? AnyLayout(HStackLayout(spacing: 24)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
-        return layout {
-            VStack(alignment: .leading) { Text(model.offer?.eventName ?? "").bold(); Text(model.offer?.eventDate ?? "") }
-            Text("Can't find your name? Please speak to the organiser.")
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(model.offer?.eventName ?? "").bold()
             Text(model.statusText).font(.body.bold())
-            if !model.isDemo { Button { model.showPIN() } label: { Label("Organiser", systemImage: "lock") }.frame(minHeight: 48) }
-        }.padding(20).background(Color.white)
+            if !model.isDemo { action("Organiser", icon: "lock") { model.showPIN() } }
+        }.padding(16)
     }
     private var done: some View {
         let name = model.selected?.displayName ?? ""
@@ -322,8 +302,7 @@ public struct KioskView: View {
                 Text(detail).font(.title2).multilineTextAlignment(.center)
                 Spacer(); Label("Tap anywhere to continue", systemImage: "hand.tap").font(.title2)
             }.padding(36).frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(.plain).background(status == .checkedIn ? KioskStyle.teal : KioskStyle.amber)
-            .foregroundStyle(status == .checkedIn ? Color.white : Color.primary)
+        }.buttonStyle(KioskFilledStyle(prominent: status == .checkedIn))
             .accessibilityLabel(title + " " + detail + " Tap to continue")
     }
     private var organiser: some View {
@@ -345,7 +324,6 @@ public struct KioskView: View {
                 action("Pair again", icon: "qrcode") { model.rePair() }
                 action("Hand over this iPad", icon: "hand.raised") { model.beginHandover() }
                 action("Change PIN", icon: "lock") { model.changePIN() }
-                if let onNearbyTest { action("Nearby link test", icon: "dot.radiowaves.left.and.right") { onNearbyTest() } }
                 Text("About · \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Development build") · Protocol 1")
                 Text("Check-ins send while this app is open. Sending while the iPad is locked or the app is closed isn't guaranteed.")
                 Text("Deleting this app removes check-ins saved on this iPad. Save a recovery file first.")
@@ -373,7 +351,10 @@ public struct KioskView: View {
         case .withTheOrganiser: return "hand.raised"; case .notCheckedIn: return "person" }
     }
     private func action(_ title: String, icon: String, perform: @escaping () -> Void) -> some View {
-        Button(action: perform) { Label(title, systemImage: icon).font(.title2.bold()).frame(minHeight: 64) }.disabled(model.busy)
+        Button(action: perform) {
+            Label(title, systemImage: icon).font(.title2.bold()).multilineTextAlignment(.leading)
+                .padding(.horizontal, 20).frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
+        }.buttonStyle(KioskFilledStyle(prominent: true)).disabled(model.busy)
     }
     private func digits(_ value: String) -> String { String(value.filter { $0.isASCII && $0.isNumber }.prefix(6)) }
     private func digitPad(_ value: Binding<String>) -> some View {
@@ -398,7 +379,7 @@ public struct KioskView: View {
                 Image(systemName: icon).font(.system(size: 72)).foregroundStyle(KioskStyle.teal).accessibilityHidden(true)
                 Text(title).font(.system(size: heroSize, weight: .bold)).accessibilityAddTraits(.isHeader).accessibilityFocused($headingFocused)
                 Text(detail).font(.title2)
-                if !model.message.isEmpty { Text(model.message).font(.title3).foregroundStyle(.red) }
+                if !model.message.isEmpty { Text(model.message).font(.title3.bold()).foregroundStyle(KioskStyle.ink) }
                 actions()
             }.frame(maxWidth: 850, alignment: .leading).padding(36).frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -407,11 +388,24 @@ public struct KioskView: View {
         #if os(iOS)
         VStack(spacing: 24) {
             Text("Point the camera at the code on the laptop.").font(.largeTitle.bold()).padding()
-            PairingScanner(onCode: { value in Task { await model.scan(value) } }, onDenied: { model.cameraDenied() })
-            HStack { action("Enter a code instead", icon: "keyboard") { model.showManual() }; action("Cancel", icon: "xmark") { model.cancelSetup() } }.padding()
+            PairingScanner(onCode: { value in
+                if onNearbyCode?(value) != true { Task { await model.scan(value) } }
+            }, onDenied: { model.cameraDenied() })
+            VStack { action("Enter a code instead", icon: "keyboard") { model.showManual() }; action("Cancel", icon: "xmark") { model.cancelSetup() } }.padding()
         }
         #else
         panel("Scan pairing code", icon: "camera", detail: "Camera scanning requires an iPad.") { action("Enter a code instead", icon: "keyboard") { model.showManual() } }
         #endif
+    }
+}
+
+private struct KioskFilledStyle: ButtonStyle {
+    var prominent: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(prominent ? Color.white : KioskStyle.ink)
+            .background(prominent ? KioskStyle.teal : KioskStyle.tile, in: RoundedRectangle(cornerRadius: 14))
+            .scaleEffect(configuration.isPressed ? 0.99 : 1)
     }
 }

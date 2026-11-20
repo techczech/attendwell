@@ -10,10 +10,10 @@
 <key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
 <key>MinimumOSVersion</key><string>16.0</string>
 <key>ITSAppUsesNonExemptEncryption</key><false/>
-<key>NSLocalNetworkUsageDescription</key><string>AttendWell finds the organiser's Mac in the room for the nearby link test.</string>
+<key>NSLocalNetworkUsageDescription</key><string>AttendWell finds the organiser's Mac in the room for nearby check-in.</string>
 <key>NSBonjourServices</key><array><string>_attendwell-nb._tcp</string><string>_attendwell-nb._udp</string></array>
-<key>NSBluetoothAlwaysUsageDescription</key><string>AttendWell finds the organiser's Mac in the room for the nearby link test.</string>
-<key>NSCameraUsageDescription</key><string>Scan the pairing code shown on the organiser's laptop.</string>
+<key>NSBluetoothAlwaysUsageDescription</key><string>AttendWell finds the organiser's Mac in the room for nearby check-in.</string>
+<key>NSCameraUsageDescription</key><string>Scan the Connect iPad code shown on the organiser's Mac.</string>
 <key>UISupportedInterfaceOrientations~ipad</key><array>
 <string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationPortraitUpsideDown</string>
 <string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string>

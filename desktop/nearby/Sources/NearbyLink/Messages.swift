@@ -4,7 +4,10 @@ public struct NameEntry: Codable, Equatable {
     public var id: String
     public var displayName: String
     public var hidden: Bool
-    public init(id: String, displayName: String, hidden: Bool) { self.id = id; self.displayName = displayName; self.hidden = hidden }
+    public var checkedIn: Bool?
+    public init(id: String, displayName: String, hidden: Bool, checkedIn: Bool? = nil) {
+        self.id = id; self.displayName = displayName; self.hidden = hidden; self.checkedIn = checkedIn
+    }
 }
 
 public struct Hello: Codable, Equatable {
@@ -25,8 +28,9 @@ public struct Snapshot: Codable, Equatable {
     public var title: String
     public var open: Bool
     public var names: [NameEntry]
-    public init(version: Int, workshopId: String, title: String, open: Bool, names: [NameEntry]) {
-        self.version = version; self.workshopId = workshopId; self.title = title; self.open = open; self.names = names
+    public var acceptsWorkshopCheckIns: Bool?
+    public init(version: Int, workshopId: String, title: String, open: Bool, names: [NameEntry], acceptsWorkshopCheckIns: Bool? = nil) {
+        self.version = version; self.workshopId = workshopId; self.title = title; self.open = open; self.names = names; self.acceptsWorkshopCheckIns = acceptsWorkshopCheckIns
     }
 }
 
@@ -34,7 +38,10 @@ public struct CheckIn: Codable, Equatable {
     public var opId: String
     public var nameId: String
     public var at: String
-    public init(opId: String = UUID().uuidString, nameId: String, at: String) { self.opId = opId; self.nameId = nameId; self.at = at }
+    public var workshopId: String?
+    public init(opId: String = UUID().uuidString, nameId: String, at: String, workshopId: String? = nil) {
+        self.opId = opId; self.nameId = nameId; self.at = at; self.workshopId = workshopId
+    }
     public static func isoNow() -> String { ISO8601DateFormatter.withFraction.string(from: Date()) }
 }
 

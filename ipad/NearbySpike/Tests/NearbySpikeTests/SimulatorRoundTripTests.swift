@@ -40,7 +40,7 @@ final class SimulatorRoundTripTests: XCTestCase {
 
         let t1 = Date()
         sent = true
-        for i in 0..<20 { ids.append(client.checkIn(nameId: snapshot.names[i].id).opId) }
+        for i in 0..<20 { ids.append(try client.checkIn(nameId: snapshot.names[i].id).opId) }
         wait(for: [drained], timeout: 40)
         ackedAfter = Date().timeIntervalSince(t1)
         XCTAssertEqual(client.pendingCount, 0)

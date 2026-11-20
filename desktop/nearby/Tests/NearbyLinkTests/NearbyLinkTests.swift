@@ -36,12 +36,44 @@ final class NearbyLinkTests: XCTestCase {
         XCTAssertNil(SharedKey(base64url: "too-short"))
     }
 
+    func testBothMacQRCodesUseNearbyAndOriginalCodeUsesInternet() throws {
+        let printable = SharedKey.generate()
+        let local = "{\"v\":1,\"workshopId\":\"nearby-test\",\"key\":\"\(printable)\"}"
+        let original = "https://checkin.example.org/s/workshop/pair#v=1&code=K7QM-4TZP"
+        let extended = original + "%23nearby=" + printable
+        for payload in [local, extended] {
+            guard case .nearby(let parsed) = NearbyPairingQR(payload) else {
+                return XCTFail("Expected nearby pairing")
+            }
+            XCTAssertTrue(parsed == printable)
+        }
+        guard case .internet(let parsed) = NearbyPairingQR(original) else {
+            return XCTFail("Expected internet pairing")
+        }
+        XCTAssertEqual(parsed, original)
+        XCTAssertNil(NearbyPairingQR(extended + "&other=x"))
+        XCTAssertNil(NearbyPairingQR(original + "%23nearby=invalid"))
+    }
+
     func testQueueSurvivesReload() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("nearby-queue-\(UUID().uuidString).json")
         defer { try? FileManager.default.removeItem(at: url) }
         let q = PendingQueue(url: url)
-        q.append(CheckIn(opId: "1", nameId: "a", at: "x")); q.append(CheckIn(opId: "2", nameId: "b", at: "y"))
-        q.remove(opIds: ["1"])
+        try q.append(CheckIn(opId: "1", nameId: "a", at: "x"))
+        try q.append(CheckIn(opId: "2", nameId: "b", at: "y", workshopId: "original-workshop"))
+        try q.remove(opIds: ["1"])
         XCTAssertEqual(PendingQueue(url: url).items.map(\.opId), ["2"])
+        XCTAssertEqual(PendingQueue(url: url).items.first?.workshopId, "original-workshop")
+    }
+
+    func testUnreadableQueueIsPreservedAndDoesNotReportASave() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("nearby-invalid-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let contents = Data("not a complete queue".utf8)
+        try contents.write(to: url)
+        let queue = PendingQueue(url: url)
+        XCTAssertThrowsError(try queue.append(CheckIn(nameId: "a", at: "x", workshopId: "w")))
+        XCTAssertTrue(queue.items.isEmpty)
+        XCTAssertEqual(try Data(contentsOf: url), contents)
     }
 }

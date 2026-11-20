@@ -1,78 +1,123 @@
 import SwiftUI
 import Foundation
+import NearbyLink
 import WorkshopCheckInCore
 
-/// AttendWell on the iPad. A normal launch pairs with the organiser's laptop
-/// over HTTPS (`LiveHostTransport`) and keeps the session in local SQLite.
-/// "Try a demo" on the set-up screen opens a practice workshop with made-up
-/// names (`DemoSession`), entirely in memory.
-/// In Debug builds only, the `--fixture-*` launch arguments open isolated,
-/// fictional modes for screenshots, journeys and the platform probe; a Release
-/// build does not contain them.
 @main
 @MainActor
 struct AttendWellApp: App {
+    @StateObject private var nearby = SpikeModel(allowSpike: false)
+    @Environment(\.scenePhase) private var phase
+    @State private var legacy: KioskModel?
+    @State private var showingInternet = false
+    @State private var scannedInternetCode: String?
+    @State private var demo: DemoSession?
+
     #if DEBUG
     private let probeRequested = ProcessInfo.processInfo.arguments.contains("--fixture-platform-probe")
     @State private var probeResult = "Running fictional platform checks…"
-    private let fixtureTransport: FictionalKioskTransport?
-    #endif
-    private let model: KioskModel?
-    @State private var demo: DemoSession?
-    /// Nearby link test (spike): a separate screen with made-up names; it never touches the check-in store.
-    @State private var nearbyTest = false
+    private let fixture: (KioskModel, FictionalKioskTransport)?
 
     init() {
-        #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
-        let previewHome = arguments.contains("--fixture-home")
-        let previewSetup = arguments.contains("--fixture-setup")
-        let fixtureDemo = arguments.contains("--fixture-demo")
-        do {
-            if previewHome || previewSetup || fixtureDemo {
-                let built = try Self.fixture(home: previewHome, inMemory: previewHome || previewSetup,
-                    directoryName: previewHome ? "WorkshopFixturePreview" : previewSetup ? "WorkshopFixtureSetupPreview" : "WorkshopFixture")
-                model = built.0; fixtureTransport = built.1
-            } else {
-                model = try Self.live(); fixtureTransport = nil
-            }
-        } catch { model = nil; fixtureTransport = nil }
-        #else
-        model = try? Self.live()
-        #endif
+        let home = arguments.contains("--fixture-home")
+        let setup = arguments.contains("--fixture-setup")
+        let demo = arguments.contains("--fixture-demo")
+        if home || setup || demo {
+            fixture = try? Self.fixture(home: home, inMemory: home || setup,
+                directoryName: home ? "WorkshopFixturePreview" : setup ? "WorkshopFixtureSetupPreview" : "WorkshopFixture")
+        } else {
+            fixture = nil
+        }
     }
+    #endif
 
     var body: some Scene {
-        WindowGroup {
-            #if DEBUG
-            if probeRequested {
-                Text(probeResult).font(.title).padding().task {
-                    probeResult = await PlatformProbe.run() ? "Fictional platform checks passed" : "Fictional platform checks failed"
-                }
-            } else {
-                mainContent
-            }
-            #else
-            mainContent
-            #endif
-        }
+        WindowGroup { mainContent.preferredColorScheme(.light) }
     }
 
     @ViewBuilder private var mainContent: some View {
-        if let demo {
-            KioskView(model: demo.model, onLeaveDemo: { demo.end(); self.demo = nil }).id(ObjectIdentifier(demo))
-        } else if let model {
-            VStack(spacing: 0) {
-                KioskView(model: model, onTryDemo: { demo = try? DemoSession() }, onNearbyTest: { nearbyTest = true })
-                    .fullScreenCover(isPresented: $nearbyTest) { NearbyTestScreen { nearbyTest = false } }
-                #if DEBUG
-                if let fixtureTransport { FixtureControls(model: model, transport: fixtureTransport) }
-                #endif
+        #if DEBUG
+        if probeRequested {
+            Text(probeResult).font(.title).padding().task {
+                probeResult = await PlatformProbe.run() ? "Fictional platform checks passed" : "Fictional platform checks failed"
+            }
+        } else if let fixture {
+            if let demo {
+                KioskView(model: demo.model, onLeaveDemo: { demo.end(); self.demo = nil }).id(ObjectIdentifier(demo))
+            } else {
+                VStack(spacing: 0) {
+                    KioskView(model: fixture.0, onTryDemo: { demo = try? DemoSession() })
+                    FixtureControls(model: fixture.0, transport: fixture.1)
+                }
             }
         } else {
-            Text("Couldn't open the saved check-ins. Nothing has been removed. Please speak to the organiser.")
-                .font(.title).padding()
+            nearbyContent
         }
+        #else
+        nearbyContent
+        #endif
+    }
+
+    private var nearbyContent: some View {
+        ContentView(model: nearby, version: Self.version, onInternet: openInternet,
+                    onDemo: { demo = try? DemoSession() })
+            .onChange(of: phase) { if $0 == .active { nearby.appDidBecomeActive() } }
+            .task(prepareSimulatorFixture)
+            .fullScreenCover(isPresented: $showingInternet) { internetContent }
+            .fullScreenCover(item: $demo) { session in
+                KioskView(model: session.model, onLeaveDemo: { session.end(); demo = nil })
+            }
+    }
+
+    @MainActor private func prepareSimulatorFixture() async {
+        #if ATTENDWELL_STARTUP_FIXTURES && targetEnvironment(simulator)
+        guard !showingInternet,
+              let state = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--startup-internet-") }) else { return }
+        if state != "--startup-internet-error" {
+            let paired = state != "--startup-internet-setup"
+            legacy = try? Self.fixture(home: paired, inMemory: true, directoryName: "StartupFixture",
+                                       closed: state == "--startup-internet-closed").0
+        }
+        showingInternet = true
+        #endif
+    }
+
+    private var internetContent: some View {
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("AttendWell").font(.title.bold()).accessibilityAddTraits(.isHeader)
+                Text(Self.version).font(.title3)
+                KioskTile("Back to local check-in", icon: "arrow.left") { showingInternet = false }
+            }
+            .padding(20).frame(maxWidth: .infinity, alignment: .leading)
+            if let legacy {
+                KioskView(model: legacy, initialQR: scannedInternetCode, onNearbyCode: { payload in
+                    guard case .nearby(let code) = NearbyPairingQR(payload) else { return false }
+                    nearby.pair(code)
+                    showingInternet = false
+                    return true
+                })
+            } else {
+                Text("Couldn’t open internet check-in. Please speak to the organiser.").font(.title2.bold()).padding(24)
+                Spacer()
+            }
+        }
+        .foregroundStyle(KioskTile.ink)
+        .background(KioskTile.surface.ignoresSafeArea())
+    }
+
+    private func openInternet(_ code: String?) {
+        if legacy == nil { legacy = try? Self.live() }
+        scannedInternetCode = code
+        showingInternet = true
+    }
+
+    private static var version: String {
+        let bundle = Bundle.main
+        let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        return "AttendWell \(version) (\(build))"
     }
 
     /// Application Support folder excluded from backup, plus the local-only
@@ -105,9 +150,9 @@ struct AttendWellApp: App {
                           transport: transport, fictional: false)
     }
 
-    #if DEBUG
+    #if DEBUG || (ATTENDWELL_STARTUP_FIXTURES && targetEnvironment(simulator))
     private static func fixture(home previewHome: Bool, inMemory: Bool,
-                                directoryName: String) throws -> (KioskModel, FictionalKioskTransport) {
+                                directoryName: String, closed: Bool = false) throws -> (KioskModel, FictionalKioskTransport) {
         let (directory, installationID) = try directory(directoryName)
         let credentials: any CredentialVault = inMemory ? FixtureCredentialVault()
             : KeychainCredentialVault(installationID: installationID, service: "net.dominiklukes.attendwell.ipad.credentials")
@@ -121,14 +166,15 @@ struct AttendWellApp: App {
         let people = names.enumerated().map { index, name in
             RosterPerson(personToken: "pt_fixture_\(index)", displayName: name, revision: 1, checkedIn: index == 3)
         }
-        let host = FixtureHost(eventId: offer.eventId, eventCode: offer.eventCode, people: people,
-            window: WindowInfo(state: .open, revision: 1, openedAt: Date(), closesAt: Date() + 7200), now: { Date() })
+        let window = WindowInfo(state: closed ? .closed : .open, revision: 1, openedAt: Date(),
+                                closesAt: closed ? Date() - 1 : Date() + 7200)
+        let host = FixtureHost(eventId: offer.eventId, eventCode: offer.eventCode, people: people, window: window, now: { Date() })
         let transport = FictionalKioskTransport(host: host, mode: previewHome ? .offline : .connected)
         if previewHome {
             // Screenshot fixture only: isolated database and in-memory
             // credentials/PIN. Never bypasses the normal pairing flow.
             _ = try store.applyRoster(RosterSnapshot(eventId: offer.eventId, eventCode: offer.eventCode,
-                serverTime: Date(), window: WindowInfo(state: .open, revision: 1, openedAt: Date(), closesAt: Date() + 7200), people: people))
+                serverTime: Date(), window: window, people: people))
             try store.setPairing(eventId: offer.eventId, participantAddress: "https://checkin.example.org/s/k3v9")
             _ = try store.recordCheckIn(eventId: offer.eventId, personToken: "pt_fixture_2")
             try credentials.write(CredentialState(active: ActiveCredential(credential: DeviceCredential.generate(),
@@ -161,19 +207,4 @@ private struct FixtureControls: View {
     }
 }
 #endif
-
-/// The nearby link test (spike, branch spike/multipeer-nearby-link): the NearbySpike screen inside AttendWell, with Close.
-/// Its own model, files (Application Support/NearbySpike) and made-up names; nothing here reads or writes the check-ins.
-private struct NearbyTestScreen: View {
-    let close: () -> Void
-    @StateObject private var model = SpikeModel()
-    @Environment(\.scenePhase) private var phase
-    var body: some View {
-        ContentView(model: model)
-            .safeAreaInset(edge: .bottom) {
-                Button("Close nearby link test", action: close).buttonStyle(.borderedProminent).padding(8)
-            }
-            .onChange(of: phase) { if $0 == .active { model.appDidBecomeActive() } }
-    }
-}
 
