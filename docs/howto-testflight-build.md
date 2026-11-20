@@ -26,6 +26,14 @@ FOR DOMINIK. Agents: paste the numbered steps below into your message every time
 7. Optional, to avoid this next time: on the same group page, turn on **Automatic distribution**. New builds then go to the group without step 6.
 8. On the iPad, open the **TestFlight** app, tap **AttendWell**, and tap **Update** (or **Install**).
 
+How to tell it worked: Apple emails "AttendWell 1.0.1 (2) for iOS is now available to test". In App Store Connect the build may still say **Ready to Submit**. That only matters for external groups, which Apple reviews. Your internal group gets the build anyway.
+
+## Redeem codes and new iPads
+
+You don't need a redeem code. TestFlight only gives those to external testers. You are an internal tester, invited on 28 Oct 2026, and every iPad signed in to TestFlight with your Apple ID sees the app.
+
+To set up an iPad that has never had AttendWell: install **TestFlight** from the App Store, sign in with your Apple ID, then open the email "DOMINIK LUKES has invited you to test AttendWell" (28 Oct 2026) on that iPad and tap **View in TestFlight**.
+
 ## Doing without these steps
 
 Agents can do steps 4 to 7 themselves with an App Store Connect API key. To make one: App Store Connect → **Users and Access** → **Integrations** → **Team Keys** → **+**, name it "AttendWell agent", role **App Manager**, then **Generate**. Download the `.p8` file (Apple only lets you download it once) and give it to the agent through the secret request card, never in chat, together with the Key ID and Issuer ID shown on that page.
