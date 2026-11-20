@@ -38,6 +38,8 @@ final class PairingCheckInUITests: XCTestCase {
         app.launch()
         shot("01-setup")
 
+        tap(app.buttons["Connections"], "Connections")
+        tap(app.buttons["Connect computer over internet"], "Connect computer over internet")
         tap(app.buttons["Enter a code instead"], "Enter a code instead")
         let addressField = app.textFields["Address"]
         XCTAssertTrue(addressField.waitForExistence(timeout: 10))

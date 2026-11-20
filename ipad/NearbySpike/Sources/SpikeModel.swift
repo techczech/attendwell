@@ -12,9 +12,11 @@ final class SpikeModel: ObservableObject {
     @Published private(set) var confirmation: String?
     @Published private(set) var error: String?
 
+    var onRosterChanged: (() -> Void)?
+    private(set) var pairingTag: String?
+
     private let allowSpike: Bool
     private var client: NearbyIPadClient?
-    private var pairingTag: String?
     private var confirmationTask: Task<Void, Never>?
     private let pairingPreference = "spike.pairing"
 
@@ -58,23 +60,25 @@ final class SpikeModel: ObservableObject {
         connect(key, remember: keyText)
     }
 
-    func checkIn(_ name: NameEntry) {
-        guard let snapshot, snapshot.open, !name.hidden, !isCheckedIn(name) else { return }
+    @discardableResult
+    func checkIn(_ name: NameEntry) -> Bool {
+        guard let snapshot, snapshot.open, !name.hidden, !isCheckedIn(name) else { return false }
         #if ATTENDWELL_STARTUP_FIXTURES && targetEnvironment(simulator)
         if client == nil && hasPairing {
             pendingNames.insert(name.id)
             pending += 1
-            showConfirmation(for: name)
-            return
+            onRosterChanged?()
+            return true
         }
         #endif
-        guard let client else { return }
+        guard let client else { return false }
         do {
             try client.checkIn(nameId: name.id, workshopId: snapshot.acceptsWorkshopCheckIns == true ? snapshot.workshopId : nil)
             error = nil
-            showConfirmation(for: name)
+            if allowSpike { showConfirmation(for: name) }
+            return true
         } catch {
-            self.error = "This check-in could not be saved. Try again or speak to the organiser."
+            return false
         }
     }
 
@@ -120,9 +124,12 @@ final class SpikeModel: ObservableObject {
         snapshot = (try? Data(contentsOf: snapshotURL)).flatMap { try? JSONDecoder().decode(Snapshot.self, from: $0) }
         let queue = PendingQueue(url: directory.appendingPathComponent("queue.json"))
         let next = NearbyIPadClient(key: key, deviceName: Self.deviceName, queue: queue)
-        next.onPeer = { [weak self, weak next] _, _ in self?.connectedMac = next?.connectedMac }
-        next.onSnapshot = { [weak self] snapshot, _ in
-            guard let self else { return }
+        next.onPeer = { [weak self, weak next] _, _ in
+            guard let self, self.client === next else { return }
+            self.connectedMac = next?.connectedMac
+        }
+        next.onSnapshot = { [weak self, weak next] snapshot, _ in
+            guard let self, self.client === next else { return }
             guard self.allowSpike || snapshot.acceptsWorkshopCheckIns == true else {
                 self.error = "Update AttendWell on the Mac to use nearby check-in."
                 return
@@ -132,7 +139,10 @@ final class SpikeModel: ObservableObject {
             self.refreshQueue()
             if let data = try? JSONEncoder().encode(snapshot) { try? data.write(to: snapshotURL, options: .atomic) }
         }
-        next.onQueueChanged = { [weak self] _ in self?.refreshQueue() }
+        next.onQueueChanged = { [weak self, weak next] _ in
+            guard let self, self.client === next else { return }
+            self.refreshQueue()
+        }
         client = next
         pairingTag = key.tag
         hasPairing = true
@@ -146,6 +156,7 @@ final class SpikeModel: ObservableObject {
         pending = client?.pendingCount ?? 0
         let workshopId = snapshot?.acceptsWorkshopCheckIns == true ? snapshot?.workshopId : nil
         pendingNames = client?.pendingNames(for: workshopId) ?? []
+        onRosterChanged?()
     }
 
     private static var deviceName: String {

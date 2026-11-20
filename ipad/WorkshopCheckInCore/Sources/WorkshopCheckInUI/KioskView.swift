@@ -24,9 +24,6 @@ private struct RecoveryDocument: FileDocument {
 public struct KioskView: View {
     @ObservedObject private var model: KioskModel
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @ScaledMetric(relativeTo: .largeTitle) private var heroSize = 56.0
-    @ScaledMetric(relativeTo: .title2) private var nameSize = 28.0
     @State private var address = "https://checkin.example.org/s/k3v9"
     @State private var code = "K7QM-4TZP"
     @State private var pin = ""
@@ -72,13 +69,6 @@ public struct KioskView: View {
         }
         .task(id: model.screen) {
             pin = ""; confirmation = ""; editingConfirmation = false; headingFocused = true
-            if model.screen == .done {
-                // Saved has already rendered; acknowledgement changes the copy
-                // only after a definite fixture response.
-                await model.sendNow()
-                try? await Task.sleep(for: .seconds(3))
-                if !Task.isCancelled && model.screen == .done { model.goHome() }
-            }
         }
         .task {
             while !Task.isCancelled {
@@ -97,7 +87,6 @@ public struct KioskView: View {
 
     @ViewBuilder private var content: some View {
         switch model.screen {
-        case .home: home
         case .setup:
             panel("Set up check-in", icon: "qrcode", detail: "Scan the pairing code shown on the organiser's laptop.") {
                 action("Scan pairing code", icon: "qrcode.viewfinder") { model.showScanner() }
@@ -162,35 +151,8 @@ public struct KioskView: View {
                 Text("If you forget it, show a new pairing code on the laptop and scan it.")
                 action("Continue", icon: "arrow.right") { Task { await model.setPIN(pin, confirmation: confirmation) } }
             }
-        case .gettingNames:
-            panel("Getting the names list…", icon: "list.bullet", detail: "Still waiting for the laptop. Keep this iPad connected to the internet.") {
-                ProgressView(); action("Try again", icon: "arrow.clockwise") { Task { await model.sendNow() } }
-                if !model.isDemo { action("Organiser", icon: "lock") { model.showPIN() } }
-            }
-        case .confirm:
-            panel("Is this you?", icon: "person", detail: model.selected?.displayName ?? "") {
-                action("Yes, check me in", icon: "checkmark") { model.saveSelected() }
-                action("No, go back", icon: "arrow.left") { model.goHome() }
-            }
-        case .done:
-            done
-        case .already:
-            panel(alreadyTitle, icon: statusIcon(model.selected?.status ?? .notCheckedIn), detail: alreadyDetail) {
-                action("OK", icon: "checkmark") { model.goHome() }
-            }
-        case .commitFailed:
-            panel("Sorry, that didn't save.", icon: "exclamationmark.triangle", detail: "Nothing has been marked. Please try again, or speak to the organiser.") {
-                action("Try again", icon: "arrow.clockwise") { model.saveSelected() }
-                action("Back to the list", icon: "arrow.left") { model.goHome() }
-            }
-        case .closed:
-            panel("Check-in is closed", icon: "door.left.hand.closed", detail: "Please speak to the organiser.") {
-                if !model.isDemo { action("Organiser", icon: "lock") { model.showPIN() } }
-            }
-        case .paused:
-            panel("This iPad is paused", icon: "pause.circle", detail: "Please speak to the organiser.") {
-                if !model.isDemo { action("Organiser", icon: "lock") { model.showPIN() } }
-            }
+        case .home, .gettingNames, .confirm, .done, .already, .commitFailed, .closed, .paused:
+            participant
         case .pin:
             panel("Organiser PIN", icon: "lock", detail: "Forgotten the PIN? Show a new pairing code on the laptop and scan it.") {
                 SecureField("Six-digit PIN", text: $pin, prompt: prompt("Six-digit PIN")).font(.title).textFieldStyle(.roundedBorder)
@@ -238,76 +200,12 @@ public struct KioskView: View {
         }
     }
 
-    private var home: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 24) {
-                Image(systemName: "person.2").font(.system(size: 52)).accessibilityHidden(true)
-                VStack(alignment: .leading) {
-                    Text("Please check in").font(.system(size: heroSize, weight: .bold)).accessibilityAddTraits(.isHeader).accessibilityFocused($headingFocused)
-                    Text("Find your name, then tap it.").font(.title2)
-                }
-                Spacer()
-            }.padding(28).foregroundStyle(.white).background(KioskStyle.teal)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    TextField("Search your name", text: $model.query, prompt: prompt("Search your name")).font(.title2).textFieldStyle(.roundedBorder)
-                        .accessibilityLabel("Search your name")
-                    section("Find your name", icon: "person", rows: model.findRows)
-                    if model.findRows.isEmpty {
-                        Text(model.doneRows.isEmpty ? "No names match '\(model.query)'. Check the spelling, or speak to the organiser." : "No names here match '\(model.query)'. Look under Already done below.")
-                            .font(.title3)
-                    }
-                    Divider()
-                    section("Already done", icon: "clock.arrow.circlepath", rows: model.doneRows)
-                }.padding(24)
-            }
-            footer.frame(maxWidth: .infinity, alignment: .leading).background(Color.white)
-        }
+    private var participant: some View {
+        let organiser: (() -> Void)? = model.isDemo ? nil : { model.showPIN() }
+        return KioskParticipantView(model: model, showFooter: true, onOrganiser: organiser,
+                                    waitingDetail: "Still waiting for the laptop. Keep this iPad connected to the internet.")
     }
-    private func section(_ title: String, icon: String, rows: [PersonRow]) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Label(title, systemImage: icon).font(.title.bold()).accessibilityAddTraits(.isHeader)
-            LazyVStack(spacing: 16) {
-                ForEach(rows, id: \.personToken) { row in
-                    Button { model.select(row) } label: {
-                        HStack(spacing: 16) {
-                            Image(systemName: row.status.isDone ? statusIcon(row.status) : "person").font(.title)
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(row.displayName).font(.system(size: nameSize, weight: .bold)).fixedSize(horizontal: false, vertical: true)
-                                if row.status.isDone { Text(row.status.label).font(.body) }
-                            }
-                            Spacer(minLength: 0)
-                            if !row.status.isDone { Image(systemName: "chevron.right") }
-                        }.padding(20).frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
-                    }.buttonStyle(KioskFilledStyle(prominent: !row.status.isDone))
-                        .accessibilityLabel("\(row.displayName), \(row.status.label)")
-                        .accessibilityHint(row.status.isDone ? "Shows your saved status" : "Opens check-in confirmation")
-                }
-            }
-        }
-    }
-    private var footer: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(model.offer?.eventName ?? "").bold()
-            Text(model.statusText).font(.body.bold())
-            if !model.isDemo { action("Organiser", icon: "lock") { model.showPIN() } }
-        }.padding(16)
-    }
-    private var done: some View {
-        let name = model.selected?.displayName ?? ""
-        let status = model.selected?.status ?? .savedOnThisIPad
-        let title = status == .checkedIn ? "You're checked in, \(name)." : status == .withTheOrganiser ? "Thank you, \(name)." : "Saved on this iPad, \(name)."
-        let detail = status == .checkedIn ? "" : status == .withTheOrganiser ? "The organiser will confirm your check-in." : "You don't need to wait. It will be sent to the organiser's laptop."
-        return Button { model.goHome() } label: {
-            VStack(spacing: 32) {
-                Spacer(); Image(systemName: statusIcon(status)).font(.system(size: 96)).accessibilityHidden(true)
-                Text(title).font(.system(size: heroSize, weight: .bold)).multilineTextAlignment(.center).accessibilityFocused($headingFocused)
-                Text(detail).font(.title2).multilineTextAlignment(.center)
-                Spacer(); Label("Tap anywhere to continue", systemImage: "hand.tap").font(.title2)
-            }.padding(36).frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(KioskFilledStyle(prominent: status == .checkedIn))
-            .accessibilityLabel(title + " " + detail + " Tap to continue")
-    }
+
     private var organiser: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -334,25 +232,12 @@ public struct KioskView: View {
             }.padding(32)
         }
     }
-    private var alreadyTitle: String {
-        let name = model.selected?.displayName ?? ""
-        switch model.selected?.status {
-        case .checkedIn: return "\(name) is already checked in."
-        case .savedOnThisIPad: return "\(name) is saved on this iPad and will be sent to the organiser."
-        default: return "Please speak to the organiser about \(name)."
-        }
-    }
-    private var alreadyDetail: String { model.selected?.status == .checkedIn ? "If that isn't right, please speak to the organiser." : "" }
     private var handoverDetail: String {
         let n = model.removal?.unsentOpIds.count ?? 0
         return n == 0 ? "This removes the names list and the pairing from this iPad. Nothing is waiting to be sent." :
             "This removes the names list, the pairing and \(n) unsent check-ins from this iPad: \(model.removal?.unsentNames.joined(separator: ", ") ?? ""). They are in the recovery file saved\(model.recoverySavedAt.map { " at " + $0.formatted(date: .omitted, time: .shortened) } ?? ""). Check it has reached the laptop first."
     }
     private func saveRecovery(handover: Bool) { model.prepareRecovery(fromHandover: handover); if model.recovery != nil { exportFile = true } }
-    private func statusIcon(_ status: RowStatus) -> String {
-        switch status { case .checkedIn: return "checkmark.circle"; case .savedOnThisIPad: return "square.and.arrow.down"
-        case .withTheOrganiser: return "hand.raised"; case .notCheckedIn: return "person" }
-    }
     private func action(_ title: String, icon: String, perform: @escaping () -> Void) -> some View {
         Button(action: perform) {
             actionLabel(title, icon: icon)
@@ -380,16 +265,8 @@ public struct KioskView: View {
             }
         }.frame(maxWidth: 420)
     }
-    private func panel<Actions: View>(_ title: String, icon: String, detail: String, @ViewBuilder actions: () -> Actions) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                Image(systemName: icon).font(.system(size: 72)).foregroundStyle(KioskStyle.teal).accessibilityHidden(true)
-                Text(title).font(.system(size: heroSize, weight: .bold)).accessibilityAddTraits(.isHeader).accessibilityFocused($headingFocused)
-                Text(detail).font(.title2)
-                if !model.message.isEmpty { Text(model.message).font(.title3.bold()).foregroundStyle(KioskStyle.ink) }
-                actions()
-            }.frame(maxWidth: 850, alignment: .leading).padding(36).frame(maxWidth: .infinity, alignment: .leading)
-        }
+    private func panel<Actions: View>(_ title: String, icon: String, detail: String, @ViewBuilder actions: @escaping () -> Actions) -> some View {
+        KioskPanel(title, icon: icon, detail: detail, message: model.message, focus: $headingFocused, actions: actions)
     }
     @ViewBuilder private var scanner: some View {
         #if os(iOS)
@@ -414,5 +291,226 @@ private struct KioskFilledStyle: ButtonStyle {
             .foregroundStyle(prominent ? Color.white : KioskStyle.ink)
             .background(prominent ? KioskStyle.teal : KioskStyle.tile, in: RoundedRectangle(cornerRadius: 14))
             .scaleEffect(configuration.isPressed ? 0.99 : 1)
+    }
+}
+
+/// The participant screens share their layout across the internet and the nearby check-in routes.
+@MainActor
+protocol KioskParticipantModel: ObservableObject {
+    var screen: KioskModel.Screen { get }
+    var workshopTitle: String? { get }
+    var query: String { get set }
+    var findRows: [PersonRow] { get }
+    var doneRows: [PersonRow] { get }
+    var selected: PersonRow? { get }
+    var statusText: String { get }
+    var message: String { get }
+    var busy: Bool { get }
+    func select(_ row: PersonRow)
+    func saveSelected()
+    func goHome()
+    func sendNow() async
+}
+
+extension KioskModel: KioskParticipantModel {
+    var workshopTitle: String? { offer?.eventName }
+}
+
+struct KioskParticipantView<Model: KioskParticipantModel>: View {
+    @ObservedObject var model: Model
+    let showFooter: Bool
+    let onOrganiser: (() -> Void)?
+    let waitingDetail: String
+    @ScaledMetric(relativeTo: .largeTitle) private var heroSize = 56.0
+    @ScaledMetric(relativeTo: .title2) private var nameSize = 28.0
+    @AccessibilityFocusState private var headingFocused: Bool
+
+    init(model: Model, showFooter: Bool = false, onOrganiser: (() -> Void)? = nil,
+         waitingDetail: String = "Waiting for the names list from the Mac. Please speak to the organiser.") {
+        self.model = model
+        self.showFooter = showFooter
+        self.onOrganiser = onOrganiser
+        self.waitingDetail = waitingDetail
+    }
+
+    var body: some View {
+        content
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .foregroundStyle(KioskStyle.ink).background(KioskStyle.warm.ignoresSafeArea()).tint(KioskStyle.teal)
+            .controlSize(.large)
+            .task(id: model.screen) {
+                headingFocused = true
+                if model.screen == .done {
+                    await model.sendNow()
+                    try? await Task.sleep(for: .seconds(3))
+                    if !Task.isCancelled && model.screen == .done { model.goHome() }
+                }
+            }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch model.screen {
+        case .home: home
+        case .gettingNames:
+            panel("Getting the names list…", icon: "list.bullet", detail: waitingDetail) {
+                ProgressView(); action("Try again", icon: "arrow.clockwise") { Task { await model.sendNow() } }
+                if let onOrganiser { action("Organiser", icon: "lock", perform: onOrganiser) }
+            }
+        case .confirm:
+            panel("Is this you?", icon: "person", detail: model.selected?.displayName ?? "") {
+                action("Yes, check me in", icon: "checkmark") { model.saveSelected() }
+                action("No, go back", icon: "arrow.left") { model.goHome() }
+            }
+        case .done:
+            done
+        case .already:
+            panel(alreadyTitle, icon: statusIcon(model.selected?.status ?? .notCheckedIn), detail: alreadyDetail) {
+                action("OK", icon: "checkmark") { model.goHome() }
+            }
+        case .commitFailed:
+            panel("Sorry, that didn't save.", icon: "exclamationmark.triangle", detail: "Nothing has been marked. Please try again, or speak to the organiser.") {
+                action("Try again", icon: "arrow.clockwise") { model.saveSelected() }
+                action("Back to the list", icon: "arrow.left") { model.goHome() }
+            }
+        case .closed:
+            panel("Check-in is closed", icon: "door.left.hand.closed", detail: "Please speak to the organiser.") {
+                if let onOrganiser { action("Organiser", icon: "lock", perform: onOrganiser) }
+            }
+        case .paused:
+            panel("This iPad is paused", icon: "pause.circle", detail: "Please speak to the organiser.") {
+                if let onOrganiser { action("Organiser", icon: "lock", perform: onOrganiser) }
+            }
+        default: EmptyView()
+        }
+    }
+
+    private var home: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 24) {
+                Image(systemName: "person.2").font(.system(size: 52)).accessibilityHidden(true)
+                VStack(alignment: .leading) {
+                    Text("Please check in").font(.system(size: heroSize, weight: .bold)).accessibilityAddTraits(.isHeader).accessibilityFocused($headingFocused)
+                    if !showFooter, let title = model.workshopTitle {
+                        Text(title).font(.title2.bold()).accessibilityAddTraits(.isHeader)
+                    }
+                    Text("Find your name, then tap it.").font(.title2)
+                }
+                Spacer()
+            }.padding(28).foregroundStyle(.white).background(KioskStyle.teal)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    TextField("Search your name", text: $model.query, prompt: prompt("Search your name")).font(.title2).textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("Search your name")
+                    section("Find your name", icon: "person", rows: model.findRows)
+                    if model.findRows.isEmpty {
+                        Text(model.doneRows.isEmpty ? "No names match '\(model.query)'. Check the spelling, or speak to the organiser." : "No names here match '\(model.query)'. Look under Already done below.")
+                            .font(.title3)
+                    }
+                    Divider()
+                    section("Already done", icon: "clock.arrow.circlepath", rows: model.doneRows)
+                }.padding(24)
+            }
+            if showFooter {
+                footer.frame(maxWidth: .infinity, alignment: .leading).background(Color.white)
+            }
+        }
+    }
+    private func section(_ title: String, icon: String, rows: [PersonRow]) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label(title, systemImage: icon).font(.title.bold()).accessibilityAddTraits(.isHeader)
+            LazyVStack(spacing: 16) {
+                ForEach(rows, id: \.personToken) { row in
+                    Button { model.select(row) } label: {
+                        HStack(spacing: 16) {
+                            Image(systemName: row.status.isDone ? statusIcon(row.status) : "person").font(.title)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(row.displayName).font(.system(size: nameSize, weight: .bold)).fixedSize(horizontal: false, vertical: true)
+                                if row.status.isDone { Text(row.status.label).font(.body) }
+                            }
+                            Spacer(minLength: 0)
+                            if !row.status.isDone { Image(systemName: "chevron.right") }
+                        }.padding(20).frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
+                    }.buttonStyle(KioskFilledStyle(prominent: !row.status.isDone))
+                        .accessibilityLabel("\(row.displayName), \(row.status.label)")
+                        .accessibilityHint(row.status.isDone ? "Shows your saved status" : "Opens check-in confirmation")
+                }
+            }
+        }
+    }
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(model.workshopTitle ?? "").bold()
+            Text(model.statusText).font(.body.bold())
+            if let onOrganiser { action("Organiser", icon: "lock", perform: onOrganiser) }
+        }.padding(16)
+    }
+    private var done: some View {
+        let name = model.selected?.displayName ?? ""
+        let status = model.selected?.status ?? .savedOnThisIPad
+        let title = status == .checkedIn ? "You're checked in, \(name)." : status == .withTheOrganiser ? "Thank you, \(name)." : "Saved on this iPad, \(name)."
+        let detail = status == .checkedIn ? "" : status == .withTheOrganiser ? "The organiser will confirm your check-in." : "You don't need to wait. It will be sent to the organiser's laptop."
+        return Button { model.goHome() } label: {
+            VStack(spacing: 32) {
+                Spacer(); Image(systemName: statusIcon(status)).font(.system(size: 96)).accessibilityHidden(true)
+                Text(title).font(.system(size: heroSize, weight: .bold)).multilineTextAlignment(.center).accessibilityFocused($headingFocused)
+                Text(detail).font(.title2).multilineTextAlignment(.center)
+                Spacer(); Label("Tap anywhere to continue", systemImage: "hand.tap").font(.title2)
+            }.padding(36).frame(maxWidth: .infinity, maxHeight: .infinity)
+        }.buttonStyle(KioskFilledStyle(prominent: status == .checkedIn))
+            .accessibilityLabel(title + " " + detail + " Tap to continue")
+    }
+    private var alreadyTitle: String {
+        let name = model.selected?.displayName ?? ""
+        switch model.selected?.status {
+        case .checkedIn: return "\(name) is already checked in."
+        case .savedOnThisIPad: return "\(name) is saved on this iPad and will be sent to the organiser."
+        default: return "Please speak to the organiser about \(name)."
+        }
+    }
+    private var alreadyDetail: String { model.selected?.status == .checkedIn ? "If that isn't right, please speak to the organiser." : "" }
+    private func statusIcon(_ status: RowStatus) -> String {
+        switch status { case .checkedIn: return "checkmark.circle"; case .savedOnThisIPad: return "square.and.arrow.down"
+        case .withTheOrganiser: return "hand.raised"; case .notCheckedIn: return "person" }
+    }
+    private func action(_ title: String, icon: String, perform: @escaping () -> Void) -> some View {
+        Button(action: perform) {
+            actionLabel(title, icon: icon)
+        }.buttonStyle(KioskFilledStyle(prominent: true)).disabled(model.busy)
+    }
+    private func actionLabel(_ title: String, icon: String) -> some View {
+        Label(title, systemImage: icon).font(.title2.bold()).multilineTextAlignment(.leading)
+            .padding(.horizontal, 20).frame(maxWidth: .infinity, minHeight: 80, alignment: .leading)
+    }
+    private func prompt(_ label: String) -> Text { Text(label).foregroundColor(KioskStyle.ink) }
+    private func panel<Actions: View>(_ title: String, icon: String, detail: String, @ViewBuilder actions: @escaping () -> Actions) -> some View {
+        KioskPanel(title, icon: icon, detail: detail, message: model.message, focus: $headingFocused, actions: actions)
+    }
+}
+
+private struct KioskPanel<Actions: View>: View {
+    let title: String
+    let icon: String
+    let detail: String
+    let message: String
+    let focus: AccessibilityFocusState<Bool>.Binding
+    let actions: () -> Actions
+    @ScaledMetric(relativeTo: .largeTitle) private var heroSize = 56.0
+
+    init(_ title: String, icon: String, detail: String, message: String,
+         focus: AccessibilityFocusState<Bool>.Binding, @ViewBuilder actions: @escaping () -> Actions) {
+        self.title = title; self.icon = icon; self.detail = detail; self.message = message
+        self.focus = focus; self.actions = actions
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                Image(systemName: icon).font(.system(size: 72)).foregroundStyle(KioskStyle.teal).accessibilityHidden(true)
+                Text(title).font(.system(size: heroSize, weight: .bold)).accessibilityAddTraits(.isHeader).accessibilityFocused(focus)
+                Text(detail).font(.title2)
+                if !message.isEmpty { Text(message).font(.title3.bold()).foregroundStyle(KioskStyle.ink) }
+                actions()
+            }.frame(maxWidth: 850, alignment: .leading).padding(36).frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }

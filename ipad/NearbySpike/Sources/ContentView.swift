@@ -7,6 +7,9 @@ struct ContentView: View {
     var version = ""
     var onInternet: ((String?) -> Void)?
     var onDemo: (() -> Void)?
+    var participantContent: (() -> AnyView)?
+    @State private var connectionsOpen = false
+    @State private var afterConnections: (() -> Void)?
     @State private var search = ""
     @State private var scanning = false
     @State private var cameraMessage: String?
@@ -27,15 +30,47 @@ struct ContentView: View {
     }
 
     var body: some View {
+        Group {
+            if let participantContent {
+                VStack(spacing: 0) {
+                    HStack {
+                        Spacer()
+                        Button { connectionsOpen = true } label: {
+                            Label("Connections", systemImage: "link").font(.body.bold())
+                                .padding(.horizontal, 16).frame(minHeight: 44)
+                        }.buttonStyle(KioskTile.FilledStyle(prominent: true))
+                    }.padding(.horizontal, 24).padding(.vertical, 8)
+                    if model.hasPairing {
+                        participantContent()
+                    } else {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("AttendWell").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+                            Text("Open Connections to set up check-in.").font(.title2)
+                            if let error = model.error { Text(error).font(.title2.bold()) }
+                        }.padding(36).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    }
+                }
+            } else {
+                spikeContent
+            }
+        }
+        .foregroundStyle(KioskTile.ink)
+        .background(KioskTile.surface.ignoresSafeArea())
+        .preferredColorScheme(.light)
+        .sheet(isPresented: $connectionsOpen, onDismiss: resumeFromConnections, content: connections)
+        .onChange(of: model.snapshot?.workshopId) { _ in search = "" }
+    }
+
+    private var spikeContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header
                 if model.hasPairing {
                     if let snapshot = model.snapshot { workshop(snapshot) }
                     if namesFirst { namesList }
-                    KioskTile("Connect to a different Mac", icon: "qrcode.viewfinder", action: openScanner)
+                    KioskTile("Connect to a different Mac", icon: "qrcode.viewfinder", action: { openScanner() })
                 } else {
-                    KioskTile("Connect Mac locally", icon: "qrcode.viewfinder", prominent: true, action: openScanner)
+                    KioskTile("Connect Mac locally", icon: "qrcode.viewfinder", prominent: true, action: { openScanner() })
                 }
                 if let onInternet {
                     KioskTile("Connect computer over internet", icon: "globe") { onInternet(nil) }
@@ -47,11 +82,50 @@ struct ContentView: View {
             .padding(32)
             .frame(maxWidth: .infinity, alignment: .top)
         }
+        .sheet(isPresented: $scanning, onDismiss: handleCode, content: scanner)
+    }
+
+    private func leaveConnections(_ action: @escaping () -> Void) {
+        if connectionsOpen {
+            afterConnections = action
+            connectionsOpen = false
+        } else {
+            action()
+        }
+    }
+
+    private func resumeFromConnections() {
+        let action = afterConnections
+        afterConnections = nil
+        action?()
+    }
+
+    private func connections() -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Connections").font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+                Text(model.status).font(.title2.bold()).accessibilityIdentifier("nearby-connection")
+                Text("Unsent check-ins: \(model.pending)").font(.title3)
+                Text(version).font(.title3)
+                if let error = model.error { Text(error).font(.title3.bold()) }
+                KioskTile("Connect Mac locally", icon: "qrcode.viewfinder", prominent: true) { openScanner() }
+                if let onInternet {
+                    KioskTile("Connect computer over internet", icon: "globe") {
+                        leaveConnections { onInternet(nil) }
+                    }
+                }
+                KioskTile("Enter local code", icon: "keyboard") { openScanner(enterCode: true) }
+                if let onDemo {
+                    KioskTile("Try a demo", icon: "play.circle") {
+                        leaveConnections(onDemo)
+                    }
+                }
+                KioskTile("Done", icon: "checkmark") { connectionsOpen = false }
+            }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+        }
         .foregroundStyle(KioskTile.ink)
         .background(KioskTile.surface.ignoresSafeArea())
-        .preferredColorScheme(.light)
         .sheet(isPresented: $scanning, onDismiss: handleCode, content: scanner)
-        .onChange(of: model.snapshot?.workshopId) { _ in search = "" }
     }
 
     private var header: some View {
@@ -106,9 +180,9 @@ struct ContentView: View {
         }
     }
 
-    private func openScanner() {
+    private func openScanner(enterCode: Bool = false) {
         cameraMessage = nil
-        enteringCode = false
+        enteringCode = enterCode
         typedCode = ""
         pairingMessage = nil
         scanning = true
@@ -186,7 +260,7 @@ struct ContentView: View {
         switch NearbyPairingQR(payload) {
         case .nearby(let code): model.pair(code)
         case .internet(let code):
-            if let onInternet { onInternet(code) } else { model.invalidCode() }
+            if let onInternet { leaveConnections { onInternet(code) } } else { model.invalidCode() }
         case nil: model.invalidCode()
         }
     }
@@ -220,7 +294,7 @@ struct KioskTile: View {
         .buttonStyle(FilledStyle(prominent: prominent))
     }
 
-    private struct FilledStyle: ButtonStyle {
+    struct FilledStyle: ButtonStyle {
         var prominent: Bool
 
         func makeBody(configuration: Configuration) -> some View {

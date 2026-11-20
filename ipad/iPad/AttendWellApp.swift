@@ -12,7 +12,8 @@ struct AttendWellApp: App {
         let scannedCode: String?
     }
 
-    @StateObject private var nearby = SpikeModel(allowSpike: false)
+    @StateObject private var nearbyKiosk = NearbyKioskModel(link: SpikeModel(allowSpike: false))
+    private var nearby: SpikeModel { nearbyKiosk.link }
     @Environment(\.scenePhase) private var phase
     @State private var legacy: KioskModel?
     @State private var internet: InternetPresentation?
@@ -66,7 +67,8 @@ struct AttendWellApp: App {
 
     private var nearbyContent: some View {
         ContentView(model: nearby, version: Self.version, onInternet: openInternet,
-                    onDemo: { demo = try? DemoSession() })
+                    onDemo: { demo = try? DemoSession() },
+                    participantContent: { AnyView(KioskParticipantView(model: nearbyKiosk)) })
             .onChange(of: phase) { if $0 == .active { nearby.appDidBecomeActive() } }
             .task(prepareSimulatorFixture)
             .fullScreenCover(item: $internet) { presentation in
@@ -215,3 +217,89 @@ private struct FixtureControls: View {
 }
 #endif
 
+/// Maps the nearby roster and its existing disk queue onto the shared participant screens.
+@MainActor
+private final class NearbyKioskModel: KioskParticipantModel {
+    let link: SpikeModel
+    @Published private(set) var screen: KioskModel.Screen = .gettingNames
+    @Published private(set) var workshopTitle: String?
+    @Published private(set) var selected: PersonRow?
+    @Published private var rows: [PersonRow] = []
+    @Published var query = ""
+
+    private var workshopId: String?
+    private var pairingTag: String?
+    var statusText: String { link.status }
+    var message: String { screen == .gettingNames ? link.error ?? "" : "" }
+    let busy = false
+
+    init(link: SpikeModel) {
+        self.link = link
+        link.onRosterChanged = { [weak self] in self?.refresh() }
+        refresh()
+    }
+
+    private var filteredRows: [PersonRow] {
+        rows.filter { query.isEmpty || $0.displayName.localizedStandardContains(query) }
+    }
+    var findRows: [PersonRow] { filteredRows.filter { !$0.status.isDone } }
+    var doneRows: [PersonRow] { filteredRows.filter { $0.status.isDone } }
+
+    func select(_ row: PersonRow) {
+        guard screen == .home, let current = rows.first(where: { $0.personToken == row.personToken }) else { return }
+        selected = current
+        screen = current.status.isDone ? .already : .confirm
+    }
+
+    func saveSelected() {
+        guard screen == .confirm || screen == .commitFailed, let selected else { return }
+        guard let snapshot = link.snapshot, snapshot.open else { goHome(); return }
+        guard let name = snapshot.names.first(where: { $0.id == selected.personToken && !$0.hidden }) else { goHome(); return }
+        if link.isCheckedIn(name) {
+            self.selected = rows.first { $0.personToken == name.id }
+            screen = .already
+        } else if link.checkIn(name) {
+            self.selected = PersonRow(personToken: name.id, displayName: name.displayName, status: .savedOnThisIPad)
+            screen = .done
+        } else {
+            screen = .commitFailed
+        }
+    }
+
+    func goHome() {
+        selected = nil
+        query = ""
+        if let snapshot = link.snapshot, !snapshot.workshopId.isEmpty {
+            screen = snapshot.open ? .home : .closed
+        } else {
+            screen = .gettingNames
+        }
+    }
+
+    // NearbyIPadClient delivers from its persisted queue and retries on its own.
+    func sendNow() async { link.appDidBecomeActive() }
+
+    private func refresh() {
+        let snapshot = link.snapshot
+        workshopTitle = snapshot?.title
+        rows = (snapshot?.names ?? []).filter { !$0.hidden }.map { name in
+            PersonRow(personToken: name.id, displayName: name.displayName,
+                      status: name.checkedIn == true ? .checkedIn : link.pendingNames.contains(name.id) ? .savedOnThisIPad : .notCheckedIn)
+        }
+
+        if workshopId != snapshot?.workshopId || pairingTag != link.pairingTag {
+            workshopId = snapshot?.workshopId
+            pairingTag = link.pairingTag
+            goHome()
+        } else if [.home, .gettingNames, .closed].contains(screen) {
+            let next: KioskModel.Screen = if let snapshot, !snapshot.workshopId.isEmpty {
+                snapshot.open ? .home : .closed
+            } else { .gettingNames }
+            if screen != next { goHome() }
+        } else if (screen == .confirm || screen == .commitFailed) && snapshot?.open != true {
+            goHome()
+        } else if let selected, let row = rows.first(where: { $0.personToken == selected.personToken }), row.status.isDone {
+            self.selected = row
+        }
+    }
+}

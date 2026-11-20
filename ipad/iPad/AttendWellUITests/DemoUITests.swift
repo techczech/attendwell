@@ -17,12 +17,15 @@ final class DemoUITests: XCTestCase {
         XCUIDevice.shared.orientation = orientation
         let app = XCUIApplication()
         app.launch()
-        let setup = app.staticTexts["Set up check-in"]
+        let setup = app.buttons["Connections"]
         XCTAssertTrue(setup.waitForExistence(timeout: 20))
-        XCTAssertTrue(app.buttons["Scan pairing code"].exists)
+        XCTAssertFalse(app.buttons["Try a demo"].exists)
         shot("\(label)-1-setup")
 
-        app.buttons["Try a demo"].tap()
+        setup.tap()
+        let demo = app.buttons["Try a demo"]
+        XCTAssertTrue(demo.waitForExistence(timeout: 10))
+        demo.tap()
         XCTAssertTrue(app.staticTexts["Demo — names are made up and nothing is sent anywhere."].waitForExistence(timeout: 10))
         let ada = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Ada Example'")).firstMatch
         XCTAssertTrue(ada.waitForExistence(timeout: 10))
@@ -41,12 +44,12 @@ final class DemoUITests: XCTestCase {
         let leave = app.buttons["Leave demo"]
         XCTAssertTrue(leave.waitForExistence(timeout: 10))
         leave.tap()
-        XCTAssertTrue(app.staticTexts["Set up check-in"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Connections"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.staticTexts["Demo — names are made up and nothing is sent anywhere."].exists)
 
         // Nothing carried over: relaunching still opens on set-up, not on a saved session.
         app.terminate(); app.launch()
-        XCTAssertTrue(app.staticTexts["Set up check-in"].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.buttons["Connections"].waitForExistence(timeout: 20))
     }
 
     func testDemoPortrait() { runDemo(.portrait, "portrait") }
