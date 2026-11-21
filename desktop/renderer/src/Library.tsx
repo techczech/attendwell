@@ -28,6 +28,8 @@ export interface LibraryProps {
   onChooseFolder(): void;
   onGetStarted(): void;
   onRemoveExample(): void;
+  onConnectIPad(): void;
+  onSettings(): void;
 }
 
 export function Library(p: LibraryProps): JSX.Element {
@@ -82,7 +84,9 @@ export function Library(p: LibraryProps): JSX.Element {
             </div>
           ) : null}
         </div>
-        <button type="button" className="btn primary" onClick={p.onNew}><Icon name="plus" />New workshop</button>
+        <button type="button" className="btn big-action" onClick={p.onSettings}><Icon name="settings" />Settings</button>
+        <button type="button" className="btn primary big-action" onClick={p.onConnectIPad}><Icon name="plug-zap" />Connect iPad</button>
+        <button type="button" className="btn primary big-action" onClick={p.onNew}><Icon name="plus" />New workshop</button>
       </div>
       <div className="main">
         <section className="panel" aria-label="Workshops">

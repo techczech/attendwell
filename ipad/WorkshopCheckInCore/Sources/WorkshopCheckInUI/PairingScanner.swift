@@ -74,6 +74,9 @@ final class ScannerController: UIViewController, AVCaptureMetadataOutputObjectsD
                     self.session.commitConfiguration(); DispatchQueue.main.async { self.onDenied() }; return
                 }
                 self.session.addOutput(output); output.setMetadataObjectsDelegate(self, queue: .main)
+                guard output.availableMetadataObjectTypes.contains(.qr) else {
+                    self.session.commitConfiguration(); DispatchQueue.main.async { self.onDenied() }; return
+                }
                 output.metadataObjectTypes = [.qr]; self.session.commitConfiguration()
             }
             self.session.startRunning()

@@ -3,10 +3,10 @@
 import { dispatchKey } from '@app-patterns/commands';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IDLE_CTX, registry, type CommandCtx, type ViewName } from '../../shared/commands.ts';
-import { buildRegister, stepSelection, SORT_ORDER, type Roster } from '../../shared/register-model.ts';
+import { buildRegister, stepSelection, SORT_ORDER, type RegisterCopyChoice, type Roster } from '../../shared/register-model.ts';
 import { repairsIn, sessionCtxOf, statusChip, type SessionSelection, type SessionView } from '../../shared/session-model.ts';
 import { getStartedButton } from '../../shared/get-started.ts';
-import type { AppSnapshot, SessionAction } from '../../shared/ipc.ts';
+import type { AppSnapshot, NearbyStatus, SessionAction } from '../../shared/ipc.ts';
 import { addedText, type NamesSheetView } from '../../shared/names-model.ts';
 import { allWorkshops, countWorkshops, longDate, shortPath } from '../../shared/workshops.ts';
 import { TEXT_SIZE_PX } from '../../shared/settings-schema.ts';
@@ -16,7 +16,7 @@ import { CommandPalette, WorkshopSwitcher } from './CommandPalette.tsx';
 import { FirstRun } from './FirstRun.tsx';
 import { GetStarted } from './GetStarted.tsx';
 import { Library } from './Library.tsx';
-import { NewWorkshopSheet, NotesSheet } from './Sheets.tsx';
+import { NearbySheet, NewWorkshopSheet, NotesSheet } from './Sheets.tsx';
 import { SessionScreen, sessionStatusText } from './SessionScreen.tsx';
 import { PairSheet } from './PairSheet.tsx';
 import { AddPersonSheet, EndConfirmSheet, QuitConfirmSheet, RenameSheet, ReviewSheet, RevokeSheet } from './SessionSheets.tsx';
@@ -25,8 +25,8 @@ import { ImportNamesSheet, PasteNamesSheet, RecoverySheet } from './NamesSheets.
 import { StatusBar } from './StatusBar.tsx';
 import { updateActionsFor } from './updateActions.ts';
 
-type Overlay = null | { kind: 'palette'; scope: 'all' | 'selection' } | { kind: 'switcher' } | { kind: 'cheat' } | { kind: 'new' } | { kind: 'add-person' } | { kind: 'pair' } | { kind: 'end' } | { kind: 'quit' } | { kind: 'revoke'; id: string } | { kind: 'rename'; id: string } | { kind: 'review' } | { kind: 'notes'; version: string; items: Array<{ title: string | null; text: string }> }
-  | { kind: 'names-paste' } | { kind: 'names-import'; view: NamesSheetView } | { kind: 'recovery' };
+type Overlay = null | { kind: 'palette'; scope: 'all' | 'selection' } | { kind: 'switcher' } | { kind: 'cheat' } | { kind: 'new' } | { kind: 'add-person' } | { kind: 'copy-register' } | { kind: 'pair' } | { kind: 'end' } | { kind: 'quit' } | { kind: 'revoke'; id: string } | { kind: 'rename'; id: string } | { kind: 'review' } | { kind: 'notes'; version: string; items: Array<{ title: string | null; text: string }> }
+  | { kind: 'names-paste' } | { kind: 'names-import'; view: NamesSheetView } | { kind: 'recovery' } | { kind: 'nearby' };
 
 /** Who the quit sheet names: the one paired iPad by its name, otherwise "the iPad". */
 function quitDeviceLabel(sv: SessionView | null): string {
@@ -47,6 +47,7 @@ export function App(): JSX.Element | null {
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [searchTick, setSearchTick] = useState(0);
   const [sv, setSv] = useState<SessionView | null>(null);
+  const [nearby, setNearby] = useState<NearbyStatus | null>(null);
   const [ui, setUiState] = useState<RegisterUi>({ filter: 'all', sort: 'newest', query: '', selectedId: null });
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [regSearchTick, setRegSearchTick] = useState(0);
@@ -71,8 +72,14 @@ export function App(): JSX.Element | null {
   // The clock of the session screen (countdown of the pairing code, "last seen" ages).
   useEffect(() => {
     if (view !== 'session') return;
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
+    let active = true;
+    const tick = (): void => {
+      setNow(Date.now());
+      void api.nearbyStatus().then((status) => { if (active) setNearby(status); });
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => { active = false; clearInterval(t); };
   }, [view]);
   useEffect(() => { setUiState({ filter: 'all', sort: 'newest', query: '', selectedId: null }); setDeviceId(null); }, [sv?.workshopId]);
 
@@ -98,7 +105,7 @@ export function App(): JSX.Element | null {
   const selectionKey = JSON.stringify(selection);
 
   const ctx: CommandCtx = useMemo(() => !snap || !view ? IDLE_CTX : ({
-    view, workshopCount: countWorkshops(snap.listing), selectedWorkshop: view === 'library' && selectedId !== null,
+    view, platform: snap.platform, workshopCount: countWorkshops(snap.listing), selectedWorkshop: view === 'library' && selectedId !== null,
     liveSession: snap.runtime.session !== 'idle', exampleOffered: snap.exampleId !== null && !snap.exampleRemoved,
     whatsNewAvailable: snap.update.whatsNew !== null,
     session: view === 'session' && sv ? sessionCtxOf(sv, selection) : null,
@@ -124,6 +131,18 @@ export function App(): JSX.Element | null {
     const r = await api.sessionAct(a);
     return r.ok ? null : r.error;
   }, []);
+  const closeCopyMenu = (): void => setOverlay((open) => open?.kind === 'copy-register' ? null : open);
+  const copyList = async (choice: RegisterCopyChoice): Promise<void> => {
+    closeCopyMenu();
+    const result = await api.sessionAct({ kind: 'copy-register', ...choice });
+    if (!result.ok) { flash(result.error); return; }
+    const { count = 0, skipped = 0 } = result.value;
+    const namesFormat = choice.format === 'names-and-emails';
+    const item = namesFormat ? 'name' : 'email address';
+    const plural = namesFormat ? 'names' : 'email addresses';
+    const copied = `Copied ${count} ${count === 1 ? item : plural}`;
+    flash(namesFormat ? copied : `${copied}. ${skipped} skipped without an email.`);
+  };
   const showAll = useCallback(() => {
     setOverlay(null);
     if (view === 'session') void api.sessionAct({ kind: 'leave' });
@@ -196,6 +215,7 @@ export function App(): JSX.Element | null {
       case 'app.whats-new':
         void api.loadNotes(snap.update.running).then((items) => { if (items) setOverlay({ kind: 'notes', version: snap.update.running, items }); });
         return;
+      case 'nearby.test': setOverlay({ kind: 'nearby' }); return;
       case 'register.find': setOverlay(null); setRegSearchTick((t) => t + 1); return;
       case 'register.show-all': setUi({ filter: 'all' }); return;
       case 'register.show-here': setUi({ filter: 'here' }); return;
@@ -222,6 +242,7 @@ export function App(): JSX.Element | null {
       case 'connection.retry': setOverlay(null); void act({ kind: 'retry' }); return;
       case 'checkin.end': setOverlay({ kind: 'end' }); return;
       case 'checkin.reopen': setOverlay(null); void act({ kind: 'start' }); return;
+      case 'register.copy-list': setOverlay((open) => open?.kind === 'copy-register' ? null : { kind: 'copy-register' }); return;
       case 'export.csv': setOverlay(null); void exportCsv(); return;
       case 'review.email': setOverlay({ kind: 'review' }); return;
       case 'names.paste': setOverlay(null); void withWorkshop(() => setOverlay({ kind: 'names-paste' })); return;
@@ -277,18 +298,21 @@ export function App(): JSX.Element | null {
           getStarted={gs} bindings={snap.bindings} selectedId={selectedId} searchFocusTick={searchTick}
           onSelect={setSelectedId} onOpen={(id) => void open(id)} onReveal={(id) => void api.runCommand('workshop.reveal', id)}
           onNew={() => run('workshop.new')} onChooseFolder={() => void api.chooseFolder().then((p) => { if (p) void api.setRegistersFolder(p); })}
-          onGetStarted={() => run('app.get-started')} onRemoveExample={() => run('app.remove-example')} />
+          onGetStarted={() => run('app.get-started')} onRemoveExample={() => run('app.remove-example')} onConnectIPad={() => run('nearby.test')} onSettings={() => run('settings')} />
       ) : view === 'get-started' ? (
         <GetStarted ran={snap.ran} bindings={snap.bindings} platform={snap.platform} exampleOffered={snap.exampleId !== null && !snap.exampleRemoved} hidden={snap.getStartedHidden}
           onOpenExample={() => void (async () => { const e = await api.createExample(); if (e.ok) await open(e.value.id); else flash(e.error); })()}
           onHide={() => void api.setGetStartedHidden(true)} onLibrary={showAll} />
       ) : (
         sv ? (
-          <SessionScreen sv={sv} workshop={sessionWorkshop} register={register} ui={ui} selectedDeviceId={deviceId} searchTick={regSearchTick} bindings={snap.bindings} platform={snap.platform} now={now}
+          <SessionScreen sv={sv} nearby={nearby} workshop={sessionWorkshop} register={register} ui={ui} selectedDeviceId={deviceId} searchTick={regSearchTick} bindings={snap.bindings} platform={snap.platform} now={now}
+            copyMenu={snap.platform === 'mac' ? { open: overlay?.kind === 'copy-register', toggle: () => run('register.copy-list'), close: closeCopyMenu, copy: (choice) => void copyList(choice) } : undefined}
             actions={{
               onUi: setUi, onShowAll: showAll, onStart: () => void act({ kind: 'start' }), onEnd: () => setOverlay({ kind: 'end' }), onReopen: () => void act({ kind: 'start' }),
-              onAdd: () => setOverlay({ kind: 'add-person' }), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
+              onAdd: () => run('person.add'), onUndo: () => run('register.undo'), onConnectIPad: () => run('nearby.test'),
+              onCommands: () => run('app.palette'), onPair: startPair, onCopyAddress: () => void act({ kind: 'copy', what: 'address' }, 'Check-in address copied'),
               onRetry: () => void act({ kind: 'retry' }),
+              onReconnect: () => { void api.nearbyReconnect().then(setNearby); },
               onWindow: (action) => void act({ kind: 'window', action }, action === 'close' ? 'Check-in on the iPad is closed.' : 'Check-in on the iPad is open.'), onMark: (id, present) => void act({ kind: 'mark', id, present }),
               onResolve: (id, action) => void act({ kind: 'resolve', id, action }), onExport: () => void exportCsv(), onReview: () => setOverlay({ kind: 'review' }),
               onSelectDevice: setDeviceId, onRenameDevice: (id) => setOverlay({ kind: 'rename', id }), onRevokeDevice: (id) => setOverlay({ kind: 'revoke', id }),
@@ -297,7 +321,7 @@ export function App(): JSX.Element | null {
             }} />
         ) : null
       )}
-      {view === 'first-run' ? null : <StatusBar left={statusLeft} version={snap.version} update={snap.update} actions={actions} notice={notice} chip={view === 'session' && sv ? statusChip(sv.phase) : null} />}
+      {view === 'first-run' ? null : <StatusBar left={statusLeft} version={snap.version} update={snap.update} actions={actions} notice={notice} chip={view === 'session' && sv ? statusChip(sv.phase, !!nearby?.peerNames.length) : null} />}
 
       {overlay?.kind === 'palette' ? (
         <CommandPalette scope={overlay.scope} ctx={ctx} bindings={snap.bindings} platform={snap.platform} recent={recent} onRun={(id) => run(id)} onClose={() => setOverlay(null)}
@@ -344,6 +368,7 @@ export function App(): JSX.Element | null {
         <RecoverySheet onChoose={() => api.sheetAct({ kind: 'recovery-choose-file' })} onDropPath={(path) => api.sheetAct({ kind: 'recovery-file', path })}
           onImport={() => api.sheetAct({ kind: 'recovery-import' })} onClose={() => closeSheet('recovery-close')} pathForFile={(f) => api.pathForFile(f)} />
       ) : null}
+      {overlay?.kind === 'nearby' ? <NearbySheet onClose={() => setOverlay(null)} /> : null}
       {overlay?.kind === 'notes' ? <NotesSheet version={overlay.version} items={overlay.items} onClose={() => { setOverlay(null); void api.update({ kind: 'dismiss-whats-new' }); }} /> : null}
     </div>
   );

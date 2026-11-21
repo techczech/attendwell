@@ -99,7 +99,7 @@ export function createFakeRuntime(options: FakeRuntimeOptions): FakeRuntime {
     let roster: Roster | undefined;
     try { if (existsSync(registerFile(id))) roster = JSON.parse(readFileSync(registerFile(id), 'utf8')) as Roster; } catch { /* an unreadable register file starts empty */ }
     const now = options.now ?? (() => new Date());
-    r = new FakeRegister({ now: () => now().getTime(), participantOrigin: currentUrl, eventName: items.get(id)?.title ?? 'Workshop', eventDate: items.get(id)?.date ?? '' }, roster);
+    r = new FakeRegister({ now: () => now().getTime(), participantOrigin: currentUrl, eventName: items.get(id)?.title ?? 'Workshop', eventDate: items.get(id)?.date ?? '', persist: () => persist(id) }, roster);
     registers.set(id, r);
     return r;
   };
@@ -109,7 +109,7 @@ export function createFakeRuntime(options: FakeRuntimeOptions): FakeRuntime {
     if (!r || !s) return;
     const roster = r.snapshot();
     mkdirSync(dirOf(id), { recursive: true });
-    writeFileSync(registerFile(id), JSON.stringify(roster));
+    writeFileSync(registerFile(id), JSON.stringify({ ...roster, nearbyOperations: r.nearbyOperations }));
     s.attended = roster.participants.filter((p) => p.present).length;
     s.names = roster.participants.length;
     save(s);
@@ -208,6 +208,12 @@ export function createFakeRuntime(options: FakeRuntimeOptions): FakeRuntime {
       registerFor(id);
       let released = false;
       return { organiserUrl: url, release: async () => { if (released) return; released = true; leaseUrls.delete(url); persist(id); } };
+    },
+    async withRegister(id, use) {
+      const lease = await this.openRegister(id);
+      const live = snap.workshopId === id && snap.session === 'running' && snap.service.state === 'running'
+        && snap.service.organiserUrl === lease.organiserUrl;
+      try { return await use(lease.organiserUrl, live); } finally { await lease.release(); }
     },
     async recordRosterProvenance(id, p) {
       const s = items.get(id);

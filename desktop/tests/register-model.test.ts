@@ -1,7 +1,7 @@
 // The register view model: status, search, filters, sort, counts, the closed summary, CSV and the email review list.
 import { describe, expect, test } from 'bun:test';
 import {
-  buildRegister, clockOf, initialsOf, registerCsv, reviewRecipients, stepSelection, summaryOf, type Roster, type RosterPerson,
+  buildRegister, copyRegisterList, clockOf, initialsOf, registerCsv, reviewRecipients, stepSelection, summaryOf, type Roster, type RosterPerson,
 } from '../shared/register-model.ts';
 
 const at = (hh: number, mm: number): string => new Date(2026, 9, 30, hh, mm).toISOString();
@@ -117,5 +117,69 @@ describe('closed summary, CSV and email review', () => {
     expect(out.recipients.map((x) => x.email)).toEqual(['bea@example.ac.uk', 'shared@example.ac.uk']);
     expect(out.skipped).toBe(2);
     expect(out.bcc).toBe('bea@example.ac.uk; shared@example.ac.uk');
+  });
+});
+
+describe('copy register lists', () => {
+  const workshop = { title: 'Fictional workshop', date: '2026-10-30' };
+  const r: Roster = {
+    participants: [
+      person('last', 'Amy Late', { present: true, updatedAt: at(14, 30), late: true }),
+      person('cancelled', 'Hidden Cancelled', { booking: 'cancelled', present: true, updatedAt: at(12, 0) }),
+      person('nomail', 'Tomasz Walk-in', { email: '', present: true, updatedAt: at(14, 5) }),
+      person('first', 'Zed Early', { present: true, updatedAt: at(13, 45) }),
+      person('waiting', 'Hidden Waiting', { booking: 'waiting' }),
+      person('removed', 'Removed Booking', { active: false, present: true, updatedAt: at(13, 20) }),
+      person('admitted', 'Admitted Booking', { booking: 'waiting', admitted: true }),
+      person('not-arrived-nomail', 'No Email Yet', { email: '  ' }),
+      person('not-arrived', 'Another Booking'),
+    ],
+    conflicts: [{ participantId: 'gone', name: 'Removed Held Booking', reason: 'not-in-roster', queuedAt: null, receivedAt: null, count: 1 }],
+  };
+
+  test('names and emails for checked-in people uses arrival order and includes late and no-email arrivals', () => {
+    expect(copyRegisterList(workshop, r, { attendance: 'checked-in', format: 'names-and-emails' })).toEqual({
+      count: 3, skipped: 0,
+      text: [
+        'Checked in: 3 of 6 — Fictional workshop, Fri 30 Oct 2026',
+        'Zed Early <zed.early@example.ac.uk>',
+        'Tomasz Walk-in',
+        'Amy Late <amy.late@example.ac.uk>',
+      ].join('\n'),
+    });
+  });
+
+  test('names and emails for people who have not checked in excludes hidden or removed names', () => {
+    expect(copyRegisterList(workshop, r, { attendance: 'not-checked-in', format: 'names-and-emails' })).toEqual({
+      count: 3, skipped: 0,
+      text: [
+        'Not checked in: 3 of 6 — Fictional workshop, Fri 30 Oct 2026',
+        'Admitted Booking <admitted.booking@example.ac.uk>',
+        'Another Booking <another.booking@example.ac.uk>',
+        'No Email Yet',
+      ].join('\n'),
+    });
+  });
+
+  test('emails only for checked-in people keeps arrival order and skips names without addresses', () => {
+    expect(copyRegisterList(workshop, r, { attendance: 'checked-in', format: 'emails-only' })).toEqual({
+      count: 2, skipped: 1, text: 'zed.early@example.ac.uk; amy.late@example.ac.uk',
+    });
+  });
+
+  test('emails only for people who have not checked in includes eligible addresses only', () => {
+    expect(copyRegisterList(workshop, r, { attendance: 'not-checked-in', format: 'emails-only' })).toEqual({
+      count: 2, skipped: 1, text: 'admitted.booking@example.ac.uk; another.booking@example.ac.uk',
+    });
+  });
+
+  test('an empty list has a header in the names format and empty text in the emails format', () => {
+    const empty: Roster = { participants: [], conflicts: [] };
+    expect(copyRegisterList(workshop, empty, { attendance: 'checked-in', format: 'names-and-emails' })).toEqual({
+      count: 0, skipped: 0, text: 'Checked in: 0 of 0 — Fictional workshop, Fri 30 Oct 2026',
+    });
+    expect(copyRegisterList(workshop, empty, { attendance: 'not-checked-in', format: 'emails-only' })).toEqual({
+      count: 0, skipped: 0, text: '',
+    });
   });
 });

@@ -32,6 +32,7 @@ const LOCK: Array<[string, string, string, string]> = [
   ['person.add', 'Add person', '⌘⌥N', 'Session'], ['ipad.pair', 'Pair an iPad', '⌘⇧N', 'Session'], ['ipad.pair-again', 'Pair again', '', 'Session'], ['ipad.rename', 'Rename iPad…', '', ''],
   ['ipad.revoke', 'Revoke iPad…', '', ''], ['ipad.import-recovery', 'Import iPad recovery file…', '', 'Session'], ['connection.copy-address', 'Copy check-in address', '⌘⌥C', 'Session'],
   ['connection.retry', 'Retry connection', '⌘⇧R', 'Session'], ['connection.test', 'Test connection', '', ''], ['review.email', 'Email review…', '⌘E', 'Session'], ['export.csv', 'Export CSV…', '⌘⇧E', 'Session'],
+  ['register.copy-list', 'Copy…', '', 'Session'],
   ['checkin.end', 'End check-in', '', 'Session'], ['checkin.reopen', 'Reopen check-in', '', 'Session'],
 ];
 
@@ -44,7 +45,7 @@ describe('the locked command list', () => {
       expect(def!.key, id).toBe(chord);
     }
     const extra = registry.defs.map((d) => d.id).filter((id) => !LOCK.some((l) => l[0] === id));
-    expect(extra.sort()).toEqual(['workshop.open', 'workshop.reveal']);
+    expect(extra.sort()).toEqual(['nearby.test', 'workshop.open', 'workshop.reveal']);
   });
   test('menu placement follows the lock (File, Edit, View, Session, Help; the AttendWell menu and Window are placed by the builder)', () => {
     for (const [id, , , menu] of LOCK) {

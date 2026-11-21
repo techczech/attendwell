@@ -18,7 +18,7 @@ export type ViewName = 'first-run' | 'library' | 'get-started' | 'session';
 /** What the session screen knows that decides its commands: where check-in stands, and what is selected. */
 export interface SessionCtx {
   phase: SessionPhase;
-  /** The register is answering (check-in is open and the connection to the register works): people can be marked and added. */
+  /** The register is answering (check-in is open and the connection to the register works): attendance can be marked. */
   registerOpen: boolean;
   pair: Availability;
   canUndo: boolean;
@@ -38,6 +38,7 @@ export interface SessionCtx {
 
 export interface CommandCtx {
   view: ViewName;
+  platform?: 'mac' | 'win';
   workshopCount: number;
   /** A workshop row is selected in the library. */
   selectedWorkshop: boolean;
@@ -56,7 +57,7 @@ export const IDLE_CTX: CommandCtx = {
 };
 
 type Avail = 'always' | 'setup' | 'selection' | 'later' | 'idle' | 'example' | 'whats-new' | 'workshops'
-  | 'register' | 'check-in' | 'undo' | 'held' | 'add' | 'pair' | 'pair-again' | 'device' | 'address' | 'retry' | 'end' | 'reopen' | 'export' | 'review'
+  | 'register' | 'check-in' | 'undo' | 'held' | 'pair' | 'pair-again' | 'device' | 'address' | 'retry' | 'end' | 'reopen' | 'export' | 'review' | 'copy-register'
   | 'names' | 'recovery';
 
 const REASONS = {
@@ -70,7 +71,7 @@ const REASONS = {
   noWorkshops: 'There are no workshops yet.',
 } as const;
 
-const SESSION_KINDS: ReadonlySet<Avail> = new Set(['register', 'check-in', 'undo', 'held', 'add', 'pair', 'pair-again', 'device', 'address', 'retry', 'end', 'reopen', 'export', 'review']);
+const SESSION_KINDS: ReadonlySet<Avail> = new Set(['register', 'check-in', 'undo', 'held', 'pair', 'pair-again', 'device', 'address', 'retry', 'end', 'reopen', 'export', 'review', 'copy-register']);
 
 function notOpen(s: SessionCtx): string {
   return s.phase === 'ready' ? 'Start check-in first.' : s.phase === 'closed' || s.phase === 'past' ? 'Check-in is closed. Reopen check-in first.' : 'The register is not answering yet.';
@@ -82,6 +83,7 @@ function sessionReason(kind: Avail, c: CommandCtx): string | null {
   const s = c.session;
   switch (kind) {
     case 'register': return null;
+    case 'copy-register': return c.platform === 'win' ? 'Available on Mac.' : null;
     case 'check-in':
       if (!s.registerOpen) return notOpen(s);
       if (!s.person) return 'Select a person first.';
@@ -90,7 +92,6 @@ function sessionReason(kind: Avail, c: CommandCtx): string | null {
       return s.person.canCheckIn ? null : 'This person is on the waiting list. Admit them first.';
     case 'undo': return !s.registerOpen ? notOpen(s) : s.canUndo ? null : 'There is nothing to undo.';
     case 'held': return !s.registerOpen ? notOpen(s) : s.person?.held ? null : 'Select a person held for review first.';
-    case 'add': return s.registerOpen ? null : notOpen(s);
     case 'pair': return s.pair.ok ? null : s.pair.reason;
     case 'pair-again': return !s.pair.ok ? s.pair.reason : s.device ? null : 'Select an iPad first.';
     case 'device': return !s.registerOpen ? notOpen(s) : s.device ? null : 'Select an iPad first.';
@@ -116,7 +117,7 @@ function reasonFor(kind: Avail, c: CommandCtx): string | null {
     // A name list goes to the workshop on screen, or to the one selected in the library; a recovery file to the workshop on screen.
     // Either works before Start check-in and after End (the runtime opens the register without the check-in address).
     case 'names':
-      if (c.view === 'session' && c.session) return c.session.phase === 'ending' ? 'Wait until check-in has closed.' : null;
+      if (c.view === 'session' && c.session) return null;
       return c.view === 'library' ? (c.selectedWorkshop ? null : REASONS.selection) : REASONS.openFirst;
     case 'recovery':
       if (c.view === 'session' && c.session) return c.session.phase === 'ending' ? 'Wait until check-in has closed.' : null;
@@ -156,6 +157,7 @@ export const COMMAND_ROWS: readonly Row[] = [
   { id: 'app.about', menu: 'App', cheat: 'App', label: 'About AttendWell', key: '', icon: 'info', avail: 'always', placed: true, noMenu: 'Placed in the AttendWell menu (Help on Windows)' },
   { id: 'app.check-for-updates', menu: 'App', cheat: 'App', label: 'Check for Updates…', key: '', icon: 'refresh-cw', avail: 'idle', placed: true, noMenu: 'Placed in the AttendWell menu (Help on Windows)' },
   { id: 'app.whats-new', menu: 'Help', cheat: 'App', label: "What's new in AttendWell", key: '', icon: 'sparkles', avail: 'whats-new' },
+  { id: 'nearby.test', menu: 'Help', cheat: 'App', label: 'Connect iPad…', key: '', icon: 'plug-zap', avail: 'always' },
   { id: 'app.get-started', menu: 'Help', cheat: 'App', label: 'Get started', key: '', icon: 'play', avail: 'setup' },
   { id: 'app.how-it-works', menu: 'Help', cheat: 'App', label: 'How AttendWell works', key: '', icon: 'book-open', avail: 'setup' },
   { id: 'app.remove-example', menu: 'Help', cheat: 'App', label: 'Remove example', key: '', icon: 'x', avail: 'example' },
@@ -185,11 +187,12 @@ export const COMMAND_ROWS: readonly Row[] = [
   { id: 'held.check-in', menu: 'Session', cheat: 'Register', label: 'Check in (held for review)', key: '', icon: 'check', avail: 'held', noMenu: 'Needs a selected held row: Actions for the selection (⌘K) only' },
   { id: 'held.keep-not-checked-in', menu: 'Session', cheat: 'Register', label: 'Keep not checked in', key: '', icon: 'user-x', avail: 'held', noMenu: 'Needs a selected held row: Actions for the selection (⌘K) only' },
   // Session
-  { id: 'person.add', menu: 'Session', cheat: 'Session', label: 'Add person', key: '⌘⌥N', icon: 'user-plus', avail: 'add' },
+  { id: 'person.add', menu: 'Session', cheat: 'Session', label: 'Add person', key: '⌘⌥N', icon: 'user-plus', avail: 'register' },
   { id: 'ipad.pair', menu: 'Session', cheat: 'Session', label: 'Pair an iPad', key: '⌘⇧N', icon: 'qr-code', avail: 'pair' },
   { id: 'connection.copy-address', menu: 'Session', cheat: 'Session', label: 'Copy check-in address', key: '⌘⌥C', icon: 'copy', avail: 'address' },
   { id: 'connection.retry', menu: 'Session', cheat: 'Session', label: 'Retry connection', key: '⌘⇧R', icon: 'rotate-cw', avail: 'retry' },
   { id: 'review.email', menu: 'Session', cheat: 'Session', label: 'Email review…', key: '⌘E', icon: 'mail', avail: 'review' },
+  { id: 'register.copy-list', menu: 'Session', cheat: 'Register', label: 'Copy…', key: '', icon: 'copy', avail: 'copy-register' },
   { id: 'export.csv', menu: 'Session', cheat: 'Session', label: 'Export CSV…', key: '⌘⇧E', icon: 'file-down', avail: 'export' },
   { id: 'checkin.end', menu: 'Session', cheat: 'Session', label: 'End check-in', key: '', icon: 'power', avail: 'end' },
   { id: 'checkin.reopen', menu: 'Session', cheat: 'Session', label: 'Reopen check-in', key: '', icon: 'rotate-ccw', avail: 'reopen' },

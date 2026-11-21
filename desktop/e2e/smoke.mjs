@@ -57,6 +57,25 @@ try {
   await page.waitForSelector('button:has-text("Start check-in")', { timeout: 15_000 });
   check(true, 'a new workshop opens on the register, ready to start check-in');
 
+  async function checkRegisterActions(phase) {
+    for (const label of ['Add person', 'Paste names…', 'Import a file…', 'Connect iPad']) {
+      const button = page.getByRole('button', { name: label, exact: true });
+      check(await button.isVisible() && await button.isEnabled(), `${label} is available ${phase}`);
+    }
+  }
+  const copyButton = page.getByRole('button', { name: 'Copy…', exact: true });
+  async function checkCopy(option, confirmation) {
+    if (process.platform !== 'darwin') return;
+    await copyButton.click();
+    const options = page.getByRole('group', { name: 'Copy options' });
+    check(await options.getByRole('button').count() === 4, 'Copy shows four options');
+    await options.getByRole('button', { name: option, exact: true }).click();
+    await page.getByText(confirmation, { exact: true }).waitFor();
+    check(true, `Copy announces ${confirmation}`);
+  }
+  await checkRegisterActions('before check-in starts');
+  await checkCopy('Names and emails — checked in', 'Copied 0 names');
+
   // Before check-in starts: paste three names, see the preview, add them, and see them in the register.
   await page.click('button:has-text("Paste names…")');
   await page.waitForSelector('[role=dialog][aria-label="Paste names"]');
@@ -77,6 +96,7 @@ try {
   await page.click('button:has-text("Start check-in")');
   await page.waitForSelector('[aria-label="Check-in: Online"]', { timeout: 15_000 });
   check(true, 'check-in starts on the fake runtime and goes online');
+  await checkRegisterActions('during check-in');
 
   await page.keyboard.press('Meta+Shift+N');
   await page.waitForSelector('[role=dialog][aria-label="Pair an iPad"] svg.qr', { timeout: 10_000 });
@@ -90,12 +110,18 @@ try {
   await page.click('[role=dialog] button:has-text("Add person")');
   await page.waitForSelector('[role=option]:has-text("Test Walkin"):has-text("Walk-in")', { timeout: 10_000 });
   check(true, 'a walk-in is added on the laptop and shown as here');
+  await checkCopy('Names and emails — checked in', 'Copied 1 name');
+  await checkCopy('Names and emails — not checked in', 'Copied 3 names');
+  await checkCopy('Emails only — checked in', 'Copied 0 email addresses. 1 skipped without an email.');
+  await checkCopy('Emails only — not checked in', 'Copied 2 email addresses. 1 skipped without an email.');
 
   await page.click('button:has-text("End check-in")');
   await page.click('[role=dialog] button:has-text("End check-in")');
   await page.waitForSelector('[aria-label="Check-in: Check-in closed"]', { timeout: 15_000 });
   await page.waitForSelector('button:has-text("Reopen check-in")');
   check(true, 'End check-in closes the address; the register stays and can be reopened');
+  await checkRegisterActions('after check-in ends');
+  await checkCopy('Names and emails — checked in', 'Copied 1 name');
 
   const state = await app.evaluate(({ BrowserWindow }) => ({
     dialogs: globalThis.__dialogCalls,

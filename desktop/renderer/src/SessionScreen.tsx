@@ -5,11 +5,12 @@ import { repairBanner, repairTargets } from '../../shared/devices-model.ts';
 import { clockOf, summaryOf, type RegisterView } from '../../shared/register-model.ts';
 import { connectionModel, pairAvailability, pastBanner, toolbarModel, windowModel, type SessionView } from '../../shared/session-model.ts';
 import type { WorkshopSummary } from '../../shared/runtime-types.ts';
+import type { NearbyStatus } from '../../shared/ipc.ts';
 import { longDate, shortPath, timeRange } from '../../shared/workshops.ts';
 import { Icon } from './icons.tsx';
 import { Keys } from './Keys.tsx';
 import { CheckInWindowPanel, ConnectionPanel, DevicesPanel, PairButton } from './Rail.tsx';
-import { RegisterPanel, type RegisterUi } from './RegisterPanel.tsx';
+import { RegisterPanel, type RegisterCopyMenu, type RegisterUi } from './RegisterPanel.tsx';
 
 export interface SessionActions {
   onUi(patch: Partial<RegisterUi>): void;
@@ -18,9 +19,13 @@ export interface SessionActions {
   onEnd(): void;
   onReopen(): void;
   onAdd(): void;
+  onUndo(): void;
+  onConnectIPad(): void;
+  onCommands(): void;
   onPair(targetId?: string): void;
   onCopyAddress(): void;
   onRetry(): void;
+  onReconnect(): void;
   onWindow(action: 'open' | 'extend' | 'close'): void;
   onMark(id: string, present: boolean): void;
   onResolve(id: string, action: 'check-in' | 'dismiss'): void;
@@ -38,6 +43,7 @@ export interface SessionActions {
 
 export interface SessionScreenProps {
   sv: SessionView;
+  nearby: NearbyStatus | null;
   workshop: WorkshopSummary | null;
   register: RegisterView;
   ui: RegisterUi;
@@ -46,6 +52,7 @@ export interface SessionScreenProps {
   bindings: Record<string, string>;
   platform: 'mac' | 'win';
   now: number;
+  copyMenu?: RegisterCopyMenu | undefined;
   actions: SessionActions;
 }
 
@@ -81,28 +88,29 @@ export function SessionScreen(p: SessionScreenProps): JSX.Element {
             onKeyDown={(e) => { if (e.key === 'Escape') { a.onUi({ query: '' }); (e.target as HTMLInputElement).blur(); } }} />
           <Keys chord={p.bindings['register.find'] ?? ''} platform={p.platform} />
         </label>
-        <button type="button" className="btn" disabled={tb.addPerson === 'disabled' || !sv.registerOpen} onClick={a.onAdd}><Icon name="user-plus" />Add person</button>
+        <button type="button" className="btn icon" onClick={a.onCommands} aria-label="Command palette" title="Command palette"><Icon name="command" size={18} /></button>
         {tb.end ? <button type="button" className="btn danger" onClick={a.onEnd} disabled={sv.busy}><Icon name="power" />End check-in</button> : null}
         {tb.closedMarker ? <span className="btn marker" aria-label="Check-in closed"><Icon name="circle-check" />Check-in closed</span> : null}
-        {tb.readOnlyMarker ? <span className="btn marker" aria-label="Read only"><Icon name="lock" />Read only</span> : null}
-        {tb.readOnlyMarker && roster.participants.length > 0 ? <button type="button" className="btn" onClick={a.onExport}><Icon name="file-down" />Export CSV</button> : null}
         {tb.start ? <button type="button" className="btn primary" onClick={a.onStart} disabled={sv.busy || sv.otherLive} title={sv.otherLive ? "Another workshop's check-in is open. End it first." : undefined}><Icon name="play" />Start check-in</button> : null}
         {tb.reopen ? <button type="button" className="btn" onClick={a.onReopen} disabled={sv.busy || sv.otherLive} title={sv.otherLive ? "Another workshop's check-in is open. End it first." : undefined}><Icon name="rotate-ccw" />Reopen check-in</button> : null}
       </div>
       <div className="main">
-        <RegisterPanel view={p.register} ui={p.ui} phase={sv.phase} editable={editable} readOnlyBanner={readOnlyBanner}
+        <RegisterPanel view={p.register} ui={p.ui} editable={editable} readOnlyBanner={readOnlyBanner}
           summary={showSummary ? { closedAt: clockOf(sv.closedAt), arrived: sum.here, total: sum.total, walkIns: sum.walkIns, held: sum.held } : null}
           repair={banner} repairChord={pairChord} platform={p.platform} rosterError={sv.rosterError} busy={sv.busy}
+          canUndo={editable && sv.canUndo} canExport={sum.total > 0} canReview={sum.here > 0}
           onUi={a.onUi} onMark={a.onMark} onResolve={a.onResolve} onRepair={() => a.onPair(banner?.targetId ?? undefined)} onExport={a.onExport} onReview={a.onReview}
-          canAddNames={sv.phase !== 'ending'} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} />
+          onAdd={a.onAdd} onPasteNames={a.onPasteNames} onImportNames={a.onImportNames} onUndo={a.onUndo} copyMenu={p.copyMenu} />
         <aside className="rail" aria-label="Connection and iPads">
+          <button type="button" className="btn primary big" onClick={a.onConnectIPad}><Icon name="plug-zap" />Connect iPad</button>
           {sv.windowError ? <div className="warn-card" role="alert"><Icon name="circle-alert" size={16} /><span>{sv.windowError}</span></div> : null}
-          <ConnectionPanel model={conn} host={sv.hostName} compact={devices.length >= 4} onCopy={a.onCopyAddress} onRetry={a.onRetry} onChooseFolder={a.onChooseFolder} />
+          <ConnectionPanel model={conn} nearby={p.nearby} host={sv.hostName} compact={devices.length >= 4}
+            onCopy={a.onCopyAddress} onRetry={a.onRetry} onReconnect={a.onReconnect} onChooseFolder={a.onChooseFolder} />
           {editable && sv.window ? (
-            <CheckInWindowPanel model={windowModel(sv.window, p.now)} openUntil={clockOf(new Date(p.now + sv.openMinutes * 60_000).toISOString())} busy={sv.busy}
+            <CheckInWindowPanel model={windowModel(sv.window, p.now)} openUntil={clockOf(new Date(p.now + sv.openMinutes * 60_000).toISOString())} busy={sv.busy} keepLidOpen={p.platform === 'mac'}
               onOpen={() => a.onWindow('open')} onExtend={() => a.onWindow('extend')} onClose={() => a.onWindow('close')} />
           ) : null}
-          <DevicesPanel list={sv.devices} live={live && sv.phase !== 'ending'} closedAt={sv.closedAt} repair={repairIds} now={p.now} selectedId={p.selectedDeviceId}
+          <DevicesPanel list={sv.devices} localNames={p.nearby?.peerNames ?? []} live={live && sv.phase !== 'ending'} closedAt={sv.closedAt} repair={repairIds} now={p.now} selectedId={p.selectedDeviceId}
             canAct={editable} onSelect={a.onSelectDevice} onRename={a.onRenameDevice} onPairAgain={(id) => a.onPair(id)} onRevoke={a.onRevokeDevice} onDismissHold={a.onDismissHold}
             canImport={sv.phase !== 'ending'} onImportRecovery={a.onImportRecovery} />
           <PairButton avail={avail} label={pairLabel} chord={pairChord} platform={p.platform} onClick={() => a.onPair(banner?.targetId ?? undefined)} />

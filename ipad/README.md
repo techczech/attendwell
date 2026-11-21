@@ -8,4 +8,6 @@ TestFlight testing is private; there is no public download or App Store listing.
 2. Change the development team and the bundle identifier (`net.dominiklukes.attendwell.ipad`) in the Xcode project to your own, because the committed settings belong to the author's Apple developer account.
 3. Run it on your own iPad, or distribute it yourself through TestFlight or an App Store listing under your own account.
 
+Getting a new build from an upload onto a tester's iPad: [../docs/howto-testflight-build.md](../docs/howto-testflight-build.md).
+
 The app is MIT licensed, like the rest of the repository. The pairing interface between the iPad and the organiser app is documented in [contract/device-v1](contract/device-v1) and [../docs/reference-device-api.md](../docs/reference-device-api.md).

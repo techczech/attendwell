@@ -1,6 +1,7 @@
 import {Database} from 'bun:sqlite';
 import {randomUUID,randomBytes,createHmac} from 'node:crypto';
 import {isEligible,eligibleSql} from './eligibility-attendance';
+import {isNearbyCheckIn,nearbyNameId,type NearbyReceipt} from './nearby-protocol';
 import {exampleWorkshop,MANUAL_SOURCE_STATUS,type Booking,type WorkshopConfig} from './workshop-config';
 import {planNames,MAX_LIST_ROWS,PLAN_CHANGED,type AddedLists,type NameListRecord,type NameRow,type NamesPlan} from './names-list';
 export type {Booking} from './workshop-config';
@@ -106,7 +107,7 @@ export class AttendanceStore {
  // Replayable self-check-in: the device's operation ID makes retries idempotent; basis is the record version the device saw.
  // A stale basis on a pending record means an organiser changed it meanwhile (for example undo): hold for review, never overwrite.
  // `by` names the channel: the browser page by default, or a paired iPad (kind device-check-in) whose replays must match that kind.
- participantCheckIn(id:string,op:{opId?:unknown;basis?:unknown;queuedAt?:unknown}={},by:{kind:string;actor:string;deviceId?:string|null}={kind:'participant-check-in',actor:'participant-self-check-in'}){
+ participantCheckIn(id:string,op:{opId?:unknown;basis?:unknown;queuedAt?:unknown;late?:boolean}={},by:{kind:string;actor:string;deviceId?:string|null}={kind:'participant-check-in',actor:'participant-self-check-in'}){
   const opId=op.opId===undefined?randomUUID():op.opId;const basis=op.basis===undefined?null:op.basis;
   if(!opOK(opId)||basis!==null&&(!Number.isInteger(basis)||(basis as number)<0))throw new InputError('Invalid check-in request.');
   const queuedAt=typeof op.queuedAt==='string'&&op.queuedAt.length<=40&&Number.isFinite(Date.parse(op.queuedAt))?op.queuedAt:null;
@@ -121,9 +122,34 @@ export class AttendanceStore {
    else if(p.present)outcome='already';
    else if(basis!==null&&basis!==p.version){outcome='conflict';reason='changed';}
    else{this.db.query('UPDATE people SET present=1,version=version+1,updatedAt=? WHERE id=? AND present=0').run(new Date().toISOString(),id);this.audit(by.actor,'check-in',id,by.deviceId??null);}
+   if(op.late)reason=reason?reason+'-late':'late';
    this.db.query('INSERT INTO operations(opId,kind,participantId,actor,outcome,reason,queuedAt,receivedAt,deviceId) VALUES(?,?,?,?,?,?,?,?,?)').run(opId,by.kind,id,by.actor,outcome,reason,queuedAt,new Date().toISOString(),by.deviceId??null);
    return {name:p.name,already:outcome==='already',outcome,reason};
   })();
+ }
+ // The authenticated desktop bridge can deliver even after closing. Commit the operation,
+ // any attendance change and its audit row together before returning a receipt.
+ recordNearbyCheckIn(input:unknown,closed:boolean):NearbyReceipt {
+  if(!isNearbyCheckIn(input))throw new InputError('Invalid nearby check-in.');
+  const {opId,nameId,at}=input;
+  const by={kind:'nearby-check-in',actor:'nearby-ipad'};
+  return this.db.transaction(()=>{
+   const prior=this.db.query('SELECT participantId,kind,outcome,reason FROM operations WHERE opId=?').get(opId) as Operation|null;
+   if(prior){
+    const priorNameId=prior.reason?.startsWith('unknown-nearby-name')?prior.participantId:nearbyNameId(prior.participantId);
+    if(prior.kind!==by.kind||priorNameId!==nameId)throw new InputError('This check-in request was already used for another record.',409);
+    return {recorded:false};
+   }
+   const people=this.db.query('SELECT id,active FROM people').all() as Pick<Row,'id'|'active'>[];
+   const person=people.find(p=>nearbyNameId(p.id)===nameId);
+   const late=closed||!this.participantWindow().open;
+   if(person?.active)this.participantCheckIn(person.id,{opId,queuedAt:at,late},by);
+   else{
+    const reason=person?'not-in-roster':'unknown-nearby-name';
+    this.holdForReview(person?.id??nameId,{opId,queuedAt:at},late?reason+'-late':reason,by);
+   }
+   return {recorded:true};
+  }).immediate();
  }
  // Held for review without trying to apply: a paired iPad's check-in for a booking a later import removed (reason not-in-roster).
  // Kept in the conflict queue so the organiser sees it; a replay of the same opId returns this row's answer.
@@ -131,15 +157,15 @@ export class AttendanceStore {
   this.db.query('INSERT OR IGNORE INTO operations(opId,kind,participantId,actor,outcome,reason,queuedAt,receivedAt,deviceId) VALUES(?,?,?,?,?,?,?,?,?)').run(op.opId,by.kind,id,by.actor,'conflict',reason,op.queuedAt??null,new Date().toISOString(),by.deviceId??null);
  }
  // Inactive bookings stay out of the queue except for not-in-roster holds, which exist only because the booking left the roster.
- conflicts(){return this.db.query("SELECT o.participantId,p.name,o.reason,MIN(o.queuedAt) AS queuedAt,MAX(o.receivedAt) AS receivedAt,COUNT(*) AS count FROM operations o JOIN people p ON p.id=o.participantId WHERE o.outcome='conflict' AND o.resolvedAt IS NULL AND (p.active=1 OR o.reason='not-in-roster') GROUP BY o.participantId ORDER BY receivedAt").all() as Conflict[];}
+ conflicts(){return this.db.query("SELECT o.participantId,COALESCE(p.name,'Unknown iPad name') AS name,o.reason,MIN(o.queuedAt) AS queuedAt,MAX(o.receivedAt) AS receivedAt,COUNT(*) AS count FROM operations o LEFT JOIN people p ON p.id=o.participantId AND o.reason NOT LIKE 'unknown-nearby-name%' WHERE o.outcome='conflict' AND o.resolvedAt IS NULL AND (p.active=1 OR o.reason IN ('not-in-roster','not-in-roster-late','unknown-nearby-name','unknown-nearby-name-late')) GROUP BY o.participantId ORDER BY receivedAt").all() as Conflict[];}
  resolveConflict(id:unknown,action:unknown,actor:string){
   if(!text(id,100)||!['check-in','dismiss'].includes(action as string))throw new InputError('Choose how to resolve this check-in.');
   this.db.transaction(()=>{
    const p=this.db.query('SELECT * FROM people WHERE id=?').get(id as string) as Row|null;
-   const open=this.db.query("SELECT COUNT(*) AS n,SUM(reason='not-in-roster') AS gone FROM operations WHERE participantId=? AND outcome='conflict' AND resolvedAt IS NULL").get(id as string) as {n:number;gone:number|null};
-   if(!p||!open.n||!p.active&&!open.gone)throw new InputError('This check-in was already resolved. Refresh the register.',404);
-   if(action==='check-in'&&!p.active)throw new InputError('This booking is no longer in the imported roster. Import it again or add the person, then check them in.',409);
-   if(action==='check-in'){if(!isEligible(p))throw new InputError('Only an eligible booking can be checked in. Admit or refresh the booking first.');if(!p.present)this.db.query('UPDATE people SET present=1,version=version+1,updatedAt=? WHERE id=?').run(new Date().toISOString(),id as string);}
+   const open=this.db.query("SELECT COUNT(*) AS n,SUM(reason IN ('not-in-roster','not-in-roster-late','unknown-nearby-name','unknown-nearby-name-late')) AS gone FROM operations WHERE participantId=? AND outcome='conflict' AND resolvedAt IS NULL").get(id as string) as {n:number;gone:number|null};
+   if(!open.n||!p?.active&&!open.gone)throw new InputError('This check-in was already resolved. Refresh the register.',404);
+   if(action==='check-in'&&!p?.active)throw new InputError('This booking is no longer in the imported roster. Import it again or add the person, then check them in.',409);
+   if(action==='check-in'&&p){if(!isEligible(p))throw new InputError('Only an eligible booking can be checked in. Admit or refresh the booking first.');if(!p.present)this.db.query('UPDATE people SET present=1,version=version+1,updatedAt=? WHERE id=?').run(new Date().toISOString(),id as string);}
    this.db.query("UPDATE operations SET resolvedAt=?,resolution=? WHERE participantId=? AND outcome='conflict' AND resolvedAt IS NULL").run(new Date().toISOString(),action as string,id as string);
    this.audit(actor,action==='check-in'?'resolve-check-in':'resolve-dismiss',id as string);
   })();return this.list();
@@ -171,9 +197,10 @@ export class AttendanceStore {
  audit(actor:string,verb:string,id:string|null=null,deviceId:string|null=null){this.db.query('INSERT INTO audit(at,actor,verb,participantId,deviceId) VALUES(?,?,?,?,?)').run(new Date().toISOString(),actor,verb,id,deviceId)}
  list(){
   const rows=this.db.query('SELECT * FROM people WHERE active=1 ORDER BY name COLLATE NOCASE,id').all() as Row[];
+  const late=new Set((this.db.query("SELECT DISTINCT participantId FROM operations WHERE kind='nearby-check-in' AND reason='late'").all() as {participantId:string}[]).map(r=>r.participantId));
   const meta=this.db.query("SELECT value FROM metadata WHERE key='source'").get() as {value:string}|null;
   const w=this.workshop;
-  return {sessionId:w.sessionId,title:w.title,date:w.date,time:`${w.startTime}–${w.endTime}`,organiserHelp:w.organiserHelp,participantBasePath:w.participantBasePath,publicOrigin:w.publicOrigin,source:meta?JSON.parse(meta.value):null,participants:rows.map(r=>({...r,present:!!r.present,active:!!r.active,admitted:!!r.admitted})),conflicts:this.conflicts(),nameLists:this.nameLists()};
+  return {sessionId:w.sessionId,title:w.title,date:w.date,time:`${w.startTime}–${w.endTime}`,organiserHelp:w.organiserHelp,participantBasePath:w.participantBasePath,publicOrigin:w.publicOrigin,source:meta?JSON.parse(meta.value):null,participants:rows.map(r=>({...r,present:!!r.present,active:!!r.active,admitted:!!r.admitted,...(r.present&&late.has(r.id)?{late:true}:{})})),conflicts:this.conflicts(),nameLists:this.nameLists()};
  }
  import(input:unknown,actor:string){
   const r=validateRoster(input,this.workshop);

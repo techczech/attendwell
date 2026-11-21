@@ -3,12 +3,13 @@
 // state machine, and follows the runtime's states. The window renders `view()`; every action is a method that returns a Result.
 import { reduce, IDLE, type PairingState } from '../shared/pairing-model.ts';
 import type { DeviceList } from '../shared/devices-model.ts';
-import type { CheckInWindow, Roster } from '../shared/register-model.ts';
+import { copyRegisterList, type CheckInWindow, type RegisterCopyChoice, type RegisterCopyResult, type Roster } from '../shared/register-model.ts';
 import type { Result } from '../shared/ipc.ts';
 import type { RuntimeSnapshot, WorkshopSummary } from '../shared/runtime-types.ts';
 import { defaultWindowMinutes, extendMinutes, phaseOf, type SessionPhase, type SessionView } from '../shared/session-model.ts';
 import { OrganiserError, type OrganiserClient, type OrganiserFactory } from './organiser-client.ts';
 import type { RuntimePort } from './runtime-port.ts';
+import type { NearbyWorkshop } from './nearby-link.ts';
 
 export interface SessionServiceDeps {
   port: RuntimePort;
@@ -16,6 +17,7 @@ export interface SessionServiceDeps {
   hostName: string;
   /** Tells the window that the view changed. */
   changed(): void;
+  extendPairingQR?: (payload: string) => string;
   now?: () => number;
   /** Milliseconds between register refreshes while check-in is open (default 3000; 0 = never, for tests that call `refresh()`). */
   pollMs?: number;
@@ -104,6 +106,15 @@ export class SessionService {
     };
   }
 
+  nearbyWorkshop(): NearbyWorkshop | null {
+    const workshop = this.workshop;
+    if (!workshop || workshop.id !== this.viewing) return null;
+    const runtime = this.d.port.status.get();
+    const open = runtime.workshopId === workshop.id && runtime.session === 'running'
+      && this.window?.open === true && (this.window.closesAt ?? 0) > this.now();
+    return { id: workshop.id, title: workshop.title, roster: this.roster, open };
+  }
+
   /** The label typed on the pairing sheet (applied when the iPad pairs). */
   pendingLabel(): string | null { return this.pairLabel; }
 
@@ -112,7 +123,7 @@ export class SessionService {
     this.workshop = [...all.today, ...all.upcoming, ...all.past, ...all.archived].find((x) => x.id === id) ?? null;
   }
 
-  /** The workshop whose register the window shows. Read-only until its check-in is open. */
+  /** The workshop whose register the window shows. */
   async show(id: string): Promise<Result> {
     try {
       if (this.viewing !== id) {
@@ -183,14 +194,21 @@ export class SessionService {
    * address tries again) and the reason is kept for the session screen; returns that reason, or null once the window is open.
    */
   private async openWindow(c: OrganiserClient): Promise<string | null> {
+    const workshopId = this.viewing;
+    if (workshopId === null) return null;
     const minutes = defaultWindowMinutes(this.workshop, this.now());
     try {
-      const w = await c.checkInWindow();
-      // An open window that already runs at least that long is left alone; anything else (closed, expired, shorter) is opened.
-      const next = w.open && (w.closesAt ?? 0) >= this.now() + minutes * 60_000 ? w : await c.setCheckInWindow('open', minutes);
+      // A late tunnel address can restart the register. Hold it until the
+      // local check-in window is saved.
+      const next = await this.d.port.withRegister(workshopId, async (_url, live) => {
+        if (!live) throw new Error(SessionService.OFFLINE);
+        const w = await c.checkInWindow();
+        return w.open && (w.closesAt ?? 0) >= this.now() + minutes * 60_000 ? w : c.setCheckInWindow('open', minutes);
+      });
       if (c !== this.client) return null;
       this.window = next; this.windowError = null; this.openWindowOnConnect = false;
       this.log(`Start check-in: check-in on the iPad is open for ${minutes} minutes.`);
+      this.d.changed();
       return null;
     } catch (e) {
       const why = say(e, 'The register did not answer.');
@@ -388,20 +406,37 @@ export class SessionService {
 
   /** Add person (walk-in): only ever on the laptop. With markHere the person is checked in at once. */
   async addPerson(input: { name: string; email: string; markHere: boolean }): Promise<Result> {
-    const c = this.need();
-    if (!c) return { ok: false, error: SessionService.OFFLINE };
-    return this.guarded(async () => {
-      try {
-        const known = new Set(this.roster?.participants.map((p) => p.id));
+    const workshopId = this.viewing;
+    if (!workshopId) return { ok: false, error: 'Open a workshop first.' };
+    try {
+      await this.d.port.withRegister(workshopId, async (url, live) => {
+        const c = this.d.organiser(url);
+        const known = input.markHere ? new Set((await c.roster()).participants.map((p) => p.id)) : null;
         let roster = await c.addParticipant(input.name, input.email.trim());
-        if (input.markHere) {
-          const added = roster.participants.find((p) => !known.has(p.id));
-          if (added) { roster = await c.setAttendance(added.id, true, added.version); this.undo.push({ id: added.id, wasPresent: false }); }
+        try {
+          const added = known ? roster.participants.find((p) => !known.has(p.id)) : null;
+          if (added) {
+            roster = await c.setAttendance(added.id, true, added.version);
+            if (live && this.viewing === workshopId) this.undo.push({ id: added.id, wasPresent: false });
+          }
+        } finally {
+          if (this.viewing === workshopId) { this.roster = roster; this.rosterError = null; }
         }
-        this.roster = roster; this.rosterError = null;
-        return OK;
-      } catch (e) { return fail(e); }
-    });
+      });
+      return OK;
+    } catch (e) { return fail(e); }
+    finally { this.d.changed(); }
+  }
+
+  /** Read the current register for Copy, including writes since the last screen refresh. */
+  async copyList(choice: RegisterCopyChoice): Promise<Result<RegisterCopyResult>> {
+    const workshop = this.workshop;
+    if (!workshop || workshop.id !== this.viewing) return { ok: false, error: 'Open a workshop first.' };
+    try {
+      const roster = await this.d.port.readRegister(workshop.id);
+      if (workshop.id !== this.viewing) return { ok: false, error: 'The workshop changed. Try again.' };
+      return { ok: true, value: copyRegisterList(workshop, roster ?? EMPTY, choice) };
+    } catch { return { ok: false, error: 'The register could not be read. Try again.' }; }
   }
 
   /** Names were added or an iPad's recovery file imported (main/names-service.ts): read the register again, live or from disk. */
@@ -442,7 +477,8 @@ export class SessionService {
         try { await c.cancelPairing(offer.sessionId); } catch { /* it expires in five minutes anyway */ }
         return OK;
       }
-      this.pairing = reduce(this.pairing, { type: 'issued', offer, now: this.now() });
+      const qrPayload = this.d.extendPairingQR?.(offer.qrPayload) ?? offer.qrPayload;
+      this.pairing = reduce(this.pairing, { type: 'issued', offer: { ...offer, qrPayload }, now: this.now() });
       this.log(`Pair an iPad: a code is shown${offer.targetDeviceId ? ' to pair an iPad again' : ''}, valid until ${offer.expiresAt}.`);
       this.startTimer();
       this.d.changed();

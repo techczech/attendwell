@@ -135,6 +135,16 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(DeviceCredential.hash("abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
     }
 
+    func testBuild2ParserAcceptsExtendedMacQRWithTheSameAddressAndCode() throws {
+        let original = fixtureAddress + "/pair#v=1&code=K7QM-4TZP"
+        let nearbySample = String(repeating: "A", count: 43)
+        let extended = original + "%23nearby=" + nearbySample
+        let (address, code) = try ParticipantAddress.pairingQR(original)
+        let (extendedAddress, extendedCode) = try ParticipantAddress.pairingQR(extended)
+        XCTAssertEqual(extendedAddress, address)
+        XCTAssertEqual(extendedCode, code)
+    }
+
     func testPrefixSafeURLsAndQRAndRejectAmbiguousOrInsecureAddresses() throws {
         for address in [fixtureAddress, fixtureAddress + "/"] {
             XCTAssertEqual(try ParticipantAddress(address).endpoint("pair").path, "/s/k3v9/device/v1/pair")

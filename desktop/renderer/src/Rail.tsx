@@ -2,47 +2,63 @@
 import { useState } from 'react';
 import { deviceRow, holdText, type DeviceHold, type DeviceList, type DeviceRow, type DeviceRecord } from '../../shared/devices-model.ts';
 import type { Availability, ConnectionModel, WindowModel } from '../../shared/session-model.ts';
+import type { NearbyStatus } from '../../shared/ipc.ts';
+import { clockOf } from '../../shared/register-model.ts';
 import { Icon } from './icons.tsx';
 import { Keys } from './Keys.tsx';
 
-export function ConnectionPanel({ model, host, compact, onCopy, onRetry, onChooseFolder, now }: {
-  model: ConnectionModel; host: string; compact: boolean; onCopy(): void; onRetry(): void; onChooseFolder(): void; now?: number;
+export function ConnectionPanel({ model, nearby, host, compact, onCopy, onRetry, onReconnect, onChooseFolder }: {
+  model: ConnectionModel; nearby: NearbyStatus | null; host: string; compact: boolean; onCopy(): void; onRetry(): void; onReconnect(): void; onChooseFolder(): void;
 }): JSX.Element {
-  void now;
   const icon = model.tone === 'good' ? 'wifi' : model.tone === 'bad' ? 'circle-x' : model.tone === 'off' ? 'lock' : 'wifi-off';
-  if (compact && model.tone === 'good' && model.address) {
-    return (
-      <section className="panel rail-panel" aria-label="Connection">
-        <div className="panel-head"><span>Connection</span><span className={`pill ${model.tone}`}>{model.chip}</span></div>
+  const localNames = nearby?.peerNames ?? [];
+  const connected = localNames.length > 0;
+  const lostAt = nearby?.lostAt;
+  const localTone = connected ? 'good' : lostAt ? 'bad' : 'off';
+  const localHeadline = connected ? `iPad connected locally: ${localNames.join(', ')}`
+    : lostAt ? `Connection to the iPad lost at ${clockOf(lostAt)}` : 'Waiting for an iPad to connect locally';
+  return (
+    <section className="panel rail-panel" aria-label="Connection">
+      {nearby?.available ? (
+        <>
+          <div className="panel-head"><span>Connection</span></div>
+          <div className="conn-body" aria-label="Local connection">
+            <div className={`conn-state ${localTone}`} role="status">
+              <Icon name={connected ? 'circle-check' : 'wifi-off'} size={24} />
+              <div><b>{localHeadline}</b></div>
+            </div>
+            {nearby.discoveryTimedOut ? <p className="conn-advice">Can't see the Mac. Put both on the same Wi-Fi — a phone hotspot works; eduroam blocks this.</p> : null}
+            {!connected ? <button type="button" className="btn primary big wide" onClick={onReconnect}><Icon name="refresh-cw" />Reconnect</button> : null}
+          </div>
+        </>
+      ) : null}
+      <div className="panel-head"><span>{nearby?.available ? 'Internet route (optional)' : 'Connection'}</span><span className={`pill ${model.tone}`}>{model.chip}</span></div>
+      {compact && model.tone === 'good' && model.address ? (
         <div className="conn-compact">
           <Icon name="wifi" size={18} /><span className="mono addr">{model.address}</span>
           <button type="button" className="btn icon small" aria-label="Copy address" title="Copy address" onClick={onCopy}><Icon name="copy" size={15} /></button>
         </div>
-      </section>
-    );
-  }
-  return (
-    <section className="panel rail-panel" aria-label="Connection">
-      <div className="panel-head"><span>Connection</span><span className={`pill ${model.tone}`}>{model.chip}</span></div>
-      <div className="conn-body">
-        <div className={`conn-state ${model.tone}`} role="status">
-          <Icon name={icon} size={24} />
-          <div><b>{model.headline}</b><span>{model.detail}</span></div>
+      ) : (
+        <div className="conn-body">
+          <div className={`conn-state ${model.tone}`} role="status">
+            <Icon name={icon} size={24} />
+            <div><b>{model.headline}</b><span>{model.detail}</span></div>
+          </div>
+          {model.address ? <div className={`addr-box mono ${model.addressClosed ? 'closed' : ''}`}>{model.address}</div> : null}
+          {model.advice ? <p className="conn-advice">{model.advice}</p> : null}
+          {model.copy ? <button type="button" className="btn" onClick={onCopy}><Icon name="copy" />Copy address</button> : null}
+          {model.retry ? <button type="button" className="btn primary wide" onClick={onRetry}><Icon name="refresh-cw" />Try again</button> : null}
+          {model.chooseFolder ? <button type="button" className="btn" onClick={onChooseFolder}>Choose folder…</button> : null}
+          <div className="conn-host"><Icon name="laptop" size={15} />{host}<span aria-hidden="true">·</span>Quick tunnel</div>
         </div>
-        {model.address ? <div className={`addr-box mono ${model.addressClosed ? 'closed' : ''}`}>{model.address}</div> : null}
-        {model.advice ? <p className="conn-advice">{model.advice}</p> : null}
-        {model.copy ? <button type="button" className="btn" onClick={onCopy}><Icon name="copy" />Copy address</button> : null}
-        {model.retry ? <button type="button" className="btn primary wide" onClick={onRetry}><Icon name="refresh-cw" />Try again</button> : null}
-        {model.chooseFolder ? <button type="button" className="btn" onClick={onChooseFolder}>Choose folder…</button> : null}
-        <div className="conn-host"><Icon name="laptop" size={15} />{host}<span aria-hidden="true">·</span>Quick tunnel</div>
-      </div>
+      )}
     </section>
   );
 }
 
 /** Whether people can check themselves in on the iPad now, and the organiser's controls for it. */
-export function CheckInWindowPanel({ model, openUntil, busy, onOpen, onExtend, onClose }: {
-  model: WindowModel; openUntil: string | null; busy: boolean; onOpen(): void; onExtend(): void; onClose(): void;
+export function CheckInWindowPanel({ model, openUntil, busy, keepLidOpen, onOpen, onExtend, onClose }: {
+  model: WindowModel; openUntil: string | null; busy: boolean; keepLidOpen: boolean; onOpen(): void; onExtend(): void; onClose(): void;
 }): JSX.Element {
   return (
     <section className="panel rail-panel" aria-label="Check-in on the iPad">
@@ -57,6 +73,7 @@ export function CheckInWindowPanel({ model, openUntil, busy, onOpen, onExtend, o
           {model.canExtend ? <button type="button" className="btn" disabled={busy} onClick={onExtend}><Icon name="plus" />30 min</button> : null}
           {model.canClose ? <button type="button" className="btn" disabled={busy} onClick={onClose}><Icon name="lock" />Close now</button> : null}
         </div>
+        {keepLidOpen ? <p className="conn-host">Keep the Mac’s lid open during check-in.</p> : null}
       </div>
     </section>
   );
@@ -76,6 +93,7 @@ function DeviceMenu({ row, canAct, onRename, onPairAgain, onRevoke, onClose }: {
 
 export function DevicesPanel(p: {
   list: DeviceList | null;
+  localNames: readonly string[];
   live: boolean;
   closedAt: string | null;
   repair: ReadonlySet<string>;
@@ -96,11 +114,18 @@ export function DevicesPanel(p: {
   const devices: DeviceRecord[] = p.list?.devices ?? [];
   const holds: DeviceHold[] = p.list?.unmatchedCheckIns ?? [];
   const rows = devices.map((d) => deviceRow(d, { now: p.now, live: p.live, closedAt: p.closedAt, repair: p.repair }));
+  const count = rows.length + p.localNames.length;
   return (
     <section className="panel rail-panel devices" aria-label="Devices">
-      <div className="panel-head"><span>Devices</span><span className="count-badge" aria-label={`${rows.length} iPads`}>{rows.length}</span></div>
+      <div className="panel-head"><span>Devices</span><span className="count-badge" aria-label={`${count} iPads`}>{count}</span></div>
       <div className="scroll dev-scroll">
-        {rows.length === 0 ? (
+        {p.localNames.map((name, index) => (
+          <div className="dev good" key={index}>
+            <Icon name="tablet" size={22} />
+            <div className="dev-main"><b>{name}</b><span className="dev-status good"><i className="dot" aria-hidden="true" />Connected locally</span></div>
+          </div>
+        ))}
+        {count === 0 ? (
           <div className="rail-empty dev-empty">
             <div><Icon name="tablet" size={30} /><b>No iPads paired yet.</b><p>An iPad lets people check themselves in at the door, even if the Wi-Fi drops.</p></div>
           </div>

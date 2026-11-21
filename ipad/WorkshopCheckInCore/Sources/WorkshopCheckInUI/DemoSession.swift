@@ -7,7 +7,7 @@ import WorkshopCheckInCore
 /// Keychain item. The names list lives in a SQLite file in a private temporary
 /// folder that `end()` deletes; nothing survives leaving the demo.
 @MainActor
-public final class DemoSession {
+public final class DemoSession: Identifiable {
     public static let workshopName = "Demo workshop"
     public static let names = [
         "Ada Example", "Ben Sample", "Cleo Placeholder", "Dev Demo", "Elin Testperson",

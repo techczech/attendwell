@@ -25,11 +25,11 @@ const nobodyYet: Roster = {
 /** The earlier session: Dev Patel was checked in. */
 const names: Roster = { participants: nobodyYet.participants.map((p) => (p.id === 'p4' ? { ...p, present: true, version: 1, updatedAt: new Date(2026, 9, 21, 9, 10).toISOString() } : p)), conflicts: [] };
 
-async function setup(opts: { seedNames?: boolean } = {}) {
+async function setup(opts: { seedNames?: boolean; startDelayMs?: number } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'aw-sess-'));
   dirs.push(dir);
   const clock = { ms: T0 };
-  const rt: FakeRuntime = createFakeRuntime({ dataRoot: dir, now: () => new Date(clock.ms), seed: ({ title }) => (opts.seedNames === false ? null : title === 'Earlier session' ? names : nobodyYet) });
+  const rt: FakeRuntime = createFakeRuntime({ dataRoot: dir, startDelayMs: opts.startDelayMs, now: () => new Date(clock.ms), seed: ({ title }) => (opts.seedNames === false ? null : title === 'Earlier session' ? names : nobodyYet) });
   const today = await rt.workshops.create({ title: 'Generative AI for Researchers', date: '2026-10-30', startTime: '14:00', endTime: '16:30' });
   const past = await rt.workshops.create({ title: 'Earlier session', date: '2026-10-21', startTime: '09:00', endTime: '10:30' });
   let changes = 0;
@@ -82,6 +82,31 @@ describe('starting check-in', () => {
 });
 
 describe('the register on the laptop', () => {
+  test('adds people while check-in is off, connecting, online, closed and offline', async () => {
+    const s = await setup({ startDelayMs: 100 });
+    await s.svc.show(s.today.id);
+    const add = async (name: string, phase: string) => {
+      expect(s.svc.view().phase).toBe(phase);
+      expect(await s.svc.addPerson({ name, email: '', markHere: false })).toEqual({ ok: true });
+      expect(s.svc.nearbyWorkshop()?.roster?.participants.some((person) => person.name === name)).toBe(true);
+    };
+    await add('Before check-in', 'ready');
+    const starting = s.svc.start();
+    await settle();
+    await add('During startup', 'connecting');
+    expect(s.rt.status.get().session).toBe('starting');
+    await starting;
+    await add('With internet', 'online');
+    await s.svc.setWindow('close');
+    await add('With iPad check-in closed', 'online');
+    await s.svc.end();
+    await add('After check-in', 'closed');
+    s.rt.fake.failNextTunnel('blocked-by-network', 'blocked');
+    await s.svc.start();
+    await add('Without internet', 'trouble');
+    await s.svc.show(s.past.id);
+    await add('Another register', 'past');
+  });
   test('mark present, then undo', async () => {
     const s = await setup();
     await online(s);
@@ -142,11 +167,10 @@ describe('the register on the laptop', () => {
     await s.svc.refresh();
     expect(s.svc.view().rosterError).toBeNull();
   });
-  test('nothing changes while check-in is closed', async () => {
+  test('attendance marking still needs an open check-in', async () => {
     const s = await setup();
     await s.svc.show(s.today.id);
     expect(await s.svc.mark('p1', true)).toEqual({ ok: false, error: 'Check-in is not open. Reopen check-in to change the register.' });
-    expect((await s.svc.addPerson({ name: 'X Y', email: '', markHere: false })).ok).toBe(false);
   });
 });
 

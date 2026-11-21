@@ -31,6 +31,8 @@ export interface RuntimePort {
    * leased service before `startSession` for the same workshop (or reuse it), so two services never open one register.
    */
   openRegister(id: string): Promise<RegisterLease>;
+  /** A local request protected from a concurrent register start or stop. `live` reports whether check-in is running. */
+  withRegister<T>(id: string, use: (organiserUrl: string, live: boolean) => Promise<T>): Promise<T>;
   /** Records where the latest name list came from (workshops.recordRosterProvenance); the library's "N names" reads `count` back. */
   recordRosterProvenance(id: string, provenance: RosterProvenance): Promise<void>;
   /** The folder that holds one folder per workshop; the adapter owns where it is. */

@@ -1,0 +1,1779 @@
+a1 mac {"msg":"advertising as spike-mac tag=a762839106129819","t":851675828,"type":"log","h":859948667}
+a1 mac {"t":851675830,"type":"ready","h":859948667}
+a1 mac {"names":500,"t":851675831,"type":"snapshot-set","version":1,"h":859948668}
+a1 mac {"msg":"accepted invitation from spike-ipad","t":851676947,"type":"log","h":859949784}
+a1 mac {"peer":"spike-ipad","state":"connecting","t":851676947,"type":"peer","h":859949784}
+a1 mac {"peer":"spike-ipad","state":"connected","t":851677005,"type":"peer","h":859949842}
+a1 mac {"bytes":39358,"peer":"spike-ipad","t":851677006,"type":"snapshot-sent","h":859949843}
+a1 sim {"msg":"browsing as spike-ipad","t":851675835,"type":"log","h":859948674}
+a1 sim {"queued":0,"resumeAt":0,"t":851675837,"type":"ready","h":859948674}
+a1 sim {"msg":"found spike-mac","t":851676935,"type":"log","h":859949772}
+a1 sim {"msg":"inviting spike-mac","t":851676935,"type":"log","h":859949772}
+a1 sim {"peer":"spike-mac","state":"connecting","t":851676966,"type":"peer","h":859949803}
+a1 sim {"peer":"spike-mac","state":"connected","t":851677005,"type":"peer","h":859949842}
+a1 sim {"bytes":39358,"names":500,"t":851677007,"type":"snapshot","version":1,"h":859949844}
+a2 mac {"msg":"advertising as spike-mac tag=7b7d19df931c7018","t":851678521,"type":"log","h":859951361}
+a2 mac {"t":851678524,"type":"ready","h":859951361}
+a2 mac {"names":500,"t":851678526,"type":"snapshot-set","version":1,"h":859951363}
+a2 mac {"msg":"accepted invitation from spike-ipad","t":851679651,"type":"log","h":859952488}
+a2 mac {"peer":"spike-ipad","state":"connecting","t":851679651,"type":"peer","h":859952488}
+a2 mac {"peer":"spike-ipad","state":"connected","t":851679707,"type":"peer","h":859952544}
+a2 mac {"bytes":39358,"peer":"spike-ipad","t":851679708,"type":"snapshot-sent","h":859952545}
+a2 sim {"msg":"browsing as spike-ipad","t":851678532,"type":"log","h":859951371}
+a2 sim {"queued":0,"resumeAt":0,"t":851678534,"type":"ready","h":859951371}
+a2 sim {"msg":"found spike-mac","t":851679634,"type":"log","h":859952475}
+a2 sim {"msg":"inviting spike-mac","t":851679634,"type":"log","h":859952475}
+a2 sim {"peer":"spike-mac","state":"connecting","t":851679671,"type":"peer","h":859952508}
+a2 sim {"peer":"spike-mac","state":"connected","t":851679707,"type":"peer","h":859952544}
+a2 sim {"bytes":39358,"names":500,"t":851679709,"type":"snapshot","version":1,"h":859952546}
+a3 mac {"msg":"advertising as spike-mac tag=046ddb687d9171d5","t":851681224,"type":"log","h":859954064}
+a3 mac {"t":851681227,"type":"ready","h":859954064}
+a3 mac {"names":500,"t":851681228,"type":"snapshot-set","version":1,"h":859954065}
+a3 mac {"msg":"accepted invitation from spike-ipad","t":851682280,"type":"log","h":859955117}
+a3 mac {"peer":"spike-ipad","state":"connecting","t":851682280,"type":"peer","h":859955117}
+a3 mac {"peer":"spike-ipad","state":"connected","t":851682329,"type":"peer","h":859955166}
+a3 mac {"bytes":39358,"peer":"spike-ipad","t":851682330,"type":"snapshot-sent","h":859955167}
+a3 sim {"msg":"browsing as spike-ipad","t":851681233,"type":"log","h":859954073}
+a3 sim {"queued":0,"resumeAt":0,"t":851681236,"type":"ready","h":859954073}
+a3 sim {"msg":"found spike-mac","t":851682266,"type":"log","h":859955103}
+a3 sim {"msg":"inviting spike-mac","t":851682266,"type":"log","h":859955103}
+a3 sim {"peer":"spike-mac","state":"connecting","t":851682297,"type":"peer","h":859955134}
+a3 sim {"peer":"spike-mac","state":"connected","t":851682329,"type":"peer","h":859955167}
+a3 sim {"bytes":39358,"names":500,"t":851682332,"type":"snapshot","version":1,"h":859955169}
+a4 mac {"msg":"advertising as spike-mac tag=fe3b524e972b4c18","t":851683845,"type":"log","h":859956685}
+a4 mac {"t":851683848,"type":"ready","h":859956685}
+a4 mac {"names":500,"t":851683849,"type":"snapshot-set","version":1,"h":859956686}
+a4 mac {"msg":"accepted invitation from spike-ipad","t":851684860,"type":"log","h":859957697}
+a4 mac {"peer":"spike-ipad","state":"connecting","t":851684860,"type":"peer","h":859957697}
+a4 mac {"peer":"spike-ipad","state":"connected","t":851684912,"type":"peer","h":859957749}
+a4 mac {"bytes":39358,"peer":"spike-ipad","t":851684913,"type":"snapshot-sent","h":859957750}
+a4 sim {"msg":"browsing as spike-ipad","t":851683854,"type":"log","h":859956694}
+a4 sim {"queued":0,"resumeAt":0,"t":851683857,"type":"ready","h":859956694}
+a4 sim {"msg":"found spike-mac","t":851684842,"type":"log","h":859957679}
+a4 sim {"msg":"inviting spike-mac","t":851684842,"type":"log","h":859957679}
+a4 sim {"peer":"spike-mac","state":"connecting","t":851684879,"type":"peer","h":859957716}
+a4 sim {"peer":"spike-mac","state":"connected","t":851684912,"type":"peer","h":859957749}
+a4 sim {"bytes":39358,"names":500,"t":851684914,"type":"snapshot","version":1,"h":859957751}
+a5 mac {"msg":"advertising as spike-mac tag=0e30a512f4578089","t":851686429,"type":"log","h":859959269}
+a5 mac {"t":851686432,"type":"ready","h":859959269}
+a5 mac {"names":500,"t":851686433,"type":"snapshot-set","version":1,"h":859959270}
+a5 mac {"msg":"accepted invitation from spike-ipad","t":851687436,"type":"log","h":859960273}
+a5 mac {"peer":"spike-ipad","state":"connecting","t":851687436,"type":"peer","h":859960273}
+a5 mac {"peer":"spike-ipad","state":"connected","t":851687491,"type":"peer","h":859960328}
+a5 mac {"bytes":39358,"peer":"spike-ipad","t":851687492,"type":"snapshot-sent","h":859960329}
+a5 sim {"msg":"browsing as spike-ipad","t":851686438,"type":"log","h":859959278}
+a5 sim {"queued":0,"resumeAt":0,"t":851686441,"type":"ready","h":859959278}
+a5 sim {"msg":"found spike-mac","t":851687422,"type":"log","h":859960259}
+a5 sim {"msg":"inviting spike-mac","t":851687422,"type":"log","h":859960259}
+a5 sim {"peer":"spike-mac","state":"connecting","t":851687458,"type":"peer","h":859960295}
+a5 sim {"peer":"spike-mac","state":"connected","t":851687491,"type":"peer","h":859960328}
+a5 sim {"bytes":39358,"names":500,"t":851687493,"type":"snapshot","version":1,"h":859960330}
+a6 mac {"msg":"advertising as spike-mac tag=b9a13f880da6a7f4","t":851689010,"type":"log","h":859961850}
+a6 mac {"t":851689013,"type":"ready","h":859961850}
+a6 mac {"names":500,"t":851689015,"type":"snapshot-set","version":1,"h":859961852}
+a6 mac {"msg":"accepted invitation from spike-ipad","t":851690024,"type":"log","h":859962861}
+a6 mac {"peer":"spike-ipad","state":"connecting","t":851690024,"type":"peer","h":859962861}
+a6 mac {"peer":"spike-ipad","state":"connected","t":851690073,"type":"peer","h":859962910}
+a6 mac {"bytes":39358,"peer":"spike-ipad","t":851690074,"type":"snapshot-sent","h":859962911}
+a6 sim {"msg":"browsing as spike-ipad","t":851689020,"type":"log","h":859961860}
+a6 sim {"queued":0,"resumeAt":0,"t":851689023,"type":"ready","h":859961860}
+a6 sim {"msg":"found spike-mac","t":851690014,"type":"log","h":859962851}
+a6 sim {"msg":"inviting spike-mac","t":851690014,"type":"log","h":859962851}
+a6 sim {"peer":"spike-mac","state":"connecting","t":851690041,"type":"peer","h":859962878}
+a6 sim {"peer":"spike-mac","state":"connected","t":851690073,"type":"peer","h":859962910}
+a6 sim {"bytes":39358,"names":500,"t":851690075,"type":"snapshot","version":1,"h":859962912}
+a7 mac {"msg":"advertising as spike-mac tag=bc6a41547d779489","t":851691585,"type":"log","h":859964425}
+a7 mac {"t":851691588,"type":"ready","h":859964425}
+a7 mac {"names":500,"t":851691589,"type":"snapshot-set","version":1,"h":859964425}
+a7 mac {"msg":"accepted invitation from spike-ipad","t":851692574,"type":"log","h":859965411}
+a7 mac {"peer":"spike-ipad","state":"connecting","t":851692574,"type":"peer","h":859965411}
+a7 mac {"peer":"spike-ipad","state":"connected","t":851692631,"type":"peer","h":859965468}
+a7 mac {"bytes":39358,"peer":"spike-ipad","t":851692632,"type":"snapshot-sent","h":859965469}
+a7 sim {"msg":"browsing as spike-ipad","t":851691593,"type":"log","h":859964433}
+a7 sim {"queued":0,"resumeAt":0,"t":851691596,"type":"ready","h":859964433}
+a7 sim {"msg":"found spike-mac","t":851692561,"type":"log","h":859965398}
+a7 sim {"msg":"inviting spike-mac","t":851692561,"type":"log","h":859965398}
+a7 sim {"peer":"spike-mac","state":"connecting","t":851692593,"type":"peer","h":859965430}
+a7 sim {"peer":"spike-mac","state":"connected","t":851692631,"type":"peer","h":859965468}
+a7 sim {"bytes":39358,"names":500,"t":851692634,"type":"snapshot","version":1,"h":859965470}
+a8 mac {"msg":"advertising as spike-mac tag=b8246f301e085898","t":851694143,"type":"log","h":859966982}
+a8 mac {"t":851694146,"type":"ready","h":859966983}
+a8 mac {"names":500,"t":851694146,"type":"snapshot-set","version":1,"h":859966983}
+a8 mac {"msg":"accepted invitation from spike-ipad","t":851695213,"type":"log","h":859968050}
+a8 mac {"peer":"spike-ipad","state":"connecting","t":851695214,"type":"peer","h":859968050}
+a8 mac {"peer":"spike-ipad","state":"connected","t":851695271,"type":"peer","h":859968109}
+a8 mac {"bytes":39358,"peer":"spike-ipad","t":851695272,"type":"snapshot-sent","h":859968109}
+a8 sim {"msg":"browsing as spike-ipad","t":851694151,"type":"log","h":859966990}
+a8 sim {"queued":0,"resumeAt":0,"t":851694153,"type":"ready","h":859966990}
+a8 sim {"msg":"found spike-mac","t":851695199,"type":"log","h":859968036}
+a8 sim {"msg":"inviting spike-mac","t":851695199,"type":"log","h":859968036}
+a8 sim {"peer":"spike-mac","state":"connecting","t":851695232,"type":"peer","h":859968069}
+a8 sim {"peer":"spike-mac","state":"connected","t":851695271,"type":"peer","h":859968108}
+a8 sim {"bytes":39358,"names":500,"t":851695274,"type":"snapshot","version":1,"h":859968111}
+a9 mac {"msg":"advertising as spike-mac tag=ef0064d7ad4ab1c9","t":851696784,"type":"log","h":859969624}
+a9 mac {"t":851696787,"type":"ready","h":859969624}
+a9 mac {"names":500,"t":851696788,"type":"snapshot-set","version":1,"h":859969624}
+a9 mac {"msg":"accepted invitation from spike-ipad","t":851697903,"type":"log","h":859970740}
+a9 mac {"peer":"spike-ipad","state":"connecting","t":851697903,"type":"peer","h":859970740}
+a9 mac {"peer":"spike-ipad","state":"connected","t":851697961,"type":"peer","h":859970797}
+a9 mac {"bytes":39358,"peer":"spike-ipad","t":851697961,"type":"snapshot-sent","h":859970798}
+a9 sim {"msg":"browsing as spike-ipad","t":851696792,"type":"log","h":859969632}
+a9 sim {"queued":0,"resumeAt":0,"t":851696795,"type":"ready","h":859969632}
+a9 sim {"msg":"found spike-mac","t":851697893,"type":"log","h":859970730}
+a9 sim {"msg":"inviting spike-mac","t":851697893,"type":"log","h":859970730}
+a9 sim {"peer":"spike-mac","state":"connecting","t":851697923,"type":"peer","h":859970760}
+a9 sim {"peer":"spike-mac","state":"connected","t":851697961,"type":"peer","h":859970798}
+a9 sim {"bytes":39358,"names":500,"t":851697963,"type":"snapshot","version":1,"h":859970800}
+a10 mac {"msg":"advertising as spike-mac tag=6aef34d14f192e96","t":851699475,"type":"log","h":859972314}
+a10 mac {"t":851699477,"type":"ready","h":859972314}
+a10 mac {"names":500,"t":851699478,"type":"snapshot-set","version":1,"h":859972315}
+a10 mac {"msg":"accepted invitation from spike-ipad","t":851700476,"type":"log","h":859973313}
+a10 mac {"peer":"spike-ipad","state":"connecting","t":851700476,"type":"peer","h":859973313}
+a10 mac {"peer":"spike-ipad","state":"connected","t":851700529,"type":"peer","h":859973366}
+a10 mac {"bytes":39358,"peer":"spike-ipad","t":851700530,"type":"snapshot-sent","h":859973367}
+a10 sim {"msg":"browsing as spike-ipad","t":851699483,"type":"log","h":859972322}
+a10 sim {"queued":0,"resumeAt":0,"t":851699485,"type":"ready","h":859972322}
+a10 sim {"msg":"found spike-mac","t":851700465,"type":"log","h":859973302}
+a10 sim {"msg":"inviting spike-mac","t":851700465,"type":"log","h":859973302}
+a10 sim {"peer":"spike-mac","state":"connecting","t":851700495,"type":"peer","h":859973332}
+a10 sim {"peer":"spike-mac","state":"connected","t":851700529,"type":"peer","h":859973366}
+a10 sim {"bytes":39358,"names":500,"t":851700531,"type":"snapshot","version":1,"h":859973368}
+c mac-before-kill {"msg":"advertising as spike-mac tag=ec1f297118859b63","t":851702042,"type":"log","h":859974882}
+c mac-before-kill {"t":851702045,"type":"ready","h":859974882}
+c mac-before-kill {"names":500,"t":851702046,"type":"snapshot-set","version":1,"h":859974883}
+c mac-before-kill {"msg":"accepted invitation from spike-ipad","t":851703164,"type":"log","h":859976001}
+c mac-before-kill {"peer":"spike-ipad","state":"connecting","t":851703164,"type":"peer","h":859976001}
+c mac-before-kill {"peer":"spike-ipad","state":"connected","t":851703217,"type":"peer","h":859976054}
+c mac-before-kill {"bytes":39358,"peer":"spike-ipad","t":851703218,"type":"snapshot-sent","h":859976055}
+c mac {"msg":"advertising as spike-mac tag=ec1f297118859b63","t":851707563,"type":"log","h":859980403}
+c mac {"t":851707566,"type":"ready","h":859980403}
+c mac {"names":500,"t":851707566,"type":"snapshot-set","version":1,"h":859980403}
+c mac {"msg":"accepted invitation from spike-ipad","t":851708523,"type":"log","h":859981360}
+c mac {"peer":"spike-ipad","state":"connecting","t":851708523,"type":"peer","h":859981360}
+c mac {"peer":"spike-ipad","state":"connected","t":851708572,"type":"peer","h":859981409}
+c mac {"bytes":39358,"peer":"spike-ipad","t":851708572,"type":"snapshot-sent","h":859981409}
+c sim {"msg":"browsing as spike-ipad","t":851702050,"type":"log","h":859974889}
+c sim {"queued":0,"resumeAt":0,"t":851702052,"type":"ready","h":859974889}
+c sim {"msg":"found spike-mac","t":851703149,"type":"log","h":859975986}
+c sim {"msg":"inviting spike-mac","t":851703149,"type":"log","h":859975986}
+c sim {"peer":"spike-mac","state":"connecting","t":851703184,"type":"peer","h":859976021}
+c sim {"peer":"spike-mac","state":"connected","t":851703217,"type":"peer","h":859976054}
+c sim {"bytes":39358,"names":500,"t":851703219,"type":"snapshot","version":1,"h":859976056}
+c sim {"msg":"ack 1, 0 left","t":851703221,"type":"log","h":859976058}
+c sim {"msg":"ack 1, 0 left","t":851703236,"type":"log","h":859976073}
+c sim {"msg":"ack 1, 0 left","t":851703251,"type":"log","h":859976088}
+c sim {"msg":"ack 1, 0 left","t":851703266,"type":"log","h":859976103}
+c sim {"msg":"ack 1, 0 left","t":851703281,"type":"log","h":859976118}
+c sim {"msg":"ack 1, 0 left","t":851703295,"type":"log","h":859976131}
+c sim {"msg":"ack 1, 0 left","t":851703308,"type":"log","h":859976145}
+c sim {"msg":"ack 1, 0 left","t":851703321,"type":"log","h":859976158}
+c sim {"msg":"ack 1, 0 left","t":851703337,"type":"log","h":859976174}
+c sim {"msg":"ack 1, 0 left","t":851703351,"type":"log","h":859976188}
+c sim {"msg":"ack 1, 0 left","t":851703366,"type":"log","h":859976203}
+c sim {"msg":"ack 1, 0 left","t":851703378,"type":"log","h":859976215}
+c sim {"msg":"ack 1, 0 left","t":851703391,"type":"log","h":859976227}
+c sim {"msg":"ack 1, 0 left","t":851703405,"type":"log","h":859976242}
+c sim {"msg":"ack 1, 0 left","t":851703419,"type":"log","h":859976256}
+c sim {"msg":"ack 1, 0 left","t":851703434,"type":"log","h":859976271}
+c sim {"msg":"ack 1, 0 left","t":851703449,"type":"log","h":859976286}
+c sim {"msg":"ack 1, 0 left","t":851703461,"type":"log","h":859976298}
+c sim {"msg":"ack 1, 0 left","t":851703474,"type":"log","h":859976311}
+c sim {"msg":"ack 1, 0 left","t":851703488,"type":"log","h":859976325}
+c sim {"msg":"ack 1, 0 left","t":851703503,"type":"log","h":859976340}
+c sim {"msg":"ack 1, 0 left","t":851703519,"type":"log","h":859976356}
+c sim {"msg":"ack 1, 0 left","t":851703551,"type":"log","h":859976388}
+c sim {"msg":"ack 1, 0 left","t":851703564,"type":"log","h":859976401}
+c sim {"msg":"ack 1, 0 left","t":851703579,"type":"log","h":859976416}
+c sim {"msg":"ack 1, 0 left","t":851703591,"type":"log","h":859976428}
+c sim {"msg":"ack 1, 0 left","t":851703607,"type":"log","h":859976444}
+c sim {"msg":"ack 1, 0 left","t":851703621,"type":"log","h":859976458}
+c sim {"msg":"ack 1, 0 left","t":851703637,"type":"log","h":859976474}
+c sim {"msg":"ack 1, 0 left","t":851703651,"type":"log","h":859976488}
+c sim {"msg":"ack 1, 0 left","t":851703666,"type":"log","h":859976503}
+c sim {"msg":"ack 1, 0 left","t":851703680,"type":"log","h":859976517}
+c sim {"msg":"ack 1, 0 left","t":851703697,"type":"log","h":859976534}
+c sim {"msg":"ack 1, 0 left","t":851703712,"type":"log","h":859976548}
+c sim {"msg":"ack 1, 0 left","t":851703727,"type":"log","h":859976564}
+c sim {"msg":"ack 1, 0 left","t":851703741,"type":"log","h":859976578}
+c sim {"msg":"ack 1, 0 left","t":851703757,"type":"log","h":859976594}
+c sim {"msg":"ack 1, 0 left","t":851703772,"type":"log","h":859976609}
+c sim {"msg":"ack 1, 0 left","t":851703785,"type":"log","h":859976621}
+c sim {"msg":"ack 1, 0 left","t":851703800,"type":"log","h":859976637}
+c sim {"msg":"ack 1, 0 left","t":851703816,"type":"log","h":859976653}
+c sim {"msg":"ack 1, 0 left","t":851703831,"type":"log","h":859976668}
+c sim {"msg":"ack 1, 0 left","t":851703848,"type":"log","h":859976685}
+c sim {"msg":"ack 1, 0 left","t":851703876,"type":"log","h":859976713}
+c sim {"msg":"ack 1, 0 left","t":851703891,"type":"log","h":859976728}
+c sim {"msg":"ack 1, 0 left","t":851703906,"type":"log","h":859976743}
+c sim {"msg":"ack 1, 0 left","t":851703921,"type":"log","h":859976758}
+c sim {"msg":"ack 1, 0 left","t":851703935,"type":"log","h":859976771}
+c sim {"msg":"ack 1, 0 left","t":851703950,"type":"log","h":859976787}
+c sim {"msg":"ack 1, 0 left","t":851703967,"type":"log","h":859976804}
+c sim {"msg":"ack 1, 0 left","t":851703986,"type":"log","h":859976823}
+c sim {"msg":"ack 1, 0 left","t":851704000,"type":"log","h":859976837}
+c sim {"msg":"ack 1, 0 left","t":851704027,"type":"log","h":859976864}
+c sim {"msg":"ack 1, 0 left","t":851704035,"type":"log","h":859976872}
+c sim {"msg":"ack 1, 0 left","t":851704051,"type":"log","h":859976888}
+c sim {"msg":"ack 1, 0 left","t":851704076,"type":"log","h":859976912}
+c sim {"msg":"ack 1, 0 left","t":851704091,"type":"log","h":859976928}
+c sim {"msg":"ack 1, 0 left","t":851704107,"type":"log","h":859976944}
+c sim {"msg":"ack 1, 0 left","t":851704123,"type":"log","h":859976960}
+c sim {"msg":"ack 1, 0 left","t":851704140,"type":"log","h":859976977}
+c sim {"msg":"ack 1, 0 left","t":851704155,"type":"log","h":859976992}
+c sim {"msg":"ack 1, 0 left","t":851704170,"type":"log","h":859977007}
+c sim {"msg":"ack 1, 0 left","t":851704185,"type":"log","h":859977022}
+c sim {"msg":"ack 1, 0 left","t":851704199,"type":"log","h":859977036}
+c sim {"msg":"ack 1, 0 left","t":851704211,"type":"log","h":859977048}
+c sim {"msg":"ack 1, 0 left","t":851704227,"type":"log","h":859977064}
+c sim {"msg":"ack 1, 0 left","t":851704242,"type":"log","h":859977079}
+c sim {"msg":"ack 1, 0 left","t":851704259,"type":"log","h":859977096}
+c sim {"msg":"ack 1, 0 left","t":851704286,"type":"log","h":859977124}
+c sim {"msg":"ack 1, 0 left","t":851704295,"type":"log","h":859977132}
+c sim {"msg":"ack 1, 0 left","t":851704309,"type":"log","h":859977146}
+c sim {"msg":"ack 1, 0 left","t":851704322,"type":"log","h":859977159}
+c sim {"msg":"ack 1, 0 left","t":851704338,"type":"log","h":859977175}
+c sim {"msg":"ack 1, 0 left","t":851704355,"type":"log","h":859977192}
+c sim {"msg":"ack 1, 0 left","t":851704371,"type":"log","h":859977208}
+c sim {"msg":"ack 1, 0 left","t":851704388,"type":"log","h":859977225}
+c sim {"msg":"ack 1, 0 left","t":851704404,"type":"log","h":859977241}
+c sim {"msg":"ack 1, 0 left","t":851704424,"type":"log","h":859977261}
+c sim {"msg":"ack 1, 0 left","t":851704436,"type":"log","h":859977273}
+c sim {"msg":"ack 1, 0 left","t":851704454,"type":"log","h":859977291}
+c sim {"msg":"ack 1, 0 left","t":851704471,"type":"log","h":859977308}
+c sim {"msg":"ack 1, 0 left","t":851704489,"type":"log","h":859977326}
+c sim {"msg":"ack 1, 0 left","t":851704504,"type":"log","h":859977341}
+c sim {"msg":"ack 1, 0 left","t":851704519,"type":"log","h":859977356}
+c sim {"msg":"ack 1, 0 left","t":851704536,"type":"log","h":859977373}
+c sim {"msg":"ack 1, 0 left","t":851704557,"type":"log","h":859977394}
+c sim {"msg":"ack 1, 0 left","t":851704573,"type":"log","h":859977410}
+c sim {"msg":"ack 1, 0 left","t":851704586,"type":"log","h":859977423}
+c sim {"msg":"ack 1, 0 left","t":851704601,"type":"log","h":859977438}
+c sim {"msg":"ack 1, 0 left","t":851704617,"type":"log","h":859977454}
+c sim {"msg":"ack 1, 0 left","t":851704632,"type":"log","h":859977469}
+c sim {"msg":"ack 1, 0 left","t":851704646,"type":"log","h":859977483}
+c sim {"msg":"ack 1, 0 left","t":851704658,"type":"log","h":859977495}
+c sim {"msg":"ack 1, 0 left","t":851704677,"type":"log","h":859977514}
+c sim {"msg":"ack 1, 0 left","t":851704691,"type":"log","h":859977527}
+c sim {"msg":"ack 1, 0 left","t":851704706,"type":"log","h":859977543}
+c sim {"msg":"ack 1, 0 left","t":851704725,"type":"log","h":859977562}
+c sim {"msg":"ack 1, 0 left","t":851704740,"type":"log","h":859977577}
+c sim {"msg":"ack 1, 0 left","t":851704759,"type":"log","h":859977596}
+c sim {"msg":"ack 1, 0 left","t":851704772,"type":"log","h":859977609}
+c sim {"msg":"ack 1, 0 left","t":851704789,"type":"log","h":859977626}
+c sim {"msg":"ack 1, 0 left","t":851704805,"type":"log","h":859977642}
+c sim {"msg":"ack 1, 0 left","t":851704820,"type":"log","h":859977657}
+c sim {"msg":"ack 1, 0 left","t":851704834,"type":"log","h":859977671}
+c sim {"msg":"ack 1, 0 left","t":851704849,"type":"log","h":859977686}
+c sim {"msg":"ack 1, 0 left","t":851704861,"type":"log","h":859977698}
+c sim {"msg":"ack 1, 0 left","t":851704878,"type":"log","h":859977717}
+c sim {"msg":"ack 1, 0 left","t":851704892,"type":"log","h":859977729}
+c sim {"msg":"ack 1, 0 left","t":851704920,"type":"log","h":859977757}
+c sim {"msg":"ack 1, 0 left","t":851704936,"type":"log","h":859977773}
+c sim {"msg":"ack 1, 0 left","t":851704955,"type":"log","h":859977792}
+c sim {"msg":"ack 1, 0 left","t":851704971,"type":"log","h":859977808}
+c sim {"msg":"ack 1, 0 left","t":851704985,"type":"log","h":859977822}
+c sim {"msg":"ack 1, 0 left","t":851705000,"type":"log","h":859977837}
+c sim {"msg":"ack 1, 0 left","t":851705016,"type":"log","h":859977852}
+c sim {"msg":"ack 1, 0 left","t":851705029,"type":"log","h":859977866}
+c sim {"msg":"ack 1, 0 left","t":851705045,"type":"log","h":859977882}
+c sim {"msg":"ack 1, 0 left","t":851705058,"type":"log","h":859977895}
+c sim {"msg":"ack 1, 0 left","t":851705072,"type":"log","h":859977909}
+c sim {"msg":"ack 1, 0 left","t":851705096,"type":"log","h":859977933}
+c sim {"msg":"ack 1, 0 left","t":851705112,"type":"log","h":859977949}
+c sim {"msg":"ack 1, 0 left","t":851705125,"type":"log","h":859977962}
+c sim {"msg":"ack 1, 0 left","t":851705141,"type":"log","h":859977977}
+c sim {"msg":"ack 1, 0 left","t":851705155,"type":"log","h":859977992}
+c sim {"msg":"ack 1, 0 left","t":851705170,"type":"log","h":859978007}
+c sim {"msg":"ack 1, 0 left","t":851705186,"type":"log","h":859978023}
+c sim {"msg":"ack 1, 0 left","t":851705201,"type":"log","h":859978037}
+c sim {"msg":"ack 1, 0 left","t":851705216,"type":"log","h":859978053}
+c sim {"msg":"ack 1, 0 left","t":851705230,"type":"log","h":859978067}
+c sim {"msg":"ack 1, 0 left","t":851705245,"type":"log","h":859978082}
+c sim {"msg":"ack 1, 0 left","t":851705259,"type":"log","h":859978096}
+c sim {"msg":"ack 1, 0 left","t":851705274,"type":"log","h":859978111}
+c sim {"msg":"ack 1, 0 left","t":851705288,"type":"log","h":859978125}
+c sim {"msg":"ack 1, 0 left","t":851705303,"type":"log","h":859978140}
+c sim {"msg":"ack 1, 0 left","t":851705318,"type":"log","h":859978155}
+c sim {"msg":"ack 1, 0 left","t":851705332,"type":"log","h":859978169}
+c sim {"msg":"ack 1, 0 left","t":851705349,"type":"log","h":859978186}
+c sim {"msg":"ack 1, 0 left","t":851705363,"type":"log","h":859978200}
+c sim {"msg":"ack 1, 0 left","t":851705380,"type":"log","h":859978217}
+c sim {"msg":"ack 1, 0 left","t":851705395,"type":"log","h":859978232}
+c sim {"msg":"ack 1, 0 left","t":851705410,"type":"log","h":859978247}
+c sim {"msg":"ack 1, 0 left","t":851705424,"type":"log","h":859978261}
+c sim {"msg":"ack 1, 0 left","t":851705438,"type":"log","h":859978275}
+c sim {"msg":"ack 1, 0 left","t":851705453,"type":"log","h":859978290}
+c sim {"msg":"ack 1, 0 left","t":851705469,"type":"log","h":859978306}
+c sim {"msg":"ack 1, 0 left","t":851705484,"type":"log","h":859978321}
+c sim {"msg":"ack 1, 0 left","t":851705500,"type":"log","h":859978337}
+c sim {"msg":"ack 1, 0 left","t":851705518,"type":"log","h":859978355}
+c sim {"msg":"ack 1, 0 left","t":851705534,"type":"log","h":859978371}
+c sim {"msg":"ack 1, 0 left","t":851705550,"type":"log","h":859978387}
+c sim {"msg":"lost spike-mac","t":851707759,"type":"log","h":859980596}
+c sim {"msg":"spike-mac came back as a new peer; dropping the stale connection","t":851708513,"type":"log","h":859981350}
+c sim {"msg":"found spike-mac","t":851708513,"type":"log","h":859981350}
+c sim {"msg":"inviting spike-mac","t":851708513,"type":"log","h":859981350}
+c sim {"peer":"spike-mac","state":"notConnected","t":851708514,"type":"peer","h":859981351}
+c sim {"peer":"spike-mac","state":"connecting","t":851708539,"type":"peer","h":859981376}
+c sim {"peer":"spike-mac","state":"connected","t":851708572,"type":"peer","h":859981409}
+c sim {"bytes":39358,"names":500,"t":851708580,"type":"snapshot","version":1,"h":859981417}
+c sim {"msg":"ack 1, 191 left","t":851708581,"type":"log","h":859981420}
+c sim {"msg":"ack 1, 190 left","t":851708581,"type":"log","h":859981420}
+c sim {"msg":"ack 1, 189 left","t":851708582,"type":"log","h":859981420}
+c sim {"msg":"ack 1, 188 left","t":851708583,"type":"log","h":859981420}
+c sim {"msg":"ack 1, 187 left","t":851708583,"type":"log","h":859981420}
+c sim {"msg":"ack 1, 186 left","t":851708584,"type":"log","h":859981421}
+c sim {"msg":"ack 1, 185 left","t":851708584,"type":"log","h":859981421}
+c sim {"msg":"ack 1, 184 left","t":851708585,"type":"log","h":859981421}
+c sim {"msg":"ack 1, 183 left","t":851708585,"type":"log","h":859981422}
+c sim {"msg":"ack 1, 182 left","t":851708585,"type":"log","h":859981422}
+c sim {"msg":"ack 1, 181 left","t":851708586,"type":"log","h":859981423}
+c sim {"msg":"ack 1, 180 left","t":851708586,"type":"log","h":859981423}
+c sim {"msg":"ack 1, 179 left","t":851708587,"type":"log","h":859981423}
+c sim {"msg":"ack 1, 178 left","t":851708587,"type":"log","h":859981424}
+c sim {"msg":"ack 1, 177 left","t":851708587,"type":"log","h":859981424}
+c sim {"msg":"ack 1, 176 left","t":851708588,"type":"log","h":859981425}
+c sim {"msg":"ack 1, 175 left","t":851708588,"type":"log","h":859981425}
+c sim {"msg":"ack 1, 174 left","t":851708589,"type":"log","h":859981425}
+c sim {"msg":"ack 1, 173 left","t":851708589,"type":"log","h":859981426}
+c sim {"msg":"ack 1, 172 left","t":851708589,"type":"log","h":859981426}
+c sim {"msg":"ack 1, 171 left","t":851708590,"type":"log","h":859981427}
+c sim {"msg":"ack 1, 170 left","t":851708590,"type":"log","h":859981427}
+c sim {"msg":"ack 1, 169 left","t":851708591,"type":"log","h":859981428}
+c sim {"msg":"ack 1, 168 left","t":851708591,"type":"log","h":859981428}
+c sim {"msg":"ack 1, 167 left","t":851708592,"type":"log","h":859981429}
+c sim {"msg":"ack 1, 166 left","t":851708592,"type":"log","h":859981429}
+c sim {"msg":"ack 1, 165 left","t":851708593,"type":"log","h":859981430}
+c sim {"msg":"ack 1, 164 left","t":851708593,"type":"log","h":859981430}
+c sim {"msg":"ack 1, 163 left","t":851708593,"type":"log","h":859981430}
+c sim {"msg":"ack 1, 162 left","t":851708594,"type":"log","h":859981431}
+c sim {"msg":"ack 1, 161 left","t":851708595,"type":"log","h":859981431}
+c sim {"msg":"ack 1, 160 left","t":851708595,"type":"log","h":859981432}
+c sim {"msg":"ack 1, 159 left","t":851708595,"type":"log","h":859981432}
+c sim {"msg":"ack 1, 158 left","t":851708596,"type":"log","h":859981433}
+c sim {"msg":"ack 1, 157 left","t":851708596,"type":"log","h":859981433}
+c sim {"msg":"ack 1, 156 left","t":851708597,"type":"log","h":859981433}
+c sim {"msg":"ack 1, 155 left","t":851708597,"type":"log","h":859981434}
+c sim {"msg":"ack 1, 154 left","t":851708597,"type":"log","h":859981434}
+c sim {"msg":"ack 1, 153 left","t":851708598,"type":"log","h":859981435}
+c sim {"msg":"ack 1, 152 left","t":851708598,"type":"log","h":859981435}
+c sim {"msg":"ack 1, 151 left","t":851708599,"type":"log","h":859981435}
+c sim {"msg":"ack 1, 150 left","t":851708599,"type":"log","h":859981436}
+c sim {"msg":"ack 1, 149 left","t":851708599,"type":"log","h":859981436}
+c sim {"msg":"ack 1, 148 left","t":851708600,"type":"log","h":859981437}
+c sim {"msg":"ack 1, 147 left","t":851708600,"type":"log","h":859981437}
+c sim {"msg":"ack 1, 146 left","t":851708600,"type":"log","h":859981437}
+c sim {"msg":"ack 1, 146 left","t":851708601,"type":"log","h":859981438}
+c sim {"msg":"ack 1, 145 left","t":851708602,"type":"log","h":859981439}
+c sim {"msg":"ack 1, 144 left","t":851708602,"type":"log","h":859981439}
+c sim {"msg":"ack 1, 143 left","t":851708603,"type":"log","h":859981440}
+c sim {"msg":"ack 1, 142 left","t":851708603,"type":"log","h":859981440}
+c sim {"msg":"ack 1, 141 left","t":851708604,"type":"log","h":859981440}
+c sim {"msg":"ack 1, 140 left","t":851708604,"type":"log","h":859981441}
+c sim {"msg":"ack 1, 139 left","t":851708604,"type":"log","h":859981441}
+c sim {"msg":"ack 1, 138 left","t":851708605,"type":"log","h":859981441}
+c sim {"msg":"ack 1, 137 left","t":851708605,"type":"log","h":859981442}
+c sim {"msg":"ack 1, 136 left","t":851708605,"type":"log","h":859981442}
+c sim {"msg":"ack 1, 135 left","t":851708606,"type":"log","h":859981442}
+c sim {"msg":"ack 1, 134 left","t":851708606,"type":"log","h":859981443}
+c sim {"msg":"ack 1, 133 left","t":851708606,"type":"log","h":859981443}
+c sim {"msg":"ack 1, 132 left","t":851708607,"type":"log","h":859981444}
+c sim {"msg":"ack 1, 131 left","t":851708607,"type":"log","h":859981444}
+c sim {"msg":"ack 1, 130 left","t":851708608,"type":"log","h":859981444}
+c sim {"msg":"ack 1, 129 left","t":851708608,"type":"log","h":859981445}
+c sim {"msg":"ack 1, 128 left","t":851708608,"type":"log","h":859981445}
+c sim {"msg":"ack 1, 127 left","t":851708609,"type":"log","h":859981446}
+c sim {"msg":"ack 1, 126 left","t":851708609,"type":"log","h":859981446}
+c sim {"msg":"ack 1, 125 left","t":851708609,"type":"log","h":859981446}
+c sim {"msg":"ack 1, 124 left","t":851708610,"type":"log","h":859981446}
+c sim {"msg":"ack 1, 123 left","t":851708610,"type":"log","h":859981447}
+c sim {"msg":"ack 1, 122 left","t":851708610,"type":"log","h":859981447}
+c sim {"msg":"ack 1, 121 left","t":851708610,"type":"log","h":859981447}
+c sim {"msg":"ack 1, 120 left","t":851708611,"type":"log","h":859981448}
+c sim {"msg":"ack 1, 119 left","t":851708611,"type":"log","h":859981448}
+c sim {"msg":"ack 1, 118 left","t":851708611,"type":"log","h":859981448}
+c sim {"msg":"ack 1, 117 left","t":851708612,"type":"log","h":859981449}
+c sim {"msg":"ack 1, 116 left","t":851708612,"type":"log","h":859981449}
+c sim {"msg":"ack 1, 115 left","t":851708612,"type":"log","h":859981449}
+c sim {"msg":"ack 1, 114 left","t":851708613,"type":"log","h":859981450}
+c sim {"msg":"ack 1, 113 left","t":851708613,"type":"log","h":859981450}
+c sim {"msg":"ack 1, 112 left","t":851708613,"type":"log","h":859981450}
+c sim {"msg":"ack 1, 111 left","t":851708614,"type":"log","h":859981450}
+c sim {"msg":"ack 1, 110 left","t":851708614,"type":"log","h":859981451}
+c sim {"msg":"ack 1, 109 left","t":851708614,"type":"log","h":859981451}
+c sim {"msg":"ack 1, 108 left","t":851708614,"type":"log","h":859981451}
+c sim {"msg":"ack 1, 107 left","t":851708615,"type":"log","h":859981452}
+c sim {"msg":"ack 1, 106 left","t":851708615,"type":"log","h":859981452}
+c sim {"msg":"ack 1, 105 left","t":851708615,"type":"log","h":859981452}
+c sim {"msg":"ack 1, 104 left","t":851708616,"type":"log","h":859981452}
+c sim {"msg":"ack 1, 103 left","t":851708616,"type":"log","h":859981453}
+c sim {"msg":"ack 1, 102 left","t":851708616,"type":"log","h":859981453}
+c sim {"msg":"ack 1, 101 left","t":851708616,"type":"log","h":859981453}
+c sim {"msg":"ack 1, 100 left","t":851708617,"type":"log","h":859981454}
+c sim {"msg":"ack 1, 99 left","t":851708617,"type":"log","h":859981454}
+c sim {"msg":"ack 1, 98 left","t":851708617,"type":"log","h":859981454}
+c sim {"msg":"ack 1, 97 left","t":851708618,"type":"log","h":859981454}
+c sim {"msg":"ack 1, 96 left","t":851708618,"type":"log","h":859981455}
+c sim {"msg":"ack 1, 95 left","t":851708618,"type":"log","h":859981455}
+c sim {"msg":"ack 1, 94 left","t":851708618,"type":"log","h":859981455}
+c sim {"msg":"ack 1, 93 left","t":851708619,"type":"log","h":859981455}
+c sim {"msg":"ack 1, 92 left","t":851708619,"type":"log","h":859981456}
+c sim {"msg":"ack 1, 91 left","t":851708619,"type":"log","h":859981456}
+c sim {"msg":"ack 1, 90 left","t":851708619,"type":"log","h":859981456}
+c sim {"msg":"ack 1, 89 left","t":851708620,"type":"log","h":859981457}
+c sim {"msg":"ack 1, 88 left","t":851708620,"type":"log","h":859981457}
+c sim {"msg":"ack 1, 87 left","t":851708620,"type":"log","h":859981457}
+c sim {"msg":"ack 1, 86 left","t":851708620,"type":"log","h":859981457}
+c sim {"msg":"ack 1, 85 left","t":851708621,"type":"log","h":859981458}
+c sim {"msg":"ack 1, 84 left","t":851708621,"type":"log","h":859981458}
+c sim {"msg":"ack 1, 83 left","t":851708621,"type":"log","h":859981458}
+c sim {"msg":"ack 1, 82 left","t":851708622,"type":"log","h":859981458}
+c sim {"msg":"ack 1, 81 left","t":851708622,"type":"log","h":859981459}
+c sim {"msg":"ack 1, 80 left","t":851708622,"type":"log","h":859981459}
+c sim {"msg":"ack 1, 79 left","t":851708624,"type":"log","h":859981461}
+c sim {"msg":"ack 1, 78 left","t":851708624,"type":"log","h":859981461}
+c sim {"msg":"ack 1, 77 left","t":851708625,"type":"log","h":859981461}
+c sim {"msg":"ack 1, 76 left","t":851708625,"type":"log","h":859981462}
+c sim {"msg":"ack 1, 75 left","t":851708625,"type":"log","h":859981462}
+c sim {"msg":"ack 1, 74 left","t":851708625,"type":"log","h":859981462}
+c sim {"msg":"ack 1, 73 left","t":851708630,"type":"log","h":859981467}
+c sim {"msg":"ack 1, 72 left","t":851708632,"type":"log","h":859981469}
+c sim {"msg":"ack 1, 71 left","t":851708632,"type":"log","h":859981469}
+c sim {"msg":"ack 1, 70 left","t":851708636,"type":"log","h":859981473}
+c sim {"msg":"ack 1, 69 left","t":851708637,"type":"log","h":859981474}
+c sim {"msg":"ack 1, 68 left","t":851708638,"type":"log","h":859981474}
+c sim {"msg":"ack 1, 67 left","t":851708638,"type":"log","h":859981475}
+c sim {"msg":"ack 1, 66 left","t":851708638,"type":"log","h":859981475}
+c sim {"msg":"ack 1, 65 left","t":851708639,"type":"log","h":859981476}
+c sim {"msg":"ack 1, 64 left","t":851708639,"type":"log","h":859981476}
+c sim {"msg":"ack 1, 63 left","t":851708639,"type":"log","h":859981476}
+c sim {"msg":"ack 1, 62 left","t":851708640,"type":"log","h":859981477}
+c sim {"msg":"ack 1, 61 left","t":851708640,"type":"log","h":859981477}
+c sim {"msg":"ack 1, 60 left","t":851708641,"type":"log","h":859981478}
+c sim {"msg":"ack 1, 59 left","t":851708641,"type":"log","h":859981478}
+c sim {"msg":"ack 1, 58 left","t":851708642,"type":"log","h":859981478}
+c sim {"msg":"ack 1, 57 left","t":851708642,"type":"log","h":859981479}
+c sim {"msg":"ack 1, 56 left","t":851708642,"type":"log","h":859981479}
+c sim {"msg":"ack 1, 55 left","t":851708643,"type":"log","h":859981480}
+c sim {"msg":"ack 1, 54 left","t":851708643,"type":"log","h":859981480}
+c sim {"msg":"ack 1, 53 left","t":851708643,"type":"log","h":859981480}
+c sim {"msg":"ack 1, 52 left","t":851708644,"type":"log","h":859981481}
+c sim {"msg":"ack 1, 51 left","t":851708644,"type":"log","h":859981481}
+c sim {"msg":"ack 1, 50 left","t":851708645,"type":"log","h":859981482}
+c sim {"msg":"ack 1, 49 left","t":851708645,"type":"log","h":859981482}
+c sim {"msg":"ack 1, 48 left","t":851708645,"type":"log","h":859981482}
+c sim {"msg":"ack 1, 47 left","t":851708646,"type":"log","h":859981483}
+c sim {"msg":"ack 1, 46 left","t":851708646,"type":"log","h":859981483}
+c sim {"msg":"ack 1, 45 left","t":851708647,"type":"log","h":859981483}
+c sim {"msg":"ack 1, 44 left","t":851708647,"type":"log","h":859981484}
+c sim {"msg":"ack 1, 43 left","t":851708647,"type":"log","h":859981484}
+c sim {"msg":"ack 1, 42 left","t":851708647,"type":"log","h":859981484}
+c sim {"msg":"ack 1, 41 left","t":851708648,"type":"log","h":859981485}
+c sim {"msg":"ack 1, 40 left","t":851708648,"type":"log","h":859981485}
+c sim {"msg":"ack 1, 39 left","t":851708648,"type":"log","h":859981485}
+c sim {"msg":"ack 1, 38 left","t":851708648,"type":"log","h":859981485}
+c sim {"msg":"ack 1, 37 left","t":851708649,"type":"log","h":859981486}
+c sim {"msg":"ack 1, 36 left","t":851708649,"type":"log","h":859981486}
+c sim {"msg":"ack 1, 35 left","t":851708649,"type":"log","h":859981486}
+c sim {"msg":"ack 1, 34 left","t":851708650,"type":"log","h":859981487}
+c sim {"msg":"ack 1, 33 left","t":851708650,"type":"log","h":859981487}
+c sim {"msg":"ack 1, 32 left","t":851708650,"type":"log","h":859981487}
+c sim {"msg":"ack 1, 31 left","t":851708651,"type":"log","h":859981487}
+c sim {"msg":"ack 1, 30 left","t":851708651,"type":"log","h":859981488}
+c sim {"msg":"ack 1, 29 left","t":851708651,"type":"log","h":859981488}
+c sim {"msg":"ack 1, 28 left","t":851708651,"type":"log","h":859981488}
+c sim {"msg":"ack 1, 27 left","t":851708652,"type":"log","h":859981489}
+c sim {"msg":"ack 1, 26 left","t":851708652,"type":"log","h":859981489}
+c sim {"msg":"ack 1, 25 left","t":851708652,"type":"log","h":859981489}
+c sim {"msg":"ack 1, 24 left","t":851708652,"type":"log","h":859981489}
+c sim {"msg":"ack 1, 23 left","t":851708653,"type":"log","h":859981490}
+c sim {"msg":"ack 1, 22 left","t":851708653,"type":"log","h":859981490}
+c sim {"msg":"ack 1, 21 left","t":851708653,"type":"log","h":859981490}
+c sim {"msg":"ack 1, 20 left","t":851708653,"type":"log","h":859981490}
+c sim {"msg":"ack 1, 19 left","t":851708654,"type":"log","h":859981491}
+c sim {"msg":"ack 1, 18 left","t":851708654,"type":"log","h":859981491}
+c sim {"msg":"ack 1, 17 left","t":851708654,"type":"log","h":859981491}
+c sim {"msg":"ack 1, 16 left","t":851708654,"type":"log","h":859981491}
+c sim {"msg":"ack 1, 15 left","t":851708655,"type":"log","h":859981491}
+c sim {"msg":"ack 1, 14 left","t":851708655,"type":"log","h":859981492}
+c sim {"msg":"ack 1, 13 left","t":851708655,"type":"log","h":859981492}
+c sim {"msg":"ack 1, 12 left","t":851708655,"type":"log","h":859981492}
+c sim {"msg":"ack 1, 11 left","t":851708655,"type":"log","h":859981492}
+c sim {"msg":"ack 1, 10 left","t":851708656,"type":"log","h":859981492}
+c sim {"msg":"ack 1, 9 left","t":851708656,"type":"log","h":859981493}
+c sim {"msg":"ack 1, 8 left","t":851708656,"type":"log","h":859981493}
+c sim {"msg":"ack 1, 7 left","t":851708656,"type":"log","h":859981493}
+c sim {"msg":"ack 1, 6 left","t":851708656,"type":"log","h":859981493}
+c sim {"msg":"ack 1, 5 left","t":851708657,"type":"log","h":859981493}
+c sim {"msg":"ack 1, 4 left","t":851708657,"type":"log","h":859981494}
+c sim {"msg":"ack 1, 3 left","t":851708657,"type":"log","h":859981494}
+c sim {"msg":"ack 1, 2 left","t":851708657,"type":"log","h":859981494}
+c sim {"msg":"ack 1, 1 left","t":851708657,"type":"log","h":859981494}
+c sim {"msg":"ack 1, 0 left","t":851708657,"type":"log","h":859981494}
+c sim {"msg":"ack 1, 0 left","t":851708658,"type":"log","h":859981495}
+c sim {"msg":"ack 1, 0 left","t":851708674,"type":"log","h":859981511}
+c sim {"msg":"ack 1, 0 left","t":851708688,"type":"log","h":859981525}
+c sim {"msg":"ack 1, 0 left","t":851708703,"type":"log","h":859981540}
+c sim {"msg":"ack 1, 0 left","t":851708718,"type":"log","h":859981555}
+c sim {"msg":"ack 1, 0 left","t":851708732,"type":"log","h":859981569}
+c sim {"msg":"ack 1, 0 left","t":851708745,"type":"log","h":859981582}
+c sim {"msg":"ack 1, 0 left","t":851708757,"type":"log","h":859981594}
+c sim {"msg":"ack 1, 0 left","t":851708776,"type":"log","h":859981612}
+c sim {"msg":"ack 1, 0 left","t":851708791,"type":"log","h":859981628}
+c sim {"msg":"ack 1, 0 left","t":851708807,"type":"log","h":859981644}
+c sim {"msg":"ack 1, 0 left","t":851708822,"type":"log","h":859981659}
+c sim {"msg":"ack 1, 0 left","t":851708836,"type":"log","h":859981673}
+c sim {"msg":"ack 1, 0 left","t":851708847,"type":"log","h":859981684}
+c sim {"msg":"ack 1, 0 left","t":851708862,"type":"log","h":859981699}
+c sim {"msg":"ack 1, 0 left","t":851708877,"type":"log","h":859981714}
+c sim {"msg":"ack 1, 0 left","t":851708891,"type":"log","h":859981728}
+c sim {"msg":"ack 1, 0 left","t":851708905,"type":"log","h":859981742}
+c sim {"msg":"ack 1, 0 left","t":851708920,"type":"log","h":859981757}
+c sim {"msg":"ack 1, 0 left","t":851708934,"type":"log","h":859981771}
+c sim {"msg":"ack 1, 0 left","t":851708949,"type":"log","h":859981786}
+c sim {"msg":"ack 1, 0 left","t":851708962,"type":"log","h":859981799}
+c sim {"msg":"ack 1, 0 left","t":851708978,"type":"log","h":859981815}
+c sim {"msg":"ack 1, 0 left","t":851708994,"type":"log","h":859981831}
+c sim {"msg":"ack 1, 0 left","t":851709008,"type":"log","h":859981845}
+c sim {"msg":"ack 1, 0 left","t":851709023,"type":"log","h":859981860}
+c sim {"msg":"ack 1, 0 left","t":851709036,"type":"log","h":859981873}
+c sim {"msg":"ack 1, 0 left","t":851709052,"type":"log","h":859981889}
+c sim {"msg":"ack 1, 0 left","t":851709065,"type":"log","h":859981902}
+c sim {"msg":"ack 1, 0 left","t":851709081,"type":"log","h":859981918}
+c sim {"msg":"ack 1, 0 left","t":851709097,"type":"log","h":859981934}
+c sim {"msg":"ack 1, 0 left","t":851709111,"type":"log","h":859981948}
+c sim {"msg":"ack 1, 0 left","t":851709126,"type":"log","h":859981963}
+c sim {"msg":"ack 1, 0 left","t":851709144,"type":"log","h":859981981}
+c sim {"msg":"ack 1, 0 left","t":851709157,"type":"log","h":859981994}
+c sim {"msg":"ack 1, 0 left","t":851709177,"type":"log","h":859982014}
+c sim {"msg":"ack 1, 0 left","t":851709192,"type":"log","h":859982029}
+c sim {"msg":"ack 1, 0 left","t":851709205,"type":"log","h":859982042}
+c sim {"msg":"ack 1, 0 left","t":851709220,"type":"log","h":859982056}
+c sim {"msg":"ack 1, 0 left","t":851709234,"type":"log","h":859982071}
+c sim {"msg":"ack 1, 0 left","t":851709249,"type":"log","h":859982086}
+c sim {"msg":"ack 1, 0 left","t":851709261,"type":"log","h":859982098}
+c sim {"msg":"ack 1, 0 left","t":851709275,"type":"log","h":859982112}
+c sim {"msg":"ack 1, 0 left","t":851709288,"type":"log","h":859982125}
+c sim {"msg":"ack 1, 0 left","t":851709303,"type":"log","h":859982140}
+c sim {"msg":"ack 1, 0 left","t":851709318,"type":"log","h":859982155}
+c sim {"msg":"ack 1, 0 left","t":851709335,"type":"log","h":859982172}
+c sim {"msg":"ack 1, 0 left","t":851709346,"type":"log","h":859982183}
+c sim {"msg":"ack 1, 0 left","t":851709361,"type":"log","h":859982198}
+c sim {"msg":"ack 1, 0 left","t":851709376,"type":"log","h":859982213}
+c sim {"msg":"ack 1, 0 left","t":851709395,"type":"log","h":859982231}
+c sim {"msg":"ack 1, 0 left","t":851709406,"type":"log","h":859982243}
+c sim {"msg":"ack 1, 0 left","t":851709421,"type":"log","h":859982258}
+c sim {"msg":"ack 1, 0 left","t":851709437,"type":"log","h":859982274}
+c sim {"msg":"ack 1, 0 left","t":851709451,"type":"log","h":859982288}
+c sim {"msg":"ack 1, 0 left","t":851709466,"type":"log","h":859982303}
+c sim {"msg":"ack 1, 0 left","t":851709480,"type":"log","h":859982317}
+c sim {"msg":"ack 1, 0 left","t":851709492,"type":"log","h":859982329}
+c sim {"msg":"ack 1, 0 left","t":851709507,"type":"log","h":859982344}
+c sim {"msg":"ack 1, 0 left","t":851709521,"type":"log","h":859982358}
+c sim {"msg":"ack 1, 0 left","t":851709536,"type":"log","h":859982373}
+c sim {"msg":"ack 1, 0 left","t":851709551,"type":"log","h":859982388}
+c sim {"msg":"ack 1, 0 left","t":851709567,"type":"log","h":859982404}
+c sim {"msg":"ack 1, 0 left","t":851709582,"type":"log","h":859982419}
+c sim {"msg":"ack 1, 0 left","t":851709594,"type":"log","h":859982431}
+c sim {"msg":"ack 1, 0 left","t":851709607,"type":"log","h":859982444}
+c sim {"msg":"ack 1, 0 left","t":851709622,"type":"log","h":859982458}
+c sim {"msg":"ack 1, 0 left","t":851709645,"type":"log","h":859982482}
+c sim {"msg":"ack 1, 0 left","t":851709661,"type":"log","h":859982498}
+c sim {"msg":"ack 1, 0 left","t":851709674,"type":"log","h":859982511}
+c sim {"msg":"ack 1, 0 left","t":851709691,"type":"log","h":859982527}
+c sim {"msg":"ack 1, 0 left","t":851709705,"type":"log","h":859982542}
+c sim {"msg":"ack 1, 0 left","t":851709722,"type":"log","h":859982559}
+c sim {"msg":"ack 1, 0 left","t":851709738,"type":"log","h":859982575}
+c sim {"msg":"ack 1, 0 left","t":851709754,"type":"log","h":859982591}
+c sim {"msg":"ack 1, 0 left","t":851709777,"type":"log","h":859982613}
+c sim {"msg":"ack 1, 0 left","t":851709791,"type":"log","h":859982628}
+c sim {"msg":"ack 1, 0 left","t":851709805,"type":"log","h":859982642}
+c sim {"msg":"ack 1, 0 left","t":851709820,"type":"log","h":859982657}
+c sim {"msg":"ack 1, 0 left","t":851709834,"type":"log","h":859982671}
+c sim {"msg":"ack 1, 0 left","t":851709849,"type":"log","h":859982686}
+c sim {"msg":"ack 1, 0 left","t":851709863,"type":"log","h":859982700}
+c sim {"msg":"ack 1, 0 left","t":851709880,"type":"log","h":859982717}
+c sim {"msg":"ack 1, 0 left","t":851709897,"type":"log","h":859982734}
+c sim {"msg":"ack 1, 0 left","t":851709911,"type":"log","h":859982748}
+c sim {"msg":"ack 1, 0 left","t":851709927,"type":"log","h":859982764}
+c sim {"msg":"ack 1, 0 left","t":851709941,"type":"log","h":859982777}
+c sim {"msg":"ack 1, 0 left","t":851709957,"type":"log","h":859982794}
+c sim {"msg":"ack 1, 0 left","t":851709972,"type":"log","h":859982809}
+c sim {"msg":"ack 1, 0 left","t":851709987,"type":"log","h":859982824}
+c sim {"msg":"ack 1, 0 left","t":851710001,"type":"log","h":859982838}
+c sim {"msg":"ack 1, 0 left","t":851710017,"type":"log","h":859982854}
+c sim {"msg":"ack 1, 0 left","t":851710034,"type":"log","h":859982871}
+c sim {"msg":"ack 1, 0 left","t":851710049,"type":"log","h":859982886}
+c sim {"msg":"ack 1, 0 left","t":851710065,"type":"log","h":859982902}
+c sim {"msg":"ack 1, 0 left","t":851710078,"type":"log","h":859982915}
+c sim {"msg":"ack 1, 0 left","t":851710093,"type":"log","h":859982930}
+c sim {"msg":"ack 1, 0 left","t":851710107,"type":"log","h":859982944}
+c sim {"msg":"ack 1, 0 left","t":851710122,"type":"log","h":859982959}
+c sim {"msg":"ack 1, 0 left","t":851710137,"type":"log","h":859982973}
+c sim {"msg":"ack 1, 0 left","t":851710151,"type":"log","h":859982988}
+c sim {"msg":"ack 1, 0 left","t":851710165,"type":"log","h":859983002}
+c sim {"msg":"ack 1, 0 left","t":851710187,"type":"log","h":859983025}
+c sim {"msg":"ack 1, 0 left","t":851710199,"type":"log","h":859983036}
+c sim {"msg":"ack 1, 0 left","t":851710211,"type":"log","h":859983048}
+c sim {"msg":"ack 1, 0 left","t":851710228,"type":"log","h":859983065}
+c sim {"msg":"ack 1, 0 left","t":851710242,"type":"log","h":859983079}
+c sim {"msg":"ack 1, 0 left","t":851710256,"type":"log","h":859983093}
+c sim {"msg":"ack 1, 0 left","t":851710270,"type":"log","h":859983107}
+c sim {"msg":"ack 1, 0 left","t":851710284,"type":"log","h":859983121}
+c sim {"msg":"ack 1, 0 left","t":851710299,"type":"log","h":859983136}
+c sim {"msg":"ack 1, 0 left","t":851710312,"type":"log","h":859983149}
+c sim {"msg":"ack 1, 0 left","t":851710334,"type":"log","h":859983171}
+c sim {"msg":"ack 1, 0 left","t":851710340,"type":"log","h":859983177}
+c sim {"msg":"ack 1, 0 left","t":851710356,"type":"log","h":859983193}
+c sim {"msg":"ack 1, 0 left","t":851710373,"type":"log","h":859983210}
+c sim {"msg":"ack 1, 0 left","t":851710389,"type":"log","h":859983226}
+c sim {"msg":"ack 1, 0 left","t":851710403,"type":"log","h":859983240}
+c sim {"msg":"ack 1, 0 left","t":851710419,"type":"log","h":859983256}
+c sim {"msg":"ack 1, 0 left","t":851710433,"type":"log","h":859983270}
+c sim {"msg":"ack 1, 0 left","t":851710448,"type":"log","h":859983285}
+c sim {"msg":"ack 1, 0 left","t":851710463,"type":"log","h":859983300}
+c sim {"msg":"ack 1, 0 left","t":851710477,"type":"log","h":859983314}
+c sim {"msg":"ack 1, 0 left","t":851710493,"type":"log","h":859983330}
+c sim {"msg":"ack 1, 0 left","t":851710507,"type":"log","h":859983344}
+c sim {"msg":"ack 1, 0 left","t":851710524,"type":"log","h":859983361}
+c sim {"msg":"ack 1, 0 left","t":851710539,"type":"log","h":859983376}
+c sim {"msg":"ack 1, 0 left","t":851710555,"type":"log","h":859983392}
+c sim {"msg":"ack 1, 0 left","t":851710571,"type":"log","h":859983408}
+c sim {"msg":"ack 1, 0 left","t":851710585,"type":"log","h":859983422}
+c sim {"msg":"ack 1, 0 left","t":851710599,"type":"log","h":859983436}
+c sim {"msg":"ack 1, 0 left","t":851710612,"type":"log","h":859983449}
+c sim {"msg":"ack 1, 0 left","t":851710632,"type":"log","h":859983469}
+c sim {"msg":"ack 1, 0 left","t":851710647,"type":"log","h":859983483}
+c sim {"msg":"ack 1, 0 left","t":851710671,"type":"log","h":859983508}
+c sim {"msg":"ack 1, 0 left","t":851710680,"type":"log","h":859983517}
+c sim {"msg":"ack 1, 0 left","t":851710697,"type":"log","h":859983534}
+c sim {"msg":"ack 1, 0 left","t":851710714,"type":"log","h":859983551}
+c sim {"msg":"ack 1, 0 left","t":851710728,"type":"log","h":859983565}
+c sim {"msg":"ack 1, 0 left","t":851710744,"type":"log","h":859983581}
+c sim {"msg":"ack 1, 0 left","t":851710758,"type":"log","h":859983595}
+c sim {"msg":"ack 1, 0 left","t":851710776,"type":"log","h":859983613}
+c sim {"msg":"ack 1, 0 left","t":851710788,"type":"log","h":859983625}
+c sim {"msg":"ack 1, 0 left","t":851710803,"type":"log","h":859983640}
+c sim {"msg":"ack 1, 0 left","t":851710818,"type":"log","h":859983655}
+c sim {"msg":"ack 1, 0 left","t":851710832,"type":"log","h":859983669}
+c sim {"msg":"ack 1, 0 left","t":851710845,"type":"log","h":859983682}
+c sim {"msg":"ack 1, 0 left","t":851710859,"type":"log","h":859983695}
+c sim {"msg":"ack 1, 0 left","t":851710875,"type":"log","h":859983712}
+c sim {"msg":"ack 1, 0 left","t":851710893,"type":"log","h":859983730}
+c sim {"msg":"ack 1, 0 left","t":851710909,"type":"log","h":859983746}
+c sim {"msg":"ack 1, 0 left","t":851710926,"type":"log","h":859983766}
+c sim {"msg":"ack 1, 0 left","t":851710941,"type":"log","h":859983778}
+c sim {"msg":"ack 1, 0 left","t":851710955,"type":"log","h":859983792}
+c sim {"msg":"ack 1, 0 left","t":851710970,"type":"log","h":859983807}
+c sim {"msg":"ack 1, 0 left","t":851710990,"type":"log","h":859983826}
+c sim {"produced":500,"t":851711005,"type":"done","h":859983842}
+c sim {"msg":"ack 1, 0 left","t":851711005,"type":"log","h":859983842}
+d sim-before-kill {"msg":"browsing as spike-ipad","t":851713064,"type":"log","h":859985903}
+d sim-before-kill {"queued":0,"resumeAt":0,"t":851713066,"type":"ready","h":859985903}
+d sim-before-kill {"msg":"found spike-mac","t":851714059,"type":"log","h":859986896}
+d sim-before-kill {"msg":"inviting spike-mac","t":851714059,"type":"log","h":859986896}
+d sim-before-kill {"peer":"spike-mac","state":"connecting","t":851714087,"type":"peer","h":859986923}
+d sim-before-kill {"peer":"spike-mac","state":"connected","t":851714120,"type":"peer","h":859986957}
+d sim-before-kill {"bytes":39358,"names":500,"t":851714122,"type":"snapshot","version":1,"h":859986959}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714125,"type":"log","h":859986962}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714138,"type":"log","h":859986975}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714153,"type":"log","h":859986990}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714168,"type":"log","h":859987005}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714182,"type":"log","h":859987019}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714195,"type":"log","h":859987032}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714208,"type":"log","h":859987045}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714222,"type":"log","h":859987058}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714236,"type":"log","h":859987073}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714249,"type":"log","h":859987086}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714264,"type":"log","h":859987101}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714278,"type":"log","h":859987115}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714291,"type":"log","h":859987128}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714305,"type":"log","h":859987142}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714320,"type":"log","h":859987157}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714334,"type":"log","h":859987171}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714349,"type":"log","h":859987185}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714361,"type":"log","h":859987198}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714375,"type":"log","h":859987212}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714391,"type":"log","h":859987228}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714405,"type":"log","h":859987242}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714420,"type":"log","h":859987257}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714435,"type":"log","h":859987271}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714449,"type":"log","h":859987286}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714461,"type":"log","h":859987298}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714474,"type":"log","h":859987310}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714488,"type":"log","h":859987325}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714503,"type":"log","h":859987340}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714518,"type":"log","h":859987355}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714532,"type":"log","h":859987369}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714545,"type":"log","h":859987382}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714560,"type":"log","h":859987397}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714574,"type":"log","h":859987411}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714589,"type":"log","h":859987426}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714601,"type":"log","h":859987438}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714618,"type":"log","h":859987455}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714630,"type":"log","h":859987467}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714647,"type":"log","h":859987483}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714662,"type":"log","h":859987499}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714677,"type":"log","h":859987514}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714691,"type":"log","h":859987528}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714710,"type":"log","h":859987547}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714724,"type":"log","h":859987561}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714739,"type":"log","h":859987576}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714758,"type":"log","h":859987595}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714772,"type":"log","h":859987608}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714786,"type":"log","h":859987623}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714801,"type":"log","h":859987638}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714820,"type":"log","h":859987657}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714836,"type":"log","h":859987672}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714850,"type":"log","h":859987687}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714872,"type":"log","h":859987709}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714886,"type":"log","h":859987723}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714902,"type":"log","h":859987739}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714923,"type":"log","h":859987760}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714937,"type":"log","h":859987774}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714954,"type":"log","h":859987791}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714971,"type":"log","h":859987808}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851714986,"type":"log","h":859987823}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715002,"type":"log","h":859987839}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715016,"type":"log","h":859987853}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715030,"type":"log","h":859987867}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715045,"type":"log","h":859987882}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715060,"type":"log","h":859987897}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715075,"type":"log","h":859987912}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715096,"type":"log","h":859987933}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715106,"type":"log","h":859987943}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715120,"type":"log","h":859987956}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715135,"type":"log","h":859987972}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715151,"type":"log","h":859987988}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715166,"type":"log","h":859988003}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715186,"type":"log","h":859988023}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715202,"type":"log","h":859988039}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715219,"type":"log","h":859988056}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715235,"type":"log","h":859988072}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715249,"type":"log","h":859988086}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715261,"type":"log","h":859988098}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715274,"type":"log","h":859988111}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715299,"type":"log","h":859988136}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715315,"type":"log","h":859988152}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715328,"type":"log","h":859988165}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715345,"type":"log","h":859988182}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715362,"type":"log","h":859988199}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715377,"type":"log","h":859988214}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715391,"type":"log","h":859988228}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715406,"type":"log","h":859988243}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715423,"type":"log","h":859988260}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715440,"type":"log","h":859988277}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715456,"type":"log","h":859988293}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715471,"type":"log","h":859988308}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715486,"type":"log","h":859988323}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715502,"type":"log","h":859988339}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715519,"type":"log","h":859988356}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715534,"type":"log","h":859988371}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715549,"type":"log","h":859988386}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715565,"type":"log","h":859988402}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715584,"type":"log","h":859988421}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715600,"type":"log","h":859988437}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715619,"type":"log","h":859988456}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715635,"type":"log","h":859988472}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715649,"type":"log","h":859988486}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715661,"type":"log","h":859988498}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715675,"type":"log","h":859988512}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715690,"type":"log","h":859988527}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715706,"type":"log","h":859988543}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715721,"type":"log","h":859988558}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715737,"type":"log","h":859988573}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715751,"type":"log","h":859988588}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715778,"type":"log","h":859988615}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715789,"type":"log","h":859988625}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715805,"type":"log","h":859988642}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715827,"type":"log","h":859988664}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715841,"type":"log","h":859988678}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715856,"type":"log","h":859988693}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715873,"type":"log","h":859988710}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715884,"type":"log","h":859988721}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715900,"type":"log","h":859988737}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715913,"type":"log","h":859988750}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715929,"type":"log","h":859988766}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715942,"type":"log","h":859988779}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715957,"type":"log","h":859988794}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715979,"type":"log","h":859988816}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851715994,"type":"log","h":859988831}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716009,"type":"log","h":859988846}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716025,"type":"log","h":859988862}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716043,"type":"log","h":859988880}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716061,"type":"log","h":859988898}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716080,"type":"log","h":859988917}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716092,"type":"log","h":859988929}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716107,"type":"log","h":859988944}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716122,"type":"log","h":859988959}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716138,"type":"log","h":859988975}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716154,"type":"log","h":859988991}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716174,"type":"log","h":859989011}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716189,"type":"log","h":859989026}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716203,"type":"log","h":859989040}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716220,"type":"log","h":859989057}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716238,"type":"log","h":859989075}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716254,"type":"log","h":859989091}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716268,"type":"log","h":859989105}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716283,"type":"log","h":859989120}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716298,"type":"log","h":859989135}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716319,"type":"log","h":859989156}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716330,"type":"log","h":859989167}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716345,"type":"log","h":859989182}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716359,"type":"log","h":859989196}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716374,"type":"log","h":859989211}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716388,"type":"log","h":859989225}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716403,"type":"log","h":859989240}
+d sim-before-kill {"msg":"ack 1, 0 left","t":851716420,"type":"log","h":859989257}
+d mac {"msg":"advertising as spike-mac tag=c273d114c6f549e2","t":851713055,"type":"log","h":859985895}
+d mac {"t":851713058,"type":"ready","h":859985895}
+d mac {"names":500,"t":851713059,"type":"snapshot-set","version":1,"h":859985896}
+d mac {"msg":"accepted invitation from spike-ipad","t":851714070,"type":"log","h":859986907}
+d mac {"peer":"spike-ipad","state":"connecting","t":851714070,"type":"peer","h":859986907}
+d mac {"peer":"spike-ipad","state":"connected","t":851714120,"type":"peer","h":859986957}
+d mac {"bytes":39358,"peer":"spike-ipad","t":851714121,"type":"snapshot-sent","h":859986958}
+d mac {"msg":"accepted invitation from spike-ipad","t":851717448,"type":"log","h":859990285}
+d mac {"peer":"spike-ipad","state":"connecting","t":851717448,"type":"peer","h":859990285}
+d mac {"peer":"spike-ipad","state":"connected","t":851717502,"type":"peer","h":859990339}
+d mac {"bytes":39358,"peer":"spike-ipad","t":851717502,"type":"snapshot-sent","h":859990344}
+d mac {"peer":"spike-ipad","state":"notConnected","t":851727452,"type":"peer","h":860000289}
+d sim {"msg":"browsing as spike-ipad","t":851717435,"type":"log","h":859990275}
+d sim {"queued":0,"resumeAt":150,"t":851717438,"type":"ready","h":859990275}
+d sim {"msg":"found spike-mac","t":851717439,"type":"log","h":859990276}
+d sim {"msg":"inviting spike-mac","t":851717439,"type":"log","h":859990276}
+d sim {"peer":"spike-mac","state":"connecting","t":851717466,"type":"peer","h":859990303}
+d sim {"peer":"spike-mac","state":"connected","t":851717502,"type":"peer","h":859990344}
+d sim {"bytes":39358,"names":500,"t":851717504,"type":"snapshot","version":1,"h":859990344}
+d sim {"msg":"ack 1, 0 left","t":851717507,"type":"log","h":859990344}
+d sim {"msg":"ack 1, 0 left","t":851717522,"type":"log","h":859990358}
+d sim {"msg":"ack 1, 0 left","t":851717537,"type":"log","h":859990374}
+d sim {"msg":"ack 1, 0 left","t":851717553,"type":"log","h":859990390}
+d sim {"msg":"ack 1, 0 left","t":851717568,"type":"log","h":859990405}
+d sim {"msg":"ack 1, 0 left","t":851717583,"type":"log","h":859990420}
+d sim {"msg":"ack 1, 0 left","t":851717595,"type":"log","h":859990432}
+d sim {"msg":"ack 1, 0 left","t":851717607,"type":"log","h":859990444}
+d sim {"msg":"ack 1, 0 left","t":851717621,"type":"log","h":859990458}
+d sim {"msg":"ack 1, 0 left","t":851717636,"type":"log","h":859990473}
+d sim {"msg":"ack 1, 0 left","t":851717651,"type":"log","h":859990488}
+d sim {"msg":"ack 1, 0 left","t":851717666,"type":"log","h":859990503}
+d sim {"msg":"ack 1, 0 left","t":851717681,"type":"log","h":859990518}
+d sim {"msg":"ack 1, 0 left","t":851717695,"type":"log","h":859990532}
+d sim {"msg":"ack 1, 0 left","t":851717709,"type":"log","h":859990546}
+d sim {"msg":"ack 1, 0 left","t":851717725,"type":"log","h":859990562}
+d sim {"msg":"ack 1, 0 left","t":851717738,"type":"log","h":859990575}
+d sim {"msg":"ack 1, 0 left","t":851717753,"type":"log","h":859990590}
+d sim {"msg":"ack 1, 0 left","t":851717769,"type":"log","h":859990606}
+d sim {"msg":"ack 1, 0 left","t":851717783,"type":"log","h":859990620}
+d sim {"msg":"ack 1, 0 left","t":851717796,"type":"log","h":859990633}
+d sim {"msg":"ack 1, 0 left","t":851717825,"type":"log","h":859990662}
+d sim {"msg":"ack 1, 0 left","t":851717836,"type":"log","h":859990673}
+d sim {"msg":"ack 1, 0 left","t":851717853,"type":"log","h":859990690}
+d sim {"msg":"ack 1, 0 left","t":851717869,"type":"log","h":859990706}
+d sim {"msg":"ack 1, 0 left","t":851717886,"type":"log","h":859990722}
+d sim {"msg":"ack 1, 0 left","t":851717902,"type":"log","h":859990739}
+d sim {"msg":"ack 1, 0 left","t":851717922,"type":"log","h":859990759}
+d sim {"msg":"ack 1, 0 left","t":851717937,"type":"log","h":859990774}
+d sim {"msg":"ack 1, 0 left","t":851717956,"type":"log","h":859990793}
+d sim {"msg":"ack 1, 0 left","t":851717971,"type":"log","h":859990808}
+d sim {"msg":"ack 1, 0 left","t":851717985,"type":"log","h":859990822}
+d sim {"msg":"ack 1, 0 left","t":851718000,"type":"log","h":859990837}
+d sim {"msg":"ack 1, 0 left","t":851718020,"type":"log","h":859990857}
+d sim {"msg":"ack 1, 0 left","t":851718032,"type":"log","h":859990869}
+d sim {"msg":"ack 1, 0 left","t":851718046,"type":"log","h":859990883}
+d sim {"msg":"ack 1, 0 left","t":851718063,"type":"log","h":859990899}
+d sim {"msg":"ack 1, 0 left","t":851718081,"type":"log","h":859990918}
+d sim {"msg":"ack 1, 0 left","t":851718097,"type":"log","h":859990934}
+d sim {"msg":"ack 1, 0 left","t":851718107,"type":"log","h":859990944}
+d sim {"msg":"ack 1, 0 left","t":851718122,"type":"log","h":859990959}
+d sim {"msg":"ack 1, 0 left","t":851718136,"type":"log","h":859990973}
+d sim {"msg":"ack 1, 0 left","t":851718151,"type":"log","h":859990988}
+d sim {"msg":"ack 1, 0 left","t":851718168,"type":"log","h":859991005}
+d sim {"msg":"ack 1, 0 left","t":851718180,"type":"log","h":859991017}
+d sim {"msg":"ack 1, 0 left","t":851718196,"type":"log","h":859991033}
+d sim {"msg":"ack 1, 0 left","t":851718213,"type":"log","h":859991050}
+d sim {"msg":"ack 1, 0 left","t":851718232,"type":"log","h":859991069}
+d sim {"msg":"ack 1, 0 left","t":851718249,"type":"log","h":859991086}
+d sim {"msg":"ack 1, 0 left","t":851718267,"type":"log","h":859991104}
+d sim {"msg":"ack 1, 0 left","t":851718287,"type":"log","h":859991124}
+d sim {"msg":"ack 1, 0 left","t":851718303,"type":"log","h":859991140}
+d sim {"msg":"ack 1, 0 left","t":851718317,"type":"log","h":859991154}
+d sim {"msg":"ack 1, 0 left","t":851718337,"type":"log","h":859991174}
+d sim {"msg":"ack 1, 0 left","t":851718356,"type":"log","h":859991193}
+d sim {"msg":"ack 1, 0 left","t":851718367,"type":"log","h":859991204}
+d sim {"msg":"ack 1, 0 left","t":851718382,"type":"log","h":859991219}
+d sim {"msg":"ack 1, 0 left","t":851718400,"type":"log","h":859991237}
+d sim {"msg":"ack 1, 0 left","t":851718417,"type":"log","h":859991254}
+d sim {"msg":"ack 1, 0 left","t":851718429,"type":"log","h":859991266}
+d sim {"msg":"ack 1, 0 left","t":851718442,"type":"log","h":859991279}
+d sim {"msg":"ack 1, 0 left","t":851718455,"type":"log","h":859991292}
+d sim {"msg":"ack 1, 0 left","t":851718475,"type":"log","h":859991312}
+d sim {"msg":"ack 1, 0 left","t":851718487,"type":"log","h":859991324}
+d sim {"msg":"resending 131 unacknowledged","t":851723448,"type":"log","h":859996285}
+d sim {"msg":"resending 155 unacknowledged","t":851726448,"type":"log","h":859999285}
+d sim {"msg":"ack 1, 285 left","t":851727467,"type":"log","h":860000304}
+d sim {"msg":"ack 1, 284 left","t":851727468,"type":"log","h":860000305}
+d sim {"msg":"ack 1, 283 left","t":851727468,"type":"log","h":860000305}
+d sim {"msg":"ack 1, 282 left","t":851727469,"type":"log","h":860000306}
+d sim {"msg":"ack 1, 281 left","t":851727469,"type":"log","h":860000306}
+d sim {"msg":"ack 1, 280 left","t":851727470,"type":"log","h":860000307}
+d sim {"msg":"ack 1, 279 left","t":851727471,"type":"log","h":860000308}
+d sim {"msg":"ack 1, 278 left","t":851727472,"type":"log","h":860000308}
+d sim {"msg":"ack 1, 277 left","t":851727472,"type":"log","h":860000309}
+d sim {"msg":"ack 1, 276 left","t":851727473,"type":"log","h":860000310}
+d sim {"msg":"ack 1, 275 left","t":851727473,"type":"log","h":860000310}
+d sim {"msg":"ack 1, 274 left","t":851727474,"type":"log","h":860000311}
+d sim {"msg":"ack 1, 273 left","t":851727475,"type":"log","h":860000311}
+d sim {"msg":"ack 1, 272 left","t":851727475,"type":"log","h":860000312}
+d sim {"msg":"ack 1, 271 left","t":851727476,"type":"log","h":860000313}
+d sim {"msg":"ack 1, 270 left","t":851727476,"type":"log","h":860000313}
+d sim {"msg":"ack 1, 269 left","t":851727477,"type":"log","h":860000314}
+d sim {"msg":"ack 1, 268 left","t":851727478,"type":"log","h":860000315}
+d sim {"msg":"ack 1, 267 left","t":851727478,"type":"log","h":860000315}
+d sim {"msg":"ack 1, 266 left","t":851727479,"type":"log","h":860000316}
+d sim {"msg":"ack 1, 265 left","t":851727479,"type":"log","h":860000316}
+d sim {"msg":"ack 1, 264 left","t":851727480,"type":"log","h":860000317}
+d sim {"msg":"ack 1, 263 left","t":851727480,"type":"log","h":860000317}
+d sim {"msg":"ack 1, 262 left","t":851727481,"type":"log","h":860000318}
+d sim {"msg":"ack 1, 261 left","t":851727482,"type":"log","h":860000319}
+d sim {"msg":"ack 1, 260 left","t":851727482,"type":"log","h":860000319}
+d sim {"msg":"ack 1, 259 left","t":851727483,"type":"log","h":860000320}
+d sim {"msg":"ack 1, 258 left","t":851727483,"type":"log","h":860000320}
+d sim {"msg":"ack 1, 257 left","t":851727484,"type":"log","h":860000321}
+d sim {"msg":"ack 1, 256 left","t":851727484,"type":"log","h":860000321}
+d sim {"msg":"ack 1, 255 left","t":851727485,"type":"log","h":860000322}
+d sim {"msg":"ack 1, 254 left","t":851727485,"type":"log","h":860000322}
+d sim {"msg":"ack 1, 253 left","t":851727486,"type":"log","h":860000323}
+d sim {"msg":"ack 1, 252 left","t":851727486,"type":"log","h":860000323}
+d sim {"msg":"ack 1, 251 left","t":851727487,"type":"log","h":860000324}
+d sim {"msg":"ack 1, 250 left","t":851727487,"type":"log","h":860000324}
+d sim {"msg":"ack 1, 249 left","t":851727488,"type":"log","h":860000325}
+d sim {"msg":"ack 1, 248 left","t":851727489,"type":"log","h":860000326}
+d sim {"msg":"ack 1, 247 left","t":851727489,"type":"log","h":860000326}
+d sim {"msg":"ack 1, 246 left","t":851727490,"type":"log","h":860000326}
+d sim {"msg":"ack 1, 245 left","t":851727490,"type":"log","h":860000327}
+d sim {"msg":"ack 1, 244 left","t":851727491,"type":"log","h":860000328}
+d sim {"msg":"ack 1, 243 left","t":851727491,"type":"log","h":860000328}
+d sim {"msg":"ack 1, 242 left","t":851727492,"type":"log","h":860000329}
+d sim {"msg":"ack 1, 241 left","t":851727493,"type":"log","h":860000330}
+d sim {"msg":"ack 1, 240 left","t":851727493,"type":"log","h":860000330}
+d sim {"msg":"ack 1, 239 left","t":851727494,"type":"log","h":860000331}
+d sim {"msg":"ack 1, 238 left","t":851727494,"type":"log","h":860000331}
+d sim {"msg":"ack 1, 237 left","t":851727495,"type":"log","h":860000332}
+d sim {"msg":"ack 1, 236 left","t":851727496,"type":"log","h":860000333}
+d sim {"msg":"ack 1, 235 left","t":851727496,"type":"log","h":860000333}
+d sim {"msg":"ack 1, 234 left","t":851727497,"type":"log","h":860000334}
+d sim {"msg":"ack 1, 233 left","t":851727498,"type":"log","h":860000335}
+d sim {"msg":"ack 1, 232 left","t":851727498,"type":"log","h":860000335}
+d sim {"msg":"ack 1, 231 left","t":851727499,"type":"log","h":860000335}
+d sim {"msg":"ack 1, 230 left","t":851727499,"type":"log","h":860000336}
+d sim {"msg":"ack 1, 229 left","t":851727500,"type":"log","h":860000337}
+d sim {"msg":"ack 1, 228 left","t":851727500,"type":"log","h":860000337}
+d sim {"msg":"ack 1, 227 left","t":851727501,"type":"log","h":860000338}
+d sim {"msg":"ack 1, 226 left","t":851727501,"type":"log","h":860000338}
+d sim {"msg":"ack 1, 225 left","t":851727502,"type":"log","h":860000339}
+d sim {"msg":"ack 1, 224 left","t":851727502,"type":"log","h":860000339}
+d sim {"msg":"ack 1, 223 left","t":851727503,"type":"log","h":860000340}
+d sim {"msg":"ack 1, 222 left","t":851727504,"type":"log","h":860000340}
+d sim {"msg":"ack 1, 221 left","t":851727504,"type":"log","h":860000341}
+d sim {"msg":"ack 1, 220 left","t":851728491,"type":"log","h":860001328}
+d sim {"msg":"ack 1, 219 left","t":851728492,"type":"log","h":860001328}
+d sim {"msg":"ack 1, 218 left","t":851728492,"type":"log","h":860001329}
+d sim {"msg":"ack 1, 217 left","t":851728493,"type":"log","h":860001329}
+d sim {"msg":"ack 1, 216 left","t":851728493,"type":"log","h":860001330}
+d sim {"msg":"ack 1, 215 left","t":851728494,"type":"log","h":860001330}
+d sim {"msg":"ack 1, 214 left","t":851728494,"type":"log","h":860001331}
+d sim {"msg":"ack 1, 213 left","t":851728495,"type":"log","h":860001332}
+d sim {"msg":"ack 1, 212 left","t":851728495,"type":"log","h":860001332}
+d sim {"msg":"ack 1, 211 left","t":851728496,"type":"log","h":860001333}
+d sim {"msg":"ack 1, 210 left","t":851728496,"type":"log","h":860001333}
+d sim {"msg":"ack 1, 209 left","t":851728497,"type":"log","h":860001333}
+d sim {"msg":"ack 1, 208 left","t":851728497,"type":"log","h":860001334}
+d sim {"msg":"ack 1, 207 left","t":851728497,"type":"log","h":860001334}
+d sim {"msg":"ack 1, 206 left","t":851728498,"type":"log","h":860001335}
+d sim {"msg":"ack 1, 205 left","t":851728498,"type":"log","h":860001335}
+d sim {"msg":"ack 1, 204 left","t":851728499,"type":"log","h":860001336}
+d sim {"msg":"ack 1, 203 left","t":851728499,"type":"log","h":860001336}
+d sim {"msg":"ack 1, 202 left","t":851728500,"type":"log","h":860001337}
+d sim {"msg":"ack 1, 201 left","t":851728500,"type":"log","h":860001337}
+d sim {"msg":"ack 1, 200 left","t":851728501,"type":"log","h":860001338}
+d sim {"msg":"ack 1, 199 left","t":851728501,"type":"log","h":860001338}
+d sim {"msg":"ack 1, 198 left","t":851728502,"type":"log","h":860001339}
+d sim {"msg":"ack 1, 197 left","t":851728502,"type":"log","h":860001339}
+d sim {"msg":"ack 1, 196 left","t":851728503,"type":"log","h":860001340}
+d sim {"msg":"ack 1, 195 left","t":851728503,"type":"log","h":860001340}
+d sim {"msg":"ack 1, 194 left","t":851728504,"type":"log","h":860001341}
+d sim {"msg":"ack 1, 193 left","t":851728504,"type":"log","h":860001341}
+d sim {"msg":"ack 1, 192 left","t":851728504,"type":"log","h":860001341}
+d sim {"msg":"ack 1, 191 left","t":851728505,"type":"log","h":860001342}
+d sim {"msg":"ack 1, 190 left","t":851728505,"type":"log","h":860001342}
+d sim {"msg":"ack 1, 189 left","t":851728506,"type":"log","h":860001343}
+d sim {"msg":"ack 1, 188 left","t":851728523,"type":"log","h":860001360}
+d sim {"msg":"ack 1, 187 left","t":851728524,"type":"log","h":860001361}
+d sim {"msg":"ack 1, 186 left","t":851728524,"type":"log","h":860001361}
+d sim {"msg":"ack 1, 185 left","t":851728525,"type":"log","h":860001362}
+d sim {"msg":"ack 1, 184 left","t":851728527,"type":"log","h":860001364}
+d sim {"msg":"ack 1, 183 left","t":851728527,"type":"log","h":860001364}
+d sim {"msg":"ack 1, 182 left","t":851728528,"type":"log","h":860001365}
+d sim {"msg":"ack 1, 181 left","t":851728528,"type":"log","h":860001365}
+d sim {"msg":"ack 1, 180 left","t":851728529,"type":"log","h":860001365}
+d sim {"msg":"ack 1, 179 left","t":851728529,"type":"log","h":860001366}
+d sim {"msg":"ack 1, 178 left","t":851728529,"type":"log","h":860001366}
+d sim {"msg":"ack 1, 177 left","t":851728530,"type":"log","h":860001367}
+d sim {"msg":"ack 1, 176 left","t":851728530,"type":"log","h":860001367}
+d sim {"msg":"ack 1, 175 left","t":851728531,"type":"log","h":860001367}
+d sim {"msg":"ack 1, 174 left","t":851728531,"type":"log","h":860001368}
+d sim {"msg":"ack 1, 173 left","t":851728531,"type":"log","h":860001368}
+d sim {"msg":"ack 1, 172 left","t":851728532,"type":"log","h":860001369}
+d sim {"msg":"ack 1, 171 left","t":851728532,"type":"log","h":860001369}
+d sim {"msg":"ack 1, 170 left","t":851728533,"type":"log","h":860001370}
+d sim {"msg":"ack 1, 169 left","t":851728533,"type":"log","h":860001370}
+d sim {"msg":"ack 1, 168 left","t":851728533,"type":"log","h":860001370}
+d sim {"msg":"ack 1, 167 left","t":851728534,"type":"log","h":860001371}
+d sim {"msg":"ack 1, 166 left","t":851728534,"type":"log","h":860001371}
+d sim {"msg":"ack 1, 165 left","t":851728535,"type":"log","h":860001372}
+d sim {"msg":"ack 1, 164 left","t":851728535,"type":"log","h":860001372}
+d sim {"msg":"ack 1, 163 left","t":851728535,"type":"log","h":860001372}
+d sim {"msg":"ack 1, 162 left","t":851728536,"type":"log","h":860001373}
+d sim {"msg":"ack 1, 161 left","t":851728536,"type":"log","h":860001373}
+d sim {"msg":"ack 1, 160 left","t":851728536,"type":"log","h":860001373}
+d sim {"msg":"ack 1, 159 left","t":851728537,"type":"log","h":860001374}
+d sim {"msg":"ack 1, 158 left","t":851728537,"type":"log","h":860001374}
+d sim {"msg":"ack 1, 157 left","t":851728538,"type":"log","h":860001375}
+d sim {"msg":"ack 1, 156 left","t":851728538,"type":"log","h":860001375}
+d sim {"msg":"ack 1, 155 left","t":851728538,"type":"log","h":860001375}
+d sim {"msg":"ack 1, 154 left","t":851728539,"type":"log","h":860001376}
+d sim {"msg":"ack 1, 153 left","t":851728539,"type":"log","h":860001376}
+d sim {"msg":"ack 1, 152 left","t":851728539,"type":"log","h":860001376}
+d sim {"msg":"ack 1, 151 left","t":851728540,"type":"log","h":860001377}
+d sim {"msg":"ack 1, 150 left","t":851728540,"type":"log","h":860001377}
+d sim {"msg":"ack 1, 149 left","t":851728541,"type":"log","h":860001378}
+d sim {"msg":"ack 1, 148 left","t":851728541,"type":"log","h":860001378}
+d sim {"msg":"ack 1, 147 left","t":851728541,"type":"log","h":860001378}
+d sim {"msg":"ack 1, 146 left","t":851728542,"type":"log","h":860001379}
+d sim {"msg":"ack 1, 145 left","t":851728542,"type":"log","h":860001379}
+d sim {"msg":"ack 1, 144 left","t":851728543,"type":"log","h":860001380}
+d sim {"msg":"ack 1, 143 left","t":851728544,"type":"log","h":860001381}
+d sim {"msg":"ack 1, 142 left","t":851728544,"type":"log","h":860001381}
+d sim {"msg":"ack 1, 141 left","t":851728545,"type":"log","h":860001381}
+d sim {"msg":"ack 1, 140 left","t":851728551,"type":"log","h":860001388}
+d sim {"msg":"ack 1, 139 left","t":851728552,"type":"log","h":860001389}
+d sim {"msg":"ack 1, 138 left","t":851728559,"type":"log","h":860001396}
+d sim {"msg":"ack 1, 137 left","t":851728565,"type":"log","h":860001402}
+d sim {"msg":"ack 1, 136 left","t":851728570,"type":"log","h":860001407}
+d sim {"msg":"ack 1, 135 left","t":851728571,"type":"log","h":860001408}
+d sim {"msg":"ack 1, 134 left","t":851728571,"type":"log","h":860001408}
+d sim {"msg":"ack 1, 133 left","t":851728572,"type":"log","h":860001408}
+d sim {"msg":"ack 1, 132 left","t":851728572,"type":"log","h":860001409}
+d sim {"msg":"ack 1, 131 left","t":851728572,"type":"log","h":860001409}
+d sim {"msg":"ack 1, 130 left","t":851728573,"type":"log","h":860001410}
+d sim {"msg":"ack 1, 129 left","t":851728573,"type":"log","h":860001410}
+d sim {"msg":"ack 1, 128 left","t":851728573,"type":"log","h":860001410}
+d sim {"msg":"ack 1, 127 left","t":851728574,"type":"log","h":860001411}
+d sim {"msg":"ack 1, 126 left","t":851728575,"type":"log","h":860001411}
+d sim {"msg":"ack 1, 125 left","t":851728575,"type":"log","h":860001412}
+d sim {"msg":"ack 1, 124 left","t":851728575,"type":"log","h":860001412}
+d sim {"msg":"ack 1, 123 left","t":851728576,"type":"log","h":860001413}
+d sim {"msg":"ack 1, 122 left","t":851728576,"type":"log","h":860001413}
+d sim {"msg":"ack 1, 121 left","t":851728577,"type":"log","h":860001413}
+d sim {"msg":"ack 1, 120 left","t":851728577,"type":"log","h":860001414}
+d sim {"msg":"ack 1, 119 left","t":851728577,"type":"log","h":860001414}
+d sim {"msg":"ack 1, 118 left","t":851728578,"type":"log","h":860001415}
+d sim {"msg":"ack 1, 117 left","t":851728578,"type":"log","h":860001415}
+d sim {"msg":"ack 1, 116 left","t":851728578,"type":"log","h":860001415}
+d sim {"msg":"ack 1, 115 left","t":851728579,"type":"log","h":860001416}
+d sim {"msg":"ack 1, 114 left","t":851728579,"type":"log","h":860001416}
+d sim {"msg":"ack 1, 113 left","t":851728579,"type":"log","h":860001416}
+d sim {"msg":"ack 1, 112 left","t":851728580,"type":"log","h":860001417}
+d sim {"msg":"ack 1, 111 left","t":851728580,"type":"log","h":860001417}
+d sim {"msg":"ack 1, 110 left","t":851728581,"type":"log","h":860001417}
+d sim {"msg":"ack 1, 109 left","t":851728581,"type":"log","h":860001418}
+d sim {"msg":"ack 1, 108 left","t":851728581,"type":"log","h":860001418}
+d sim {"msg":"ack 1, 107 left","t":851728582,"type":"log","h":860001419}
+d sim {"msg":"ack 1, 106 left","t":851728582,"type":"log","h":860001419}
+d sim {"msg":"ack 1, 105 left","t":851728582,"type":"log","h":860001419}
+d sim {"msg":"ack 1, 104 left","t":851728583,"type":"log","h":860001420}
+d sim {"msg":"ack 1, 103 left","t":851728583,"type":"log","h":860001420}
+d sim {"msg":"ack 1, 102 left","t":851728583,"type":"log","h":860001420}
+d sim {"msg":"ack 1, 101 left","t":851728584,"type":"log","h":860001420}
+d sim {"msg":"ack 1, 100 left","t":851728584,"type":"log","h":860001421}
+d sim {"msg":"ack 1, 99 left","t":851728584,"type":"log","h":860001421}
+d sim {"msg":"ack 1, 98 left","t":851728585,"type":"log","h":860001421}
+d sim {"msg":"ack 1, 97 left","t":851728585,"type":"log","h":860001422}
+d sim {"msg":"ack 1, 96 left","t":851728585,"type":"log","h":860001422}
+d sim {"msg":"ack 1, 95 left","t":851728585,"type":"log","h":860001422}
+d sim {"msg":"ack 1, 94 left","t":851728586,"type":"log","h":860001423}
+d sim {"msg":"ack 1, 93 left","t":851728586,"type":"log","h":860001423}
+d sim {"msg":"ack 1, 92 left","t":851728586,"type":"log","h":860001423}
+d sim {"msg":"ack 1, 91 left","t":851728587,"type":"log","h":860001423}
+d sim {"msg":"ack 1, 90 left","t":851728587,"type":"log","h":860001424}
+d sim {"msg":"ack 1, 89 left","t":851728589,"type":"log","h":860001426}
+d sim {"msg":"ack 1, 88 left","t":851728589,"type":"log","h":860001426}
+d sim {"msg":"ack 1, 87 left","t":851728590,"type":"log","h":860001427}
+d sim {"msg":"ack 1, 86 left","t":851728590,"type":"log","h":860001427}
+d sim {"msg":"ack 1, 85 left","t":851728590,"type":"log","h":860001427}
+d sim {"msg":"ack 1, 84 left","t":851728591,"type":"log","h":860001427}
+d sim {"msg":"ack 1, 83 left","t":851728591,"type":"log","h":860001428}
+d sim {"msg":"ack 1, 82 left","t":851728591,"type":"log","h":860001428}
+d sim {"msg":"ack 1, 81 left","t":851728591,"type":"log","h":860001428}
+d sim {"msg":"ack 1, 80 left","t":851728592,"type":"log","h":860001429}
+d sim {"msg":"ack 1, 79 left","t":851728592,"type":"log","h":860001429}
+d sim {"msg":"ack 1, 78 left","t":851728592,"type":"log","h":860001429}
+d sim {"msg":"ack 1, 77 left","t":851728593,"type":"log","h":860001429}
+d sim {"msg":"ack 1, 76 left","t":851728593,"type":"log","h":860001430}
+d sim {"msg":"ack 1, 75 left","t":851728593,"type":"log","h":860001430}
+d sim {"msg":"ack 1, 74 left","t":851728593,"type":"log","h":860001430}
+d sim {"msg":"ack 1, 73 left","t":851728594,"type":"log","h":860001431}
+d sim {"msg":"ack 1, 72 left","t":851728594,"type":"log","h":860001431}
+d sim {"msg":"ack 1, 71 left","t":851728594,"type":"log","h":860001431}
+d sim {"msg":"ack 1, 70 left","t":851728594,"type":"log","h":860001431}
+d sim {"msg":"ack 1, 69 left","t":851728595,"type":"log","h":860001432}
+d sim {"msg":"ack 1, 68 left","t":851728595,"type":"log","h":860001432}
+d sim {"msg":"ack 1, 67 left","t":851728595,"type":"log","h":860001432}
+d sim {"msg":"ack 1, 66 left","t":851728596,"type":"log","h":860001432}
+d sim {"msg":"ack 1, 65 left","t":851728596,"type":"log","h":860001433}
+d sim {"msg":"ack 1, 64 left","t":851728596,"type":"log","h":860001433}
+d sim {"msg":"ack 1, 63 left","t":851728596,"type":"log","h":860001433}
+d sim {"msg":"ack 1, 62 left","t":851728597,"type":"log","h":860001434}
+d sim {"msg":"ack 1, 61 left","t":851728597,"type":"log","h":860001434}
+d sim {"msg":"ack 1, 60 left","t":851728597,"type":"log","h":860001434}
+d sim {"msg":"ack 1, 59 left","t":851728598,"type":"log","h":860001434}
+d sim {"msg":"ack 1, 58 left","t":851728598,"type":"log","h":860001435}
+d sim {"msg":"ack 1, 57 left","t":851728598,"type":"log","h":860001435}
+d sim {"msg":"ack 1, 56 left","t":851728598,"type":"log","h":860001435}
+d sim {"msg":"ack 1, 55 left","t":851728599,"type":"log","h":860001436}
+d sim {"msg":"ack 1, 54 left","t":851728599,"type":"log","h":860001436}
+d sim {"msg":"ack 1, 53 left","t":851728599,"type":"log","h":860001436}
+d sim {"msg":"ack 1, 52 left","t":851728599,"type":"log","h":860001436}
+d sim {"msg":"ack 1, 51 left","t":851728600,"type":"log","h":860001437}
+d sim {"msg":"ack 1, 50 left","t":851728600,"type":"log","h":860001437}
+d sim {"msg":"ack 1, 49 left","t":851728600,"type":"log","h":860001437}
+d sim {"msg":"ack 1, 48 left","t":851728601,"type":"log","h":860001437}
+d sim {"msg":"ack 1, 47 left","t":851728601,"type":"log","h":860001438}
+d sim {"msg":"ack 1, 46 left","t":851728601,"type":"log","h":860001438}
+d sim {"msg":"ack 1, 45 left","t":851728601,"type":"log","h":860001438}
+d sim {"msg":"ack 1, 44 left","t":851728602,"type":"log","h":860001438}
+d sim {"msg":"ack 1, 43 left","t":851728602,"type":"log","h":860001439}
+d sim {"msg":"ack 1, 42 left","t":851728602,"type":"log","h":860001439}
+d sim {"msg":"ack 1, 41 left","t":851728602,"type":"log","h":860001439}
+d sim {"msg":"ack 1, 40 left","t":851728603,"type":"log","h":860001440}
+d sim {"msg":"ack 1, 39 left","t":851728603,"type":"log","h":860001440}
+d sim {"msg":"ack 1, 38 left","t":851728603,"type":"log","h":860001440}
+d sim {"msg":"ack 1, 37 left","t":851728603,"type":"log","h":860001440}
+d sim {"msg":"ack 1, 36 left","t":851728604,"type":"log","h":860001441}
+d sim {"msg":"ack 1, 35 left","t":851728604,"type":"log","h":860001441}
+d sim {"msg":"ack 1, 34 left","t":851728604,"type":"log","h":860001441}
+d sim {"msg":"ack 1, 33 left","t":851728604,"type":"log","h":860001441}
+d sim {"msg":"ack 1, 32 left","t":851728605,"type":"log","h":860001442}
+d sim {"msg":"ack 1, 31 left","t":851728605,"type":"log","h":860001442}
+d sim {"msg":"ack 1, 30 left","t":851728605,"type":"log","h":860001442}
+d sim {"msg":"ack 1, 29 left","t":851728605,"type":"log","h":860001442}
+d sim {"msg":"ack 1, 28 left","t":851728606,"type":"log","h":860001443}
+d sim {"msg":"ack 1, 27 left","t":851728606,"type":"log","h":860001443}
+d sim {"msg":"ack 1, 26 left","t":851728606,"type":"log","h":860001443}
+d sim {"msg":"ack 1, 25 left","t":851728607,"type":"log","h":860001443}
+d sim {"msg":"ack 1, 24 left","t":851728607,"type":"log","h":860001444}
+d sim {"msg":"ack 1, 23 left","t":851728607,"type":"log","h":860001444}
+d sim {"msg":"ack 1, 22 left","t":851728607,"type":"log","h":860001444}
+d sim {"msg":"ack 1, 21 left","t":851728607,"type":"log","h":860001444}
+d sim {"msg":"ack 1, 20 left","t":851728608,"type":"log","h":860001444}
+d sim {"msg":"ack 1, 19 left","t":851728608,"type":"log","h":860001445}
+d sim {"msg":"ack 1, 18 left","t":851728608,"type":"log","h":860001445}
+d sim {"msg":"ack 1, 17 left","t":851728608,"type":"log","h":860001445}
+d sim {"msg":"ack 1, 16 left","t":851728608,"type":"log","h":860001445}
+d sim {"msg":"ack 1, 15 left","t":851728609,"type":"log","h":860001445}
+d sim {"msg":"ack 1, 14 left","t":851728609,"type":"log","h":860001446}
+d sim {"msg":"ack 1, 13 left","t":851728609,"type":"log","h":860001446}
+d sim {"msg":"ack 1, 12 left","t":851728609,"type":"log","h":860001446}
+d sim {"msg":"ack 1, 11 left","t":851728609,"type":"log","h":860001446}
+d sim {"msg":"ack 1, 10 left","t":851728610,"type":"log","h":860001447}
+d sim {"msg":"ack 1, 9 left","t":851728610,"type":"log","h":860001447}
+d sim {"msg":"ack 1, 8 left","t":851728610,"type":"log","h":860001447}
+d sim {"msg":"ack 1, 7 left","t":851728610,"type":"log","h":860001447}
+d sim {"msg":"ack 1, 6 left","t":851728610,"type":"log","h":860001447}
+d sim {"msg":"ack 1, 5 left","t":851728611,"type":"log","h":860001448}
+d sim {"msg":"ack 1, 4 left","t":851728611,"type":"log","h":860001448}
+d sim {"msg":"ack 1, 3 left","t":851728611,"type":"log","h":860001448}
+d sim {"msg":"ack 1, 2 left","t":851728611,"type":"log","h":860001448}
+d sim {"msg":"ack 1, 1 left","t":851728611,"type":"log","h":860001448}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728612,"type":"done","h":860001449}
+d sim {"msg":"ack 1, 0 left","t":851728612,"type":"log","h":860001449}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728619,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728619,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001456}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001456}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728620,"type":"done","h":860001457}
+d sim {"msg":"ack 1, 0 left","t":851728620,"type":"log","h":860001457}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728655,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728655,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001492}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001492}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728656,"type":"done","h":860001493}
+d sim {"msg":"ack 1, 0 left","t":851728656,"type":"log","h":860001493}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728687,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728687,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001524}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001524}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728688,"type":"done","h":860001525}
+d sim {"msg":"ack 1, 0 left","t":851728688,"type":"log","h":860001525}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728723,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728723,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001560}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001560}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001561}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001561}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001561}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001561}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001561}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001561}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001561}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001561}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001561}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001561}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001561}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001561}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001561}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001561}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001561}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001561}
+d sim {"produced":500,"t":851728724,"type":"done","h":860001561}
+d sim {"msg":"ack 1, 0 left","t":851728724,"type":"log","h":860001561}
+e mac {"msg":"advertising as spike-mac tag=ba9df65829898b7f","t":851730647,"type":"log","h":860003487}
+e mac {"t":851730650,"type":"ready","h":860003487}
+e mac {"names":500,"t":851730650,"type":"snapshot-set","version":1,"h":860003487}
+e sim {"msg":"browsing as spike-ipad","t":851730655,"type":"log","h":860003495}
+e sim {"queued":0,"resumeAt":0,"t":851730658,"type":"ready","h":860003495}
+e sim {"msg":"ignored spike-mac: wrong tag","t":851731648,"type":"log","h":860004485}
+e sim {"msg":"ignored spike-mac: wrong tag","t":851743989,"type":"log","h":860016826}
+e sim {"msg":"ignored spike-mac: wrong tag","t":851754658,"type":"log","h":860027495}

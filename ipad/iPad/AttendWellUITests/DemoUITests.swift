@@ -17,12 +17,15 @@ final class DemoUITests: XCTestCase {
         XCUIDevice.shared.orientation = orientation
         let app = XCUIApplication()
         app.launch()
-        let setup = app.staticTexts["Set up check-in"]
+        let setup = app.buttons["Connections"]
         XCTAssertTrue(setup.waitForExistence(timeout: 20))
-        XCTAssertTrue(app.buttons["Scan pairing code"].exists)
+        XCTAssertFalse(app.buttons["Try a demo"].exists)
         shot("\(label)-1-setup")
 
-        app.buttons["Try a demo"].tap()
+        setup.tap()
+        let demo = app.buttons["Try a demo"]
+        XCTAssertTrue(demo.waitForExistence(timeout: 10))
+        demo.tap()
         XCTAssertTrue(app.staticTexts["Demo — names are made up and nothing is sent anywhere."].waitForExistence(timeout: 10))
         let ada = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Ada Example'")).firstMatch
         XCTAssertTrue(ada.waitForExistence(timeout: 10))
@@ -41,13 +44,96 @@ final class DemoUITests: XCTestCase {
         let leave = app.buttons["Leave demo"]
         XCTAssertTrue(leave.waitForExistence(timeout: 10))
         leave.tap()
-        XCTAssertTrue(app.staticTexts["Set up check-in"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Connections"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.staticTexts["Demo — names are made up and nothing is sent anywhere."].exists)
 
         // Nothing carried over: relaunching still opens on set-up, not on a saved session.
         app.terminate(); app.launch()
-        XCTAssertTrue(app.staticTexts["Set up check-in"].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.buttons["Connections"].waitForExistence(timeout: 20))
     }
+
+    #if ATTENDWELL_STARTUP_FIXTURES && targetEnvironment(simulator)
+    func testNearbyKioskReleaseScreens() {
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        func launch(_ fixture: String) {
+            app.launchArguments = [fixture]
+            app.launch()
+        }
+        let connections = app.buttons["Connections"]
+
+        launch("--startup-setup")
+        XCTAssertTrue(connections.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Open Connections to set up check-in."].exists)
+        XCTAssertFalse(app.buttons["Connect Mac locally"].exists)
+        shot("01-not-yet-connected")
+
+        launch("--startup-nearby-open")
+        XCTAssertTrue(app.staticTexts["Spring Workshop"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.textFields["Search your name"].exists)
+        XCTAssertTrue(app.staticTexts["nearby-connected"].exists)
+        XCTAssertFalse(app.buttons["nearby-reconnect"].exists)
+        XCTAssertFalse(app.buttons["Organiser"].exists)
+        XCTAssertFalse(app.buttons["Connect Mac locally"].exists)
+        let alex = app.buttons["Alex Morgan, Not checked in"]
+        XCTAssertTrue(alex.exists)
+        shot("02-connected-with-names")
+
+        alex.tap()
+        XCTAssertTrue(app.staticTexts["Is this you?"].waitForExistence(timeout: 10))
+        shot("03-confirm")
+        app.buttons["Yes, check me in"].tap()
+        let saved = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Saved on this iPad, Alex Morgan.")).firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 2))
+        shot("04-saved")
+        saved.tap()
+
+        connections.tap()
+        let local = app.buttons["Connect Mac locally"]
+        XCTAssertTrue(local.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["nearby-connection"].exists)
+        XCTAssertTrue(app.staticTexts["Unsent check-ins: 1"].exists)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "AttendWell 1.0.1 (")).firstMatch.exists)
+        XCTAssertTrue(app.buttons["Connect computer over internet"].exists)
+        XCTAssertTrue(app.buttons["Enter local code"].exists)
+        XCTAssertTrue(app.buttons["Try a demo"].exists)
+        shot("05-connections")
+        app.buttons["Enter local code"].tap()
+        XCTAssertTrue(app.textFields["8-character code"].waitForExistence(timeout: 10))
+        app.buttons["Back"].tap()
+        app.buttons["Connect computer over internet"].tap()
+        XCTAssertTrue(app.buttons["Enter a code instead"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Back to local check-in"].exists)
+
+        launch("--startup-closed")
+        XCTAssertTrue(app.staticTexts["Check-in is closed"].waitForExistence(timeout: 10))
+        XCTAssertTrue(connections.exists)
+        XCTAssertFalse(app.buttons["Organiser"].exists)
+        shot("06-closed")
+
+        launch("--startup-offline-open")
+        let loss = app.staticTexts["nearby-connection-lost"]
+        let reconnect = app.buttons["nearby-reconnect"]
+        XCTAssertTrue(loss.waitForExistence(timeout: 10))
+        XCTAssertTrue(reconnect.exists)
+        XCTAssertTrue(app.buttons["Alex Morgan, Not checked in"].exists)
+        shot("07-nearby-connection-lost")
+        alex.tap()
+        app.buttons["Yes, check me in"].tap()
+        XCTAssertTrue(saved.waitForExistence(timeout: 2))
+        saved.tap()
+
+        connections.tap()
+        XCTAssertTrue(local.waitForExistence(timeout: 10))
+        XCTAssertTrue(loss.exists)
+        XCTAssertTrue(reconnect.exists)
+        XCTAssertTrue(app.staticTexts["Unsent check-ins: 1"].exists)
+        shot("08-connections-reconnect")
+
+        launch("--startup-no-discovery")
+        XCTAssertTrue(app.staticTexts["nearby-discovery-guidance"].waitForExistence(timeout: 10))
+    }
+    #endif
 
     func testDemoPortrait() { runDemo(.portrait, "portrait") }
     func testDemoLandscape() { runDemo(.landscapeLeft, "landscape") }

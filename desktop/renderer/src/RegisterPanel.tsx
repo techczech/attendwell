@@ -1,11 +1,10 @@
 // The register: who is here, who is not yet, who is held for review. The list fills the window; the view model is shared/register-model.ts.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FILTER_LABELS, FILTER_ORDER, SORT_LABELS, SORT_ORDER, STATUS_LABELS,
-  type RegisterFilter, type RegisterRow, type RegisterSort, type RegisterView,
+  type RegisterCopyChoice, type RegisterFilter, type RegisterRow, type RegisterSort, type RegisterView,
 } from '../../shared/register-model.ts';
 import type { RepairBanner } from '../../shared/devices-model.ts';
-import type { SessionPhase } from '../../shared/session-model.ts';
 import { Icon } from './icons.tsx';
 import { Keys } from './Keys.tsx';
 
@@ -14,7 +13,6 @@ export interface RegisterUi { filter: RegisterFilter; sort: RegisterSort; query:
 export interface RegisterPanelProps {
   view: RegisterView;
   ui: RegisterUi;
-  phase: SessionPhase;
   /** People can be marked and resolved (check-in open and the register answering). */
   editable: boolean;
   readOnlyBanner: string | null;
@@ -30,10 +28,48 @@ export interface RegisterPanelProps {
   onRepair(): void;
   onExport(): void;
   onReview(): void;
-  /** Name lists can be added now (any phase but closing). */
-  canAddNames: boolean;
+  canUndo: boolean;
+  canExport: boolean;
+  canReview: boolean;
+  onAdd(): void;
+  onUndo(): void;
+  copyMenu?: RegisterCopyMenu | undefined;
   onPasteNames(): void;
   onImportNames(): void;
+}
+
+export interface RegisterCopyMenu {
+  open: boolean;
+  toggle(): void;
+  close(): void;
+  copy(choice: RegisterCopyChoice): void;
+}
+
+const COPY_OPTIONS = [
+  { label: 'Names and emails — checked in', attendance: 'checked-in', format: 'names-and-emails' },
+  { label: 'Names and emails — not checked in', attendance: 'not-checked-in', format: 'names-and-emails' },
+  { label: 'Emails only — checked in', attendance: 'checked-in', format: 'emails-only' },
+  { label: 'Emails only — not checked in', attendance: 'not-checked-in', format: 'emails-only' },
+] as const;
+
+function CopyMenu({ open, toggle, close, copy }: RegisterCopyMenu): JSX.Element {
+  const trigger = useRef<HTMLButtonElement>(null);
+  const options = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (open) options.current?.querySelector('button')?.focus(); }, [open]);
+  return (
+    <div className="reg-copy" onBlur={(e) => { if (open && !e.currentTarget.contains(e.relatedTarget)) close(); }}
+      onKeyDown={(e) => { if (open && e.key === 'Escape') { e.preventDefault(); trigger.current?.focus(); close(); } }}>
+      <button ref={trigger} type="button" className="btn big-action" onClick={toggle}
+        aria-expanded={open} aria-controls={open ? 'register-copy-options' : undefined}><Icon name="copy" />Copy…</button>
+      {open ? (
+        <div ref={options} id="register-copy-options" role="group" aria-label="Copy options" className="menu reg-copy-options">
+          {COPY_OPTIONS.map(({ label, ...choice }) => (
+            <button key={label} type="button" className="menu-item" onClick={() => { trigger.current?.focus(); copy(choice); }}>{label}</button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 const CHIP: Record<string, string> = { here: 'here', 'walk-in': 'walkin', 'not-yet': 'notyet', held: 'held', waiting: 'notyet' };
@@ -74,6 +110,16 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
         </div>
       </div>
 
+      <div className="reg-actions" role="group" aria-label="Register actions">
+        <button type="button" className="btn primary" onClick={p.onAdd}><Icon name="user-plus" />Add person</button>
+        <button type="button" className="btn" onClick={p.onPasteNames}><Icon name="clipboard-paste" />Paste names…</button>
+        <button type="button" className="btn" onClick={p.onImportNames}><Icon name="file-up" />Import a file…</button>
+        {p.copyMenu ? <CopyMenu {...p.copyMenu} /> : null}
+        {p.canUndo ? <button type="button" className="btn" onClick={p.onUndo} disabled={p.busy}><Icon name="undo-2" />Undo last change</button> : null}
+        {p.canExport ? <button type="button" className="btn" onClick={p.onExport}><Icon name="file-down" />Export CSV</button> : null}
+        {p.canReview ? <button type="button" className="btn" onClick={p.onReview}><Icon name="mail" />Email review</button> : null}
+      </div>
+
       {p.readOnlyBanner ? <div className="reg-banner info" role="note"><Icon name="info" size={18} /><span>{p.readOnlyBanner}</span></div> : null}
       {p.summary ? (
         <div className="reg-banner summary" role="status">
@@ -82,9 +128,7 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
           <span className="s-fig"><b>{p.summary.arrived}</b> of {p.summary.total} arrived</span>
           <span className="s-fig"><b>{p.summary.walkIns}</b> {p.summary.walkIns === 1 ? 'walk-in' : 'walk-ins'}</span>
           <span className="s-fig"><b>{p.summary.held}</b> held for review</span>
-          <span className="grow" />
-          <button type="button" className="btn primary" onClick={p.onExport}><Icon name="file-down" />Export CSV</button>
-          <button type="button" className="btn" onClick={p.onReview}><Icon name="mail" />Email review</button>
+
         </div>
       ) : null}
       {p.repair ? (
@@ -104,13 +148,7 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
             <Icon name="users" size={40} />
             <h2>Add the name list for this workshop</h2>
             <p>Paste a list of names, or import a CSV or Excel file from your booking system. Names and email addresses are kept only on this laptop.</p>
-            {p.canAddNames ? (
-              <div className="actions">
-                <button type="button" className="btn primary" onClick={p.onPasteNames}><Icon name="clipboard-paste" />Paste names…</button>
-                <button type="button" className="btn" onClick={p.onImportNames}><Icon name="file-up" />Import a file…</button>
-              </div>
-            ) : null}
-            {p.editable ? <p>Walk-ins can still be added with Add person.</p> : null}
+
           </div>
         ) : view.noMatch ? (
           <div className="empty"><h2>No one matches</h2><p>Change the search or the filter.</p></div>
@@ -119,7 +157,7 @@ export function RegisterPanel(p: RegisterPanelProps): JSX.Element {
             data-person={r.id} onClick={() => p.onUi({ selectedId: r.id })} onDoubleClick={() => { if (p.editable && r.canCheckIn) p.onMark(r.id, true); }}>
             <div className="rname"><span className="avatar" aria-hidden="true">{r.initials}</span><b>{r.name}</b></div>
             <div className={`remail ${r.email ? '' : 'none'}`}>{r.email ?? (r.walkIn ? 'No email' : '')}</div>
-            <div className="rtime">{r.arrived ?? '—'}</div>
+            <div className="rtime">{r.arrived ?? '—'}{r.late ? ' · Late' : ''}</div>
             <div className="rstatus">
               <StatusChip row={r} />
               {p.editable && ui.selectedId === r.id && r.status !== 'held' && r.present ? (

@@ -3,6 +3,7 @@ import type { UpdateSnapshot } from '@app-patterns/updates';
 import type { SessionSelection, SessionView } from './session-model.ts';
 import type { ConnectionTest, NewWorkshop, RuntimeSnapshot, WorkshopListing, WorkshopSummary } from './runtime-types.ts';
 import type { NamesMapping, NamesSheetView, RecoverySheetView } from './names-model.ts';
+import type { RegisterCopyChoice } from './register-model.ts';
 
 export const CH = {
   state: 'attendwell:state',
@@ -38,6 +39,11 @@ export const CH = {
   sessionChanged: 'attendwell:session-changed',
   sessionAction: 'attendwell:session-action',
   quitRequested: 'attendwell:quit-requested',
+  // the nearby link test sheet
+  nearbyView: 'attendwell:nearby-view',
+  nearbyStatus: 'attendwell:nearby-status',
+  nearbyReconnect: 'attendwell:nearby-reconnect',
+  nearbyShowLog: 'attendwell:nearby-show-log',
 } as const;
 
 /** Everything the session screen asks the main process to do. Arguments are checked by `parseSessionAction` before anything runs. */
@@ -61,6 +67,7 @@ export type SessionAction =
   | { kind: 'revoke'; id: string }
   | { kind: 'dismiss-hold'; id: number }
   | { kind: 'copy'; what: 'address' | 'pair-code' | 'pair-address' | 'review-bcc' }
+  | ({ kind: 'copy-register' } & RegisterCopyChoice)
   | { kind: 'export-csv' }
   | { kind: 'quit'; endFirst: boolean }
   // Name lists and iPad recovery files, for the workshop on screen (main/names-service.ts). Files are chosen in main, or dropped.
@@ -100,6 +107,10 @@ export function parseSessionAction(v: unknown): SessionAction {
   switch (o.kind) {
     case 'show': return { kind: 'show', workshopId: id(o.workshopId) };
     case 'leave': case 'start': case 'retry': case 'end': case 'undo': case 'pair-new': case 'pair-close': case 'export-csv': return { kind: o.kind };
+    case 'copy-register':
+      if (o.attendance !== 'checked-in' && o.attendance !== 'not-checked-in') throw new Error('Bad argument');
+      if (o.format !== 'names-and-emails' && o.format !== 'emails-only') throw new Error('Bad argument');
+      return { kind: 'copy-register', attendance: o.attendance, format: o.format };
     case 'window': if (o.action !== 'open' && o.action !== 'extend' && o.action !== 'close') throw new Error('Bad argument'); return { kind: 'window', action: o.action };
     case 'mark': if (typeof o.present !== 'boolean') throw new Error('Bad argument'); return { kind: 'mark', id: id(o.id), present: o.present };
     case 'resolve': if (o.action !== 'check-in' && o.action !== 'dismiss') throw new Error('Bad argument'); return { kind: 'resolve', id: id(o.id), action: o.action };
@@ -174,6 +185,25 @@ export interface AppSnapshot {
 
 export type Result<T = void> = ({ ok: true } & (T extends void ? unknown : { value: T })) | { ok: false; error: string };
 
+export interface NearbyStatus {
+  available: boolean;
+  peerNames: string[];
+  lostAt: string | null;
+  discoveryTimedOut: boolean;
+}
+
+export interface NearbyView {
+  /** False when the helper is not in this build or could not be started. */
+  available: boolean;
+  state: 'waiting' | 'connected';
+  peerName: string | null;
+  checkins: number;
+  workshopTitle: string;
+  /** The QR carries the durable key. The typed code is a separate, temporary credential. */
+  payload: string | null;
+  pairingCode: string | null;
+}
+
 export interface AttendWellApi {
   state(): Promise<AppSnapshot>;
   onChanged(cb: (s: AppSnapshot) => void): () => void;
@@ -198,12 +228,17 @@ export interface AttendWellApi {
   /** The session screen: its current state, a push when it changes, what the organiser does, and the quit confirmation request. */
   sessionView(): Promise<SessionView>;
   onSession(cb: (v: SessionView) => void): () => void;
-  sessionAct(a: SessionAction): Promise<Result<{ leftovers?: string[]; path?: string | null }>>;
+  sessionAct(a: SessionAction): Promise<Result<{ leftovers?: string[]; path?: string | null; count?: number; skipped?: number }>>;
   /** The names and recovery sheets' actions (the same channel as sessionAct). */
   sheetAct(a: SessionAction): Promise<Result<SheetAnswer>>;
   /** The path of a file dropped on the window (Electron webUtils), for the recovery sheet's drop zone. */
   pathForFile(file: File): string;
   onQuitRequested(cb: () => void): () => void;
+  /** The Connect iPad sheet: the link's state, and opening its log file. */
+  nearbyView(): Promise<NearbyView>;
+  nearbyStatus(): Promise<NearbyStatus>;
+  nearbyReconnect(): Promise<NearbyStatus>;
+  nearbyShowLog(): Promise<void>;
 }
 
 /** What the Settings window's About card needs for update notices (it has no other access to the app). */

@@ -2,11 +2,12 @@
 // Test mode (ATTENDWELL_TEST=1): windows are created hidden, the Dock icon is hidden, the Keychain is mocked, and nothing
 // opens Finder, a browser or a dialog, so a headless run never shows anything on the screen. The runtime (register, gateway, quick
 // tunnel; desktop/runtime) runs here in the main process; test mode uses the fake unless ATTENDWELL_RUNTIME=real.
+import { appendFileSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { homedir, hostname } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, net, session, shell, type IpcMainInvokeEvent, type MenuItemConstructorOptions } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, net, powerSaveBlocker, session, shell, type IpcMainInvokeEvent, type MenuItemConstructorOptions } from 'electron';
 import { installSettingsWith, type SettingsHost, type BrowserWindowCtor, type DialogLike, type ElectronDeps, type IpcMainLike, type MenuLike } from '@app-patterns/settings-electron';
 import { createElectronFeedFetcher, createUpdateLinkOpener } from '@app-patterns/updates/electron';
 import type { UpdateSnapshot } from '@app-patterns/updates';
@@ -28,6 +29,7 @@ import { openSettings } from './settings.ts';
 import { guardedExternal, isRealDirectory, revealFolder } from './safe-paths.ts';
 import { effectiveEnv, readTestBuildMarker } from './test-mode.ts';
 import { UPDATE_IDENTITY, createUpdateService } from './updates.ts';
+import { startNearbyLink } from './nearby-link.ts';
 
 // Test switches are read through this environment only (main/test-mode.ts): a release build sees none of them.
 const ENV = effectiveEnv({ isPackaged: app.isPackaged, testBuild: readTestBuildMarker(app.getAppPath()) });
@@ -131,6 +133,16 @@ async function start(): Promise<void> {
   const bundle = createRuntimeBundle({ dataRoot: expandForPort(folder), resourcesRoot, env: ENV, log: (line) => appLog.write(line) });
   const port = bundle.port;
   port.status.onChange(runtimeChangeLogger((line) => appLog.write(line)));
+  let sleepBlocker: number | null = null;
+  function releaseSleepBlocker(): void {
+    if (sleepBlocker === null) return;
+    powerSaveBlocker.stop(sleepBlocker);
+    sleepBlocker = null;
+  }
+  if (process.platform === 'darwin') port.status.onChange(({ session: state }) => {
+    if (state === 'idle') releaseSleepBlocker();
+    else if (sleepBlocker === null) sleepBlocker = powerSaveBlocker.start('prevent-app-suspension');
+  });
   // Test mode only: the screenshot script drives the fake runtime from here (a global is not reachable from the window).
   if (TEST && bundle.fake) (globalThis as { __attendwellFake?: unknown }).__attendwellFake = bundle.fake;
   // Test mode only: the live smoke check reads the runtime's state and its own children's process IDs (never the organiser key).
@@ -154,13 +166,22 @@ async function start(): Promise<void> {
 
   const sess = new SessionService({
     port, organiser: bundle.organiser, hostName: hostname().replace(/\.local$/, ''), log: (line) => appLog.write(line),
-    changed: () => { send(CH.sessionChanged, sess.view()); pushState(); rebuildMenu(); },
+    extendPairingQR: (payload) => nearby.extendPairingQR(payload),
+    changed: () => { nearby.updateWorkshop(sess.nearbyWorkshop()); send(CH.sessionChanged, sess.view()); pushState(); rebuildMenu(); },
   });
 
   // Name lists and iPad recovery files for the workshop on screen. Files are read here; the window only ever sees the preview.
   const names = new NamesService({
     port, organiser: bundle.organiser,
     written: async (id) => { await sess.reloadRegister(id); pushState(); rebuildMenu(); },
+  });
+  const nearby = startNearbyLink({
+    env: ENV, userData, resourcesRoot, appLog: (line) => appLog.write(line),
+    recordCheckIn: async (id, checkIn) => {
+      const receipt = await names.recordNearbyCheckIn(id, checkIn);
+      if (receipt.recorded) void sess.reloadRegister(id).catch(() => { /* The next poll refreshes the view. */ });
+      return receipt;
+    },
   });
   /** The file chooser for a names or recovery sheet. Test mode shows no dialog: it answers the file named in ATTENDWELL_TEST_NAMES_FILE or ATTENDWELL_TEST_RECOVERY_FILE, or nothing. */
   async function chooseFile(title: string, filters: Array<{ name: string; extensions: string[] }>, testFile?: string): Promise<string | null> {
@@ -223,7 +244,7 @@ async function start(): Promise<void> {
   function menuCtx(): CommandCtx {
     const s = state.get();
     return {
-      view: view.view, workshopCount: lastCount, selectedWorkshop: view.selectedWorkshop, liveSession: busy(),
+      view: view.view, platform, workshopCount: lastCount, selectedWorkshop: view.selectedWorkshop, liveSession: busy(),
       exampleOffered: s.exampleId !== null && !s.exampleRemoved, whatsNewAvailable: updates.checker.snapshot().whatsNew !== null,
       session: view.view === 'session' ? sessionCtxOf(sess.view(), selection) : null,
     };
@@ -304,6 +325,10 @@ async function start(): Promise<void> {
     const r = await settings.store.rebind(c, str(chord, 12));
     return r.ok ? { ok: true } : { ok: false, error: r.error };
   });
+  handle(CH.nearbyView, () => nearby.view());
+  handle(CH.nearbyStatus, () => nearby.status());
+  handle(CH.nearbyReconnect, () => { nearby.reconnect(); return nearby.status(); });
+  handle(CH.nearbyShowLog, async () => { if (TEST) return; try { appendFileSync(nearby.logFile, '', { mode: 0o600 }); } catch { /* opened below if it exists */ } await shell.openPath(nearby.logFile); });
   handle(CH.noteRan, (_e, id) => { const c = str(id, 80); if (registry.byId(c)) ctl.noteRan(c); });
 
   // The session screen: what it shows, and what the organiser does there.
@@ -340,6 +365,13 @@ async function start(): Promise<void> {
         const text = a.what === 'address' ? (t.state === 'online' ? t.url : null) : a.what === 'pair-code' ? open?.shortCode ?? null
           : a.what === 'pair-address' ? open?.baseUrl ?? null : v.roster ? reviewRecipients(v.roster).bcc || null : null;
         return copy(text).ok ? { ok: true } : { ok: false, error: 'There is nothing to copy yet.' };
+      }
+      case 'copy-register': {
+        if (platform !== 'mac') return { ok: false, error: 'Copy is available on Mac.' };
+        const result = await sess.copyList(a);
+        if (!result.ok) return result;
+        if (!TEST) clipboard.writeText(result.value.text);
+        return { ok: true, value: { count: result.value.count, skipped: result.value.skipped } };
       }
       case 'export-csv': {
         const v = sess.view();
@@ -438,12 +470,14 @@ async function start(): Promise<void> {
       return;
     }
     updates.checker.stop();
+    nearby.stop();
     shuttingDown = true;
     sess.dispose();
     e.preventDefault();
     // A register a names sheet opened is stopped first, then the runtime.
     appLog.write('Quitting.');
     void names.close().catch(() => undefined).then(() => port.shutdown()).catch(() => undefined).finally(() => {
+      releaseSleepBlocker();
       const left = bundle.real?.lastShutdown() ?? [];
       appLog.write(left.length ? `Quit left something running: ${left.join(' ')}` : 'Stopped cleanly.');
       appLog.close();

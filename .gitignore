@@ -33,3 +33,9 @@ xcuserdata/
 *.xcuserstate
 *.app
 site/.review-shots/
+
+# Nearby spike staging
+desktop/resources/nearby/
+desktop/release-test/
+ipad/NearbySpike/.build/
+desktop/nearby/spike/spike-key.json
