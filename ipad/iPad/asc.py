@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """App Store Connect helper for AttendWell iPad: upload an archive and add a build to a TestFlight group.
 
-The API key never lives in this repo or on disk between runs. It arrives as one environment variable,
-ASC_API_KEY_JSON = {"keyId": "...", "issuerId": "...", "p8": "-----BEGIN PRIVATE KEY-----..."},
-injected for this one process by Bitwarden Secrets Manager:
+The API key never lives in this repo or on disk between runs. It arrives from Bitwarden Secrets Manager
+(project agentdev) for this one process, either as ASC_API_KEY_JSON = {"keyId","issuerId","p8"} or as three
+variables, one secret per nested run:
 
-  bws_manager.py run --secret-id <uuid> --as ASC_API_KEY_JSON -- python3 ipad/iPad/asc.py <command> ...
+  B=bws_manager.py
+  $B run --secret-id <APPSTORE_CONNECT_API_RELEASE _MANAGER> --as ASC_KEY_P8 -- \
+    $B run --secret-id <APPSTORE_CONNECT_API_KEY_ID> --as ASC_KEY_ID -- \
+    $B run --secret-id <APPSTORE_CONNECT_API_ISSUER_ID> --as ASC_ISSUER_ID -- python3 ipad/iPad/asc.py <command> ...
+
+ipad/iPad/asc-run.sh wraps this.
 
 Commands
   check                                   sign in and print the app's name (proves the key works)
@@ -22,11 +27,25 @@ API = "https://api.appstoreconnect.apple.com/v1"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
+def pem(p8):
+    """Accepts a full .p8 PEM or just its base64 body (lines possibly joined by spaces)."""
+    if "BEGIN PRIVATE KEY" in p8:
+        return p8
+    body = "".join(p8.split())
+    head, tail = ("-----%s PRIVATE KEY-----" % w for w in ("BEGIN", "END"))  # built, so no PEM block sits in source
+    return head + "\n" + "\n".join(body[i:i + 64] for i in range(0, len(body), 64)) + "\n" + tail + "\n"
+
+
 def key():
     raw = os.environ.get("ASC_API_KEY_JSON")
-    if not raw:
-        sys.exit("ASC_API_KEY_JSON is not set; run through bws_manager.py run --secret-id ... --as ASC_API_KEY_JSON")
-    k = json.loads(raw)
+    if raw:
+        k = json.loads(raw)
+    else:
+        k = {"keyId": os.environ.get("ASC_KEY_ID", "").strip(), "issuerId": os.environ.get("ASC_ISSUER_ID", "").strip(),
+             "p8": os.environ.get("ASC_KEY_P8", "")}
+        if not k["p8"]:
+            sys.exit("Set ASC_API_KEY_JSON, or ASC_KEY_P8 + ASC_KEY_ID + ASC_ISSUER_ID, through bws_manager.py run")
+    k["p8"] = pem(k["p8"])
     for f in ("keyId", "issuerId", "p8"):
         if not k.get(f):
             sys.exit(f"ASC_API_KEY_JSON lacks {f}")
@@ -76,7 +95,8 @@ def cmd_upload(k, archive):
             f.write(k["p8"])
         out = os.path.join(os.path.dirname(os.path.abspath(archive)), "export-asc")
         env = dict(os.environ, PATH="/usr/bin:/bin:/usr/sbin:/sbin")
-        env.pop("ASC_API_KEY_JSON", None)
+        for v in ("ASC_API_KEY_JSON", "ASC_KEY_P8", "ASC_KEY_ID", "ASC_ISSUER_ID"):
+            env.pop(v, None)
         rc = subprocess.call(["xcodebuild", "-exportArchive", "-archivePath", archive,
                               "-exportOptionsPlist", os.path.join(HERE, "ExportOptions-appstore.plist"),
                               "-exportPath", out, "-allowProvisioningUpdates",
